@@ -6,6 +6,7 @@ import { fontSans } from '@/lib/fonts';
 import { SiteHeader } from '@/components/site/site-header';
 import { TailwindIndicator } from '@/components/site/tailwind-indicator';
 import { ThemeProvider } from '@/components/site/theme-provider';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import '@/styles/globals.css';
 
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <TailwindIndicator />
             <Toaster />
           </ThemeProvider>
+          <SpeedInsights />
         </body>
       </html>
     </>

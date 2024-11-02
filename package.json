@@ -75,6 +75,7 @@
     "@udecode/plate-table": "^39.1.6",
     "@udecode/plate-toggle": "^39.0.0",
     "@udecode/plate-trailing-block": "^39.0.0",
+    "@vercel/speed-insights": "^1.0.14",
     "ai": "^3.4.27",
     "class-variance-authority": "0.7.0",
     "cmdk": "1.0.0",

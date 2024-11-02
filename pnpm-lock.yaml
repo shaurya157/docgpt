@@ -197,6 +197,9 @@ importers:
       '@udecode/plate-trailing-block':
         specifier: ^39.0.0
         version: 39.0.0(@udecode/plate-common@39.2.13(@types/react@18.3.12)(immer@10.1.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(scheduler@0.23.2)(slate-history@0.110.3(slate@0.110.2))(slate-hyperscript@0.100.0(slate@0.110.2))(slate-react@0.110.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(slate@0.110.2))(slate@0.110.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(slate-history@0.110.3(slate@0.110.2))(slate-hyperscript@0.100.0(slate@0.110.2))(slate-react@0.110.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(slate@0.110.2))(slate@0.110.2)
+      '@vercel/speed-insights':
+        specifier: ^1.0.14
+        version: 1.0.14(next@15.0.2(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(svelte@5.1.2)(vue@3.5.12(typescript@5.6.3))
       ai:
         specifier: ^3.4.27
         version: 3.4.27(react@18.3.1)(sswr@2.1.0(svelte@5.1.2))(svelte@5.1.2)(vue@3.5.12(typescript@5.6.3))(zod@3.23.8)
@@ -2068,6 +2071,29 @@ packages:
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
+
+  '@vercel/speed-insights@1.0.14':
+    resolution: {integrity: sha512-env1BkPddz1UaEZwBL4GmfRksMi2LbiYaKuoxMQjfLk83aEh7kkWMukkUhpQVs717NE6nnD+1+KO85GZHOZ4nQ==}
+    peerDependencies:
+      '@sveltejs/kit': ^1 || ^2
+      next: '>= 13'
+      react: ^18 || ^19 || ^19.0.0-rc
+      svelte: '>= 4'
+      vue: ^3
+      vue-router: ^4
+    peerDependenciesMeta:
+      '@sveltejs/kit':
+        optional: true
+      next:
+        optional: true
+      react:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+      vue-router:
+        optional: true
 
   '@vue/compiler-core@3.5.12':
     resolution: {integrity: sha512-ISyBTRMmMYagUxhcpyEH0hpXRd/KqDU4ymofPgl2XAkY9ZhQ+h0ovEZJIiPop13UmR/54oA2cgMDjgroRelaEw==}
@@ -5955,6 +5981,13 @@ snapshots:
   '@udecode/utils@37.0.0': {}
 
   '@ungap/structured-clone@1.2.0': {}
+
+  '@vercel/speed-insights@1.0.14(next@15.0.2(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(svelte@5.1.2)(vue@3.5.12(typescript@5.6.3))':
+    optionalDependencies:
+      next: 15.0.2(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      svelte: 5.1.2
+      vue: 3.5.12(typescript@5.6.3)
 
   '@vue/compiler-core@3.5.12':
     dependencies:
