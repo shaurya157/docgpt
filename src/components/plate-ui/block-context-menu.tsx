@@ -93,7 +93,7 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
             setValue('askAI');
           }}
         >
-          Ask AI
+          Ask docgpt
         </ContextMenuItem>
         <ContextMenuItem
           onClick={() => {

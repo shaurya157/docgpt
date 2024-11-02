@@ -24,22 +24,32 @@ export async function POST(req: NextRequest) {
   const openai = createOpenAI({ apiKey });
 
   try {
-    console.log("Calling API with the following messages: ")
-    console.log(messages)
-    console.log("Calling API with the following SYSTEM: ")
-    console.log(system)
+    // console.log("Calling API with the following messages: ")
+    // console.log(messages)
+    // console.log("Calling API with the following SYSTEM: ")
+    // console.log(system)
     const result = await streamText({
-      maxTokens: 2048,
+      maxTokens: 2048, //2048,
       messages: convertToCoreMessages(messages),
       model: openai(model),
       system: system,
     });
 
+    // printoutput(result)
     return result.toDataStreamResponse();
   } catch {
+    console.log("ERROR WHILE PROCESSING!")
     return NextResponse.json(
       { error: 'Failed to process AI request' },
       { status: 500 }
     );
   }
+}
+
+async function printoutput(result) {
+  let resultText = ""
+  for await (const textPart of result.textStream) {
+    resultText += textPart
+  }
+  console.log("Result: \n", resultText);
 }

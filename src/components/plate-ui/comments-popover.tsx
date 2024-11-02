@@ -5,11 +5,11 @@ import { cn } from '@udecode/cn';
 import {
   CommentProvider,
   CommentsPositioner,
-  SCOPE_ACTIVE_COMMENT,
+  SCOPE_ACTIVE_COMMENT, useCommentReplies, useCommentStore,
   useFloatingCommentsContentState,
   useFloatingCommentsState,
 } from '@udecode/plate-comments/react';
-import { PortalBody } from '@udecode/plate-common/react';
+import {PortalBody, useEditorSelector} from '@udecode/plate-common/react';
 
 import { CommentCreateForm } from './comment-create-form';
 import { CommentItem } from './comment-item';

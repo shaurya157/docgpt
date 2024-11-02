@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AIChatPlugin, useEditorChat } from '@udecode/plate-ai/react';
+import {AIChatPlugin, useAIChatHooks, useEditorChat} from '@udecode/plate-ai/react';
 import {
   getAncestorNode,
   getBlocks,
@@ -34,7 +34,6 @@ export function AIMenu() {
   const open = useOption('open');
   const mode = useOption('mode');
   const isSelecting = useIsSelecting();
-
   const aiEditorRef = React.useRef<PlateEditor | null>(null);
   const [value, setValue] = React.useState('');
 
@@ -160,7 +159,7 @@ export function AIMenu() {
                 }
               }}
               onValueChange={setInput}
-              placeholder="Ask AI anything..."
+              placeholder="Ask docgpt anything..."
               autoFocus
             />
           )}

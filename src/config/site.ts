@@ -5,9 +5,9 @@ export const siteConfig = {
   description:
     'AI powered product release documents',
   mainNav: [
-    {
-      title: 'Home',
-      href: '/',
-    },
+//     {
+//       title: 'Home',
+//       href: '/',
+//     },
   ],
 };

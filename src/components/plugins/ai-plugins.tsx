@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { withProps } from '@udecode/cn';
-import { AIChatPlugin, AIPlugin } from '@udecode/plate-ai/react';
+import {AIChatPlugin, AIPlugin, useAIChatHooks} from '@udecode/plate-ai/react';
 import {
   BoldPlugin,
   CodePlugin,
@@ -47,6 +47,7 @@ import { HrElement } from '../plate-ui/hr-element';
 import { LinkElement } from '../plate-ui/link-element';
 import { LinkFloatingToolbar } from '../plate-ui/link-floating-toolbar';
 import { ParagraphElement } from '../plate-ui/paragraph-element';
+import {useCustomAIChatHooks} from "@/components/custom/customAIChatHooks";
 
 export const createAIEditor = () => {
   const editor = createPlateEditor({
@@ -232,5 +233,7 @@ export const aiPlugins = [
       },
     },
     render: { afterEditable: () => <AIMenu /> },
-  }),
+  }).extend(() => ({
+    useHooks: useCustomAIChatHooks,
+  })),
 ] as const;

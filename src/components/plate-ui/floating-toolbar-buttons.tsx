@@ -32,7 +32,7 @@ export function FloatingToolbarButtons() {
               tooltip="Edit, generate, and more"
             >
               <SparklesIcon className="mr-1.5 !size-3.5" />
-              Ask AI
+              Ask docgpt
             </AIToolbarButton>
           </ToolbarGroup>
 
