@@ -7,6 +7,8 @@ import { SiteHeader } from '@/components/site/site-header';
 import { TailwindIndicator } from '@/components/site/tailwind-indicator';
 import { ThemeProvider } from '@/components/site/theme-provider';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/react';
+
 
 import '@/styles/globals.css';
 
@@ -62,6 +64,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <Toaster />
           </ThemeProvider>
           <SpeedInsights />
+          <Analytics />
         </body>
       </html>
     </>
