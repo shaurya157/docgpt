@@ -11,9 +11,9 @@ export const useCustomAIChatHooks = () => {
 
   useChatChunk({
     onChunk: ({ isFirst, nodes }) => {
-      console.log("PROCESSING AI CHAT CHUNK. MORE INFO:")
-      console.log("isFirst", isFirst);
-      console.log("mode", mode);
+      // console.log("PROCESSING AI CHAT CHUNK. MORE INFO:")
+      // console.log("isFirst", isFirst);
+      // console.log("mode", mode);
       if (mode === 'insert' && nodes.length > 0) {
         withAIBatch(
           editor,
@@ -25,9 +25,9 @@ export const useCustomAIChatHooks = () => {
       }
     },
     onFinish: ({ content }) => {
-      console.log("FINISHED PROCESSING AI STUFF. More info:")
-      console.log("Content: ", content);
-      console.log("Mode: ", mode);
+      // console.log("FINISHED PROCESSING AI STUFF. More info:")
+      // console.log("Content: ", content);
+      // console.log("Mode: ", mode);
       if (mode !== 'insert') return;
 
       const blockAbove = getBlockAbove(editor);

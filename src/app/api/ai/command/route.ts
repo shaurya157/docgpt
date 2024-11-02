@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     // printoutput(result)
     return result.toDataStreamResponse();
   } catch {
-    console.log("ERROR WHILE PROCESSING!")
+    // console.log("ERROR WHILE PROCESSING!")
     return NextResponse.json(
       { error: 'Failed to process AI request' },
       { status: 500 }
