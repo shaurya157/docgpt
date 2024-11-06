@@ -195,7 +195,7 @@ export const useMyEditor = () => {
         {text: 'A rich-text editor with AI capabilities. Try the '},
         {text: 'AI commands', bold: true},
         {text: ' or use '},
-        {text: 'Cmd+J', kbd: true},
+        {text: '/', kbd: true},
         {text: ' to open the AI menu.'},
       ],
     },

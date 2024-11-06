@@ -24,10 +24,6 @@ export async function POST(req: NextRequest) {
   const openai = createOpenAI({ apiKey });
 
   try {
-    // console.log("Calling API with the following messages: ")
-    // console.log(messages)
-    // console.log("Calling API with the following SYSTEM: ")
-    // console.log(system)
     const result = await streamText({
       maxTokens: 2048, //2048,
       messages: convertToCoreMessages(messages),
