@@ -57,7 +57,7 @@ export function FilesDropdownMenu({session}: FilesDropdownMenuProps) {
         className="flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto"
         align="start"
       >
-        {/*<UploadedFiles />*/}
+        <UploadedFiles session={session}/>
         <form onSubmit={handleSubmit(onSubmit)}>
           <input type="file" {...register("file")} multiple={true}/>
           <button>Submit</button>
