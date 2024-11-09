@@ -17,10 +17,10 @@ export async function SiteHeader() {
   let userFilesData: Array<Map<string, string>> = []
   if (session) {
     await getData(session.user?.email).then((data) => {
-      userFilesData = data.result
+      if (data.result != undefined) {
+        userFilesData = data.result
+      }
     })
-
-    console.log(userFilesData)
   }
 
   return (

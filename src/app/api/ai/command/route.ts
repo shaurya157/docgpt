@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
       system: system,
     });
 
-    // printoutput(result)
     return result.toDataStreamResponse();
   } catch {
     // console.log("ERROR WHILE PROCESSING!")
@@ -40,12 +39,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-async function printoutput(result) {
-  let resultText = ""
-  for await (const textPart of result.textStream) {
-    resultText += textPart
-  }
-  console.log("Result: \n", resultText);
 }

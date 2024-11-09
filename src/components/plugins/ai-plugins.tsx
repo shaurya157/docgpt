@@ -146,7 +146,7 @@ const systemDefault = `\
 ${systemCommon}
 - <Block> is the current block of text the user is working on.
 - Ensure your output can seamlessly fit into the existing <Block> structure.
-- CRITICAL: Provide only a single block of text. DO NOT create multiple paragraphs or separate blocks.
+<!-- - CRITICAL: Provide only a single block of text. DO NOT create multiple paragraphs or separate blocks.-->
 <Block>
 {block}
 </Block>
