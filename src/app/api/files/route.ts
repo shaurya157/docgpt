@@ -1,6 +1,6 @@
 import fs from 'fs';
 import {NextRequest, NextResponse} from "next/server";
-import {addData} from "@/firebase/firestore-dao";
+import {appendFileDataToUser} from "@/firebase/firestore-dao";
 
 export const config = {
   api: {
@@ -43,11 +43,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: `FAILURE! Status: ${openAiResponse.status}. Error message: ${openAiResult.error.message}` })
     }
 
+    console.log(`Saving ${openAiResult.id} to firebase`);
     // Firebase save of file ID
-    addData("users", userId, {
-      filename: file.name,
-      openAiFileId: openAiResult.id
-    }).then((response) => {
+    const map = new Map<string, string>();
+    map.set('openAiFileId', openAiResult.id);
+    map.set('fileName', file.name);
+
+    appendFileDataToUser(userId, map).then((response) => {
       if (response.error) {
         console.log("Firebase response fail: ", response);
         throw response.error;

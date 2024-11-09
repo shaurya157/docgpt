@@ -4,14 +4,22 @@ import {useSession} from "next-auth/react";
 import {Session} from "next-auth";
 
 interface UploadedFilesProps {
-  session?: Session | null | undefined
+  session?: Session | null | undefined,
+  userFilesData: Array<Map<string, string>>
 }
 
-export function UploadedFiles({session}: UploadedFilesProps) {
-
+export function UploadedFiles({session, userFilesData}: UploadedFilesProps) {
   if (!session?.user) {
     return <div>Please sign in to view uploaded files</div>
   } else {
-    return <div>File display is in progress,stay tuned!<br /></div>
+    return <div>
+      {
+        userFilesData.map((file: Map<string, string>) => {
+          return <div key={file["openAiFileId"]}>
+            {file["fileName"]}
+          </div>
+        })
+      }
+    </div>
   }
 }
