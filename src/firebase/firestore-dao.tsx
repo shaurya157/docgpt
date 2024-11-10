@@ -27,7 +27,7 @@ export async function appendFileDataToUser(userid, data: Map<string, string>) {
   return { result, error };
 }
 
-export default async function getData(userid) {
+export default async function getAllUserData(userid) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userid);
   let result;

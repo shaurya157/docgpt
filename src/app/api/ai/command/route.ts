@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createOpenAI } from '@ai-sdk/openai';
-import { convertToCoreMessages, streamText } from 'ai';
+import {convertToCoreMessages, generateText, streamText} from 'ai';
 
 import type { NextRequest } from 'next/server';
 

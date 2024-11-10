@@ -18,6 +18,7 @@ export const useCustomAIChatHooks = () => {
         withAIBatch(
           editor,
           () => {
+            // TODO: when we want to eventually move to comments, to remove ai previews, comment out below
             tf.ai.insertNodes(nodes);
           },
           { split: isFirst }
@@ -42,6 +43,7 @@ export const useCustomAIChatHooks = () => {
       withAIBatch(
         editor,
         () => {
+          // TODO: when we want to eventually move to comments, to remove ai previews, comment out below
           tf.ai.insertNodes(nodes);
         },
         { split: true }
