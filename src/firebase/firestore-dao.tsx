@@ -27,7 +27,7 @@ export async function appendFileDataToUser(userid, data: Map<string, string>) {
   return { result, error };
 }
 
-export default async function getAllUserData(userid) {
+export async function getAllUserData(userid: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userid);
   let result;
@@ -35,6 +35,46 @@ export default async function getAllUserData(userid) {
 
   try {
     result = await getDoc(docRef).then(data => data.get("files"))
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
+}
+
+
+
+export async function setUserAssistant(userid: string, assistantId: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userid);
+  let result;
+  let error;
+
+  try {
+    result = await setDoc(docRef, {
+      assistantId: assistantId
+    }, {
+      merge: true,
+    });
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
+}
+
+export async function setUserActiveThread(userId: string, threadId: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userId);
+  let result;
+  let error;
+
+  try {
+    result = await setDoc(docRef, {
+      threadId: threadId
+    }, {
+      merge: true,
+    });
   } catch (e) {
     error = e;
   }

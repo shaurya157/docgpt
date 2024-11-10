@@ -1,6 +1,7 @@
 import {AssistantResponse} from "ai";
 import OpenAI from "openai";
 import { NextRequest } from "next/server";
+import {setUserActiveThread, setUserAssistant} from "@/firebase/firestore-dao";
 // import { z } from "zod";
 // import { zfd } from "zod-form-data";
 
@@ -13,8 +14,7 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
-  // Parse the request body
-  const input = await req.formData();
+  console.log("HIT THE ASSISTANT ENDPOINT");
 
   let {
     messages,
@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
     model = 'gpt-4o-mini',
     assistantId,
     threadId,
-    openAiFileIds
+    openAiFileIds,
+    userId
   } = await req.json();
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
   // While no one should technically be able to call the same due to API keys, it's a massive risk.
   // TODO: find a server only way of doing this
   // Step 1: Create the assistant
-  if (input["assistantId"] == undefined) {
+  if (assistantId == undefined) {
     console.log("No active assistant provided, creating a new assistant")
 
     const assistant = await openai.beta.assistants.create({
@@ -52,6 +53,9 @@ export async function POST(req: NextRequest) {
 
     assistantId = assistant.id;
     console.log("Assistant created. Assistant ID: ", assistant.id)
+    console.log("Saving assistant to firestore...")
+    await setUserAssistant(userId, assistantId)
+    console.log("Saved assistant!")
   }
 
   const messageData = {
@@ -70,7 +74,11 @@ export async function POST(req: NextRequest) {
 
     threadId = thread.id;
     console.log("New thread created. Thread ID: ", threadId);
+    console.log("Saving active thread ID to firestore...")
+    await setUserActiveThread(userId, threadId)
+    console.log("Saved thread!")
   }
+
   const createdMessage = await openai.beta.threads.messages.create(
     threadId,
     messageData

@@ -8,7 +8,7 @@ import { ThemeToggle } from '@/components/site/theme-toggle';
 import {FilesDropdownMenu} from "@/components/site/files-dropdown-menu";
 import UserButton from "@/components/site/user-button";
 import {auth} from "../../../auth";
-import getAllUserData from "@/firebase/firestore-dao";
+import {getAllUserData} from "@/firebase/firestore-dao";
 import {collection, getFirestore} from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 
@@ -16,7 +16,7 @@ export async function SiteHeader() {
   const session = await auth()
   let userFilesData: Array<Map<string, string>> = []
   if (session) {
-    await getAllUserData(session.user?.email).then((data) => {
+    await getAllUserData(session.user?.email!).then((data) => {
       if (data.result != undefined) {
         userFilesData = data.result
       }
