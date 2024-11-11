@@ -16,7 +16,7 @@ import {
   BlockSelectionPlugin,
   useIsSelecting,
 } from '@udecode/plate-selection/react';
-import { useChat } from 'ai/react';
+import {useAssistant, useChat} from 'ai/react';
 import { Loader2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,6 +28,7 @@ import { Popover, PopoverAnchor, PopoverContent } from './popover';
 
 import type { TElement, TNodeEntry } from '@udecode/plate-common';
 import type { PlateEditor } from '@udecode/plate-common/react';
+import {useSession} from "next-auth/react";
 
 export function AIMenu() {
   const { api, editor, useOption } = useEditorPlugin(AIChatPlugin);
@@ -36,25 +37,47 @@ export function AIMenu() {
   const isSelecting = useIsSelecting();
   const aiEditorRef = React.useRef<PlateEditor | null>(null);
   const [value, setValue] = React.useState('');
+  const { data: session } = useSession()
 
-  const chat = useChat({
-    id: 'editor',
-    api: '/api/ai/command',
+  const chat = useAssistant({
+    api: "/api/ai/assistant",
     body: {
       apiKey: useOpenAI().apiKey,
       model: useOpenAI().model.value,
+      userId: session?.user?.email,
     },
-    onError: (error) => {
-      if (error.message.includes('API key')) {
-        toast.error('OpenAI API key required');
-      } else {
-        toast.error('Invalid OpenAI API key');
-      }
-      api.aiChat.hide();
+    onError(error: Error): void {
+      toast.error(`Something went wrong while creating/using the assistant. Error: ${error.message}`);
     },
-  });
+  })
 
-  const { input, isLoading, messages, setInput } = chat;
+  const { input, status, threadId, messages, setInput } = chat
+
+  let isLoading = status == 'in_progress';
+
+  // print out all of the above
+  console.log("isLoading", isLoading);
+  console.log("messages", messages)
+
+  // const chat = useChat({
+  //   id: 'editor',
+  //   api: '/api/ai/command',
+  //   body: {
+  //     apiKey: useOpenAI().apiKey,
+  //     model: useOpenAI().model.value,
+  //   },
+  //   onError: (error) => {
+  //     if (error.message.includes('API key')) {
+  //       toast.error('OpenAI API key required');
+  //     } else {
+  //       toast.error('Invalid OpenAI API key');
+  //     }
+  //     api.aiChat.hide();
+  //   },
+  // });
+
+  // const { input, isLoading, messages, setInput } = chat;
+
   const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(
     null
   );
@@ -99,13 +122,13 @@ export function AIMenu() {
     },
   });
 
-  useHotkeys(
-    'meta+j',
-    () => {
-      api.aiChat.show();
-    },
-    { enableOnContentEditable: true, enableOnFormTags: true }
-  );
+  // useHotkeys(
+  //   'meta+j',
+  //   () => {
+  //     api.aiChat.show();
+  //   },
+  //   { enableOnContentEditable: true, enableOnFormTags: true }
+  // );
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={false}>
@@ -158,7 +181,7 @@ export function AIMenu() {
                   void api.aiChat.submit();
                 }
               }}
-              onValueChange={setInput}
+              onValueChange={input}
               placeholder="Ask docgpt anything..."
               autoFocus
             />
