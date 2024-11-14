@@ -19,7 +19,7 @@ import {useUserDataContext} from "@/providers/UserDataContextProvider";
 export function FilesDropdownMenu() {
     const openState = useOpenState();
     const {data: session} = useSession()
-    const { fileIds } = useUserDataContext()
+    const { fileIds, vectorStoreId } = useUserDataContext()
     const {
         register,
         handleSubmit,
@@ -35,6 +35,8 @@ export function FilesDropdownMenu() {
         if (userEmail != null || userEmail != undefined) {
             formData.append('file', data.file[0]);
             formData.append("user_id", userEmail!!);
+            // @ts-ignore
+            formData.append("vector_store_id", vectorStoreId);
             await fetch('/api/files', {
                 method: 'POST',
                 body: formData,

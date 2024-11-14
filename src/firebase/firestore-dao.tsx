@@ -1,5 +1,6 @@
 import { FieldValue, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion, collection } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
+import {data} from "autoprefixer";
 
 const db = getFirestore(firebase_app)
 export async function appendFileDataToUser(userid, data: Map<string, string>) {
@@ -43,19 +44,17 @@ export async function getUserUploadedFilesData(userid: string) {
   return { result, error };
 }
 
-export async function getUserActiveAssistantId(userid: string) {
+export async function getUserActiveAssistantAndVectorIds(userid: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userid);
-  let result;
-  let error;
+  let savedAssistantId;
+  let savedVectorStoreId;
 
-  try {
-    result = await getDoc(docRef).then(data => data.get("assistantId"))
-  } catch (e) {
-    error = e;
-  }
+  const result = await getDoc(docRef)
+  savedAssistantId = result.get("assistantId")
+  savedVectorStoreId = result.get("vectorStoreId")
 
-  return { result, error };
+  return { savedAssistantId, savedVectorStoreId };
 }
 
 export async function getUserActiveThreadId(userid: string) {
@@ -64,11 +63,7 @@ export async function getUserActiveThreadId(userid: string) {
   let result;
   let error;
 
-  try {
-    result = await getDoc(docRef).then(data => data.get("threadId"))
-  } catch (e) {
-    error = e;
-  }
+  result = await getDoc(docRef).then(data => data.get("threadId"))
 
   return { result, error };
 }
@@ -88,14 +83,14 @@ export async function setUserAssistant(userid: string, assistantId: string) {
   return { result };
 }
 
-export async function saveUserActiveAssistant(userId: string, assistantId: string) {
+export async function saveUserActiveAssistant(userId: string, assistantId: string, vectoreStoreId: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userId);
   let result;
-  let error;
 
   result = await setDoc(docRef, {
-    assistantId: assistantId
+    assistantId: assistantId,
+    vectorStoreId: vectoreStoreId
   }, {
     merge: true,
   });
@@ -107,7 +102,6 @@ export async function saveUserActiveThread(userId: string, threadId: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userId);
   let result;
-  let error;
 
   result = await setDoc(docRef, {
     threadId: threadId

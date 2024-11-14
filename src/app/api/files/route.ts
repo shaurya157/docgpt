@@ -1,22 +1,18 @@
 import fs from 'fs';
 import {NextRequest, NextResponse} from "next/server";
 import {appendFileDataToUser} from "@/firebase/firestore-dao";
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-type Data = {
-  file_id?: string;
-  error?: string;
-};
+import OpenAI from "openai";
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get('file') as File;
   const userId = formData.get('user_id');
+  const vectorStoreId = formData.get('vector_store_id');
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  const openai = new OpenAI({
+    apiKey: apiKey || ""
+  });
 
   try {
     if (userId == null) {
@@ -29,24 +25,22 @@ export async function POST(req: NextRequest) {
     formData.append("purpose", "assistants")
 
     // OpenAI API file upload
-    const openAiResponse = await fetch('https://api.openai.com/v1/files', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: formData as unknown as BodyInit, // Type assertion to bypass TypeScript mismatch
-    });
+    // TODO: add polling here similar to /chat route where we check upload status
+    const fileUploadResponse = await openai.files.create({
+      file,
+      purpose: "assistants"
+    })
 
-    const openAiResult = await openAiResponse.json();
+    // TODO: add polling here similar to /chat route where we check upload status
+    // @ts-ignore
+    const batchResponse = await openai.beta.vectorStores.files.create(vectorStoreId, {
+      file_id: fileUploadResponse.id
+    })
 
-    if (!openAiResponse.ok) {
-      return NextResponse.json({ message: `FAILURE! Status: ${openAiResponse.status}. Error message: ${openAiResult.error.message}` })
-    }
-
-    console.log(`Saving ${openAiResult.id} to firebase`);
+    console.log(`Saving ${fileUploadResponse.id} to firebase`);
     // Firebase save of file ID
     const map = new Map<string, string>();
-    map.set('openAiFileId', openAiResult.id);
+    map.set('openAiFileId', fileUploadResponse.id);
     map.set('fileName', file.name);
 
     appendFileDataToUser(userId, map).then((response) => {
@@ -58,7 +52,7 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    return NextResponse.json({message: `SUCCESS! Status: ${openAiResult.status}. File ID: ${openAiResult.id}`})
+    return NextResponse.json({message: `SUCCESS! Updated Vector store with uploaded file and saved to DB`})
   } catch (uploadError) {
     return NextResponse.json({ message: `ERROR! Error: ${uploadError}.` })
   }

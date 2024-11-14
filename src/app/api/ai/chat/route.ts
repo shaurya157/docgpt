@@ -14,7 +14,6 @@ export async function POST(req: NextRequest) {
     model = 'gpt-4o-mini',
     assistantId,
     threadId,
-    fileIds,
     userId
   } = await req.json();
   console.log("System: ", system)
@@ -22,7 +21,6 @@ export async function POST(req: NextRequest) {
   console.log("threadId: ", threadId)
   console.log("assistantId: ", assistantId)
   console.log("userId: ", userId)
-  console.log("fileIds: ", fileIds)
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -33,7 +31,6 @@ export async function POST(req: NextRequest) {
     const messageData = {
       role: "user" as "user",
       content: convertToCoreMessages(messages)[0]["content"] as string,
-      // file_ids: fileIds <- deprecated
     };
 
     const createdMessage = await openai.beta.threads.messages.create(
@@ -83,6 +80,7 @@ export async function POST(req: NextRequest) {
 
         // Send the messages
         for (const message of responseMessages) {
+          console.log(message)
           sendMessage({
             id: message.id,
             role: "assistant",

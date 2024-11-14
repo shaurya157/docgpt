@@ -29,20 +29,33 @@ export async function POST(req: NextRequest) {
   });
 
   try {
+    // TODO: Need to add an expiration here. The API docs say default vector stores expire after 7 days but the dashboard says never
+    //https://platform.openai.com/docs/assistants/tools/file-search#managing-costs-with-expiration-policies
+    const vectorStore = await openai.beta.vectorStores.create({
+      name: `${userId} - Vector store`,
+      metadata: { userId }
+    })
+
     const assistant = await openai.beta.assistants.create({
       model,
       name: `${userId} - Assistant`,
       instructions: SYSTEM_COMMON_INSTRUCTIONS,
       tools: [
-        { "type": "file_search" }
+        { "type": "file_search" },
       ],
       metadata: {
         userId: userId,
+      },
+      tool_resources: {
+        "file_search": {
+          "vector_store_ids": [vectorStore.id]
+        }
       }
     })
 
     return NextResponse.json({
       assistantId: assistant.id,
+      vectorStoreId: vectorStore.id
     })
   } catch (e) {
     return NextResponse.json(

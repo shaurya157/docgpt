@@ -8,24 +8,28 @@ type UserDataContext = {
   setAssistantId:  React.Dispatch<React.SetStateAction<string>>;
   setThreadId:  React.Dispatch<React.SetStateAction<string>>;
   fileIds: Map<string, string>[] | null;
-  setFileIds: React.Dispatch<React.SetStateAction<Map<string, string>[]>>
+  setFileIds: React.Dispatch<React.SetStateAction<Map<string, string>[]>>,
+  vectorStoreId?: string | null;
+  setVectorStoreId: React.Dispatch<React.SetStateAction<string>>;
 }
 export const UserDataContext = createContext<UserDataContext | null>(null)
 
 interface UserDataProviderProps {
   openAiAssistantId?: string | null
+  openAiVectorStoreId?: string | null
   openAiThreadId?: string | null
   openAiFileIds: Map<string, string>[] | null
   children: React.ReactNode
 }
 
-export default function UserDataContextProvider({ children, openAiThreadId, openAiAssistantId, openAiFileIds }: UserDataProviderProps) {
+export default function UserDataContextProvider({ children, openAiThreadId, openAiAssistantId, openAiFileIds, openAiVectorStoreId }: UserDataProviderProps) {
   const [assistantId, setAssistantId] = useState(openAiAssistantId)
   const [threadId, setThreadId] = useState(openAiThreadId)
   const [fileIds, setFileIds] = useState(openAiFileIds)
+  const [vectorStoreId, setVectorStoreId] = useState(openAiVectorStoreId)
 
   return (
-    <UserDataContext.Provider value={{assistantId, setAssistantId, threadId, setThreadId, fileIds, setFileIds}}>
+    <UserDataContext.Provider value={{assistantId, setAssistantId, threadId, setThreadId, fileIds, setFileIds, vectorStoreId, setVectorStoreId}}>
       {children}
     </UserDataContext.Provider>
   )

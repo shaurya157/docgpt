@@ -17,7 +17,7 @@ import { Metadata, Viewport } from 'next';
 import { OpenAIProvider } from '@/components/openai/openai-context';
 import {auth} from "../../auth";
 import {
-  getUserActiveAssistantId,
+  getUserActiveAssistantAndVectorIds,
   getUserActiveThreadId,
   getUserUploadedFilesData,
   saveUserActiveAssistant, saveUserActiveThread
@@ -52,7 +52,8 @@ interface RootLayoutProps {
 
 
 async function createAssistantIfNotExist(session: Session) {
-  let assistantId;
+  let openAiAssistantId;
+  let openAiVectorStoreId;
   // TODO: this is very inelegant. We are making the call in the site header/page and then passing all the children the user uploaded files.
   // I've done this due to a lack of knowledge about how to make server side callbacks when a user signs in. This is also potentially running multiple times...
   // Ideally, when the user signs in, we should:
@@ -63,10 +64,11 @@ async function createAssistantIfNotExist(session: Session) {
   // The same is done on layout.tsx, once refactor make the same change there
   // Maybe we can use useEffect() here?
   try {
-    const fireBaseResult =  await getUserActiveAssistantId(session.user?.email!)
+    const { savedAssistantId, savedVectorStoreId } =  await getUserActiveAssistantAndVectorIds(session.user?.email!)
 
-    if (fireBaseResult.result != undefined) {
-      assistantId = fireBaseResult.result
+    if (savedAssistantId && savedVectorStoreId) {
+      openAiAssistantId = savedAssistantId
+      openAiVectorStoreId = savedVectorStoreId
     } else {
       let userId = session.user?.email!
       // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
@@ -76,16 +78,17 @@ async function createAssistantIfNotExist(session: Session) {
         body: JSON.stringify({ userId }),
       })
       const responseJson = await createAssistantResult.json()
-      assistantId = responseJson["assistantId"]
+      openAiAssistantId = responseJson["assistantId"]
+      openAiVectorStoreId = responseJson["vectorStoreId"]
 
       // TODO: Move this to the server, no need for this to happen here, potentially unsafe
-      await saveUserActiveAssistant(userId, assistantId)
+      await saveUserActiveAssistant(userId, openAiAssistantId, openAiVectorStoreId)
     }
   } catch (error) {
     console.error(error)
   }
 
-  return assistantId;
+  return {openAiAssistantId, openAiVectorStoreId};
 }
 
 async function createThreadIfNotExist(session: Session) {
@@ -129,6 +132,13 @@ async function getExistingUserUploadedFiles(session: Session) {
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   const session = await auth()
+  let openAiAssistantId, openAiVectorStoreId;
+  if (session?.user) {
+    const res = await createAssistantIfNotExist(session)
+    openAiAssistantId = res.openAiAssistantId
+    openAiVectorStoreId = res.openAiVectorStoreId
+  }
+
   return (
     <>
       <html lang="en" suppressHydrationWarning>
@@ -146,7 +156,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             <OpenAIProvider>
               <SessionProvider session={session}>
                 <UserDataContextProvider
-                  openAiAssistantId={session?.user ? await createAssistantIfNotExist(session) : null}
+                  openAiAssistantId={session?.user ? openAiAssistantId : null}
+                  openAiVectorStoreId={session?.user ? openAiVectorStoreId : null}
                   openAiThreadId={session?.user ? await createThreadIfNotExist(session) : null}
                   openAiFileIds={session?.user ? await getExistingUserUploadedFiles(session) : null}>
                   <div className="relative flex min-h-screen flex-col">
