@@ -100,7 +100,7 @@ async function createThreadIfNotExist(session: Session) {
       let userId = session.user?.email!
       // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
       // Find a better way
-      const createThreadResult = await fetch(process.env.NEXTAUTH_URL + '/api/ai/thread/create', {
+      const createThreadResult = await fetch(process.env.NEXTAUTH_URL + '/api/ai/thread', {
         method: 'POST',
         body: JSON.stringify({ userId }),
       })
