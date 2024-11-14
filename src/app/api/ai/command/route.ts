@@ -5,6 +5,7 @@ import {convertToCoreMessages, generateText, streamText} from 'ai';
 import type { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
+  console.log("HIT COMMAND ROUTE")
   const {
     messages,
     system,

@@ -33,6 +33,7 @@ export function FilesDropdownMenu({session, userFilesData}: FilesDropdownMenuPro
         const formData = new FormData();
         const userEmail = session?.user?.email
 
+      // TODO: Maybe we can use useEffect() here?
         if (userEmail != null || userEmail != undefined) {
             formData.append('file', data.file[0]);
             formData.append("user_id", userEmail!!);
@@ -40,7 +41,7 @@ export function FilesDropdownMenu({session, userFilesData}: FilesDropdownMenuPro
                 method: 'POST',
                 body: formData,
             }).then(response => response.json())
-                .then(responseJson => console.log(responseJson));
+                .then(responseJson => console.log(responseJson)); // TODO: need to use setState to set the userFileDatas
         } else {
             console.log("ERROR, user must be signed in to upload!")
         }

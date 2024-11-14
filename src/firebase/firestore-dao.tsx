@@ -27,7 +27,8 @@ export async function appendFileDataToUser(userid, data: Map<string, string>) {
   return { result, error };
 }
 
-export async function getAllUserData(userid: string) {
+// TODO: refactor below 3 methods into a single method which accepts different params
+export async function getUserUploadedFilesData(userid: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userid);
   let result;
@@ -35,6 +36,36 @@ export async function getAllUserData(userid: string) {
 
   try {
     result = await getDoc(docRef).then(data => data.get("files"))
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
+}
+
+export async function getUserActiveAssistantId(userid: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userid);
+  let result;
+  let error;
+
+  try {
+    result = await getDoc(docRef).then(data => data.get("assistantId"))
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
+}
+
+export async function getUserActiveThreadId(userid: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userid);
+  let result;
+  let error;
+
+  try {
+    result = await getDoc(docRef).then(data => data.get("threadId"))
   } catch (e) {
     error = e;
   }
@@ -57,7 +88,22 @@ export async function setUserAssistant(userid: string, assistantId: string) {
   return { result };
 }
 
-export async function setUserActiveThread(userId: string, threadId: string) {
+export async function saveUserActiveAssistant(userId: string, assistantId: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userId);
+  let result;
+  let error;
+
+  result = await setDoc(docRef, {
+    assistantId: assistantId
+  }, {
+    merge: true,
+  });
+
+  return { result };
+}
+
+export async function saveUserActiveThread(userId: string, threadId: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userId);
   let result;

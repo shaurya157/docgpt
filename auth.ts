@@ -28,7 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token?.accessToken) session.accessToken = token.accessToken
 
       return session
-    },
+    }
   },
   experimental: { enableWebAuthn: true },
 })

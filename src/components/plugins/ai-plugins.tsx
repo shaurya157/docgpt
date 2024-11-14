@@ -128,7 +128,7 @@ export const createAIEditor = () => {
   return editor;
 };
 
-const systemCommon = `\
+export const SYSTEM_COMMON_INSTRUCTIONS = `\
 You are an advanced AI-powered note-taking assistant, designed to enhance productivity and creativity in note management.
 Respond directly to user prompts with clear, concise, and relevant content. Maintain a neutral, helpful tone.
 
@@ -143,7 +143,7 @@ Rules:
 `;
 
 const systemDefault = `\
-${systemCommon}
+${SYSTEM_COMMON_INSTRUCTIONS}
 - <Block> is the current block of text the user is working on.
 - Ensure your output can seamlessly fit into the existing <Block> structure.
 <!-- - CRITICAL: Provide only a single block of text. DO NOT create multiple paragraphs or separate blocks.-->
@@ -154,7 +154,7 @@ ${systemCommon}
 `;
 
 const systemSelecting = `\
-${systemCommon}
+${SYSTEM_COMMON_INSTRUCTIONS}
 - <Block> is the block of text containing the user's selection, providing context.
 - Ensure your output can seamlessly fit into the existing <Block> structure.
 - <Selection> is the specific text the user has selected in the block and wants to modify or ask about.
@@ -168,7 +168,7 @@ ${systemCommon}
 `;
 
 const systemBlockSelecting = `\
-${systemCommon}
+${SYSTEM_COMMON_INSTRUCTIONS}
 - <Selection> represents the full blocks of text the user has selected and wants to modify or ask about.
 - Your response should be a direct replacement for the entire <Selection>.
 - Maintain the overall structure and formatting of the selected blocks, unless explicitly instructed otherwise.

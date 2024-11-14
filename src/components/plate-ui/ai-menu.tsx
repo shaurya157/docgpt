@@ -39,44 +39,44 @@ export function AIMenu() {
   const [value, setValue] = React.useState('');
   const { data: session } = useSession()
 
-  const chat = useAssistant({
-    api: "/api/ai/assistant",
-    body: {
-      apiKey: useOpenAI().apiKey,
-      model: useOpenAI().model.value,
-      userId: session?.user?.email,
-    },
-    onError(error: Error): void {
-      toast.error(`Something went wrong while creating/using the assistant. Error: ${error.message}`);
-    },
-  })
-
-  const { input, status, threadId, messages, setInput } = chat
-
-  let isLoading = status == 'in_progress';
-
-  // print out all of the above
-  console.log("isLoading", isLoading);
-  console.log("messages", messages)
-
-  // const chat = useChat({
-  //   id: 'editor',
-  //   api: '/api/ai/command',
+  // const chat = useAssistant({
+  //   api: "/api/ai/assistant/create",
   //   body: {
   //     apiKey: useOpenAI().apiKey,
   //     model: useOpenAI().model.value,
+  //     userId: session?.user?.email,
   //   },
-  //   onError: (error) => {
-  //     if (error.message.includes('API key')) {
-  //       toast.error('OpenAI API key required');
-  //     } else {
-  //       toast.error('Invalid OpenAI API key');
-  //     }
-  //     api.aiChat.hide();
+  //   onError(error: Error): void {
+  //     toast.error(`Something went wrong while creating/using the assistant. Error: ${error.message}`);
   //   },
-  // });
+  // })
+  //
+  // const { input, status, threadId, messages, setInput } = chat
+  //
+  // let isLoading = status == 'in_progress';
+  //
+  // // print out all of the above
+  // console.log("isLoading", isLoading);
+  // console.log("messages", messages)
 
-  // const { input, isLoading, messages, setInput } = chat;
+  const chat = useChat({
+    id: 'editor',
+    api: '/api/ai/command',
+    body: {
+      apiKey: useOpenAI().apiKey,
+      model: useOpenAI().model.value,
+    },
+    onError: (error) => {
+      if (error.message.includes('API key')) {
+        toast.error('OpenAI API key required');
+      } else {
+        toast.error('Invalid OpenAI API key');
+      }
+      api.aiChat.hide();
+    },
+  });
+
+  const { input, isLoading, messages, setInput } = chat;
 
   const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(
     null
@@ -181,7 +181,7 @@ export function AIMenu() {
                   void api.aiChat.submit();
                 }
               }}
-              onValueChange={input}
+              onValueChange={setInput}
               placeholder="Ask docgpt anything..."
               autoFocus
             />
