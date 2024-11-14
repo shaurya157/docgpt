@@ -15,7 +15,7 @@ export const UserDataContext = createContext<UserDataContext | null>(null)
 interface UserDataProviderProps {
   openAiAssistantId?: string | null
   openAiThreadId?: string | null
-  openAiFileIds?: Map<string, string>[] | null
+  openAiFileIds: Map<string, string>[] | null
   children: React.ReactNode
 }
 
