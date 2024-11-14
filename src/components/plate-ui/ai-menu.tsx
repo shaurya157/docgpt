@@ -29,6 +29,7 @@ import { Popover, PopoverAnchor, PopoverContent } from './popover';
 import type { TElement, TNodeEntry } from '@udecode/plate-common';
 import type { PlateEditor } from '@udecode/plate-common/react';
 import {useSession} from "next-auth/react";
+import {useUserDataContext} from "@/providers/UserDataContextProvider";
 
 export function AIMenu() {
   const { api, editor, useOption } = useEditorPlugin(AIChatPlugin);
@@ -38,6 +39,7 @@ export function AIMenu() {
   const aiEditorRef = React.useRef<PlateEditor | null>(null);
   const [value, setValue] = React.useState('');
   const { data: session } = useSession()
+  const { assistantId, threadId } = useUserDataContext()
 
   // const chat = useAssistant({
   //   api: "/api/ai/assistant/create",
@@ -61,16 +63,19 @@ export function AIMenu() {
 
   const chat = useChat({
     id: 'editor',
-    api: '/api/ai/command',
+    api: `/api/ai/chat`,
     body: {
       apiKey: useOpenAI().apiKey,
       model: useOpenAI().model.value,
+      userId: session?.user?.email,
+      assistantId,
+      threadId
     },
     onError: (error) => {
       if (error.message.includes('API key')) {
-        toast.error('OpenAI API key required');
+        toast.error(error.message);
       } else {
-        toast.error('Invalid OpenAI API key');
+        toast.error(error.message);
       }
       api.aiChat.hide();
     },
