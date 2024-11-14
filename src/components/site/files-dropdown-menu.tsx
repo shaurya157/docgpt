@@ -13,15 +13,13 @@ import {
 import {useForm, SubmitHandler} from 'react-hook-form';
 import {UploadedFiles} from "@/components/site/uploaded-files";
 import {Session} from "next-auth";
+import {useSession} from "next-auth/react";
+import {useUserDataContext} from "@/providers/UserDataContextProvider";
 
-interface FilesDropdownMenuProps {
-    session?: Session | null,
-    userFilesData: Array<Map<string, string>>
-}
-
-export function FilesDropdownMenu({session, userFilesData}: FilesDropdownMenuProps) {
+export function FilesDropdownMenu() {
     const openState = useOpenState();
-
+    const {data: session} = useSession()
+    const { fileIds } = useUserDataContext()
     const {
         register,
         handleSubmit,
@@ -59,7 +57,7 @@ export function FilesDropdownMenu({session, userFilesData}: FilesDropdownMenuPro
                 className="flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto"
                 align="start"
             >
-                <UploadedFiles session={session} userFilesData={userFilesData}/>
+                <UploadedFiles session={session} userFilesData={fileIds ? fileIds : []}/>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <input type="file" {...register("file")} multiple={true}/>
                     <button>Submit</button>

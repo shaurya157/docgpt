@@ -42,24 +42,22 @@ export function AIMenu() {
   const { assistantId, threadId } = useUserDataContext()
 
   // const chat = useAssistant({
-  //   api: "/api/ai/assistant/create",
+  //   api: "/api/ai/chat",
   //   body: {
   //     apiKey: useOpenAI().apiKey,
   //     model: useOpenAI().model.value,
   //     userId: session?.user?.email,
+  //     assistantId,
+  //     threadId,
   //   },
   //   onError(error: Error): void {
   //     toast.error(`Something went wrong while creating/using the assistant. Error: ${error.message}`);
   //   },
   // })
   //
-  // const { input, status, threadId, messages, setInput } = chat
-  //
+  // const { input, status, messages, setInput } = chat
+
   // let isLoading = status == 'in_progress';
-  //
-  // // print out all of the above
-  // console.log("isLoading", isLoading);
-  // console.log("messages", messages)
 
   const chat = useChat({
     id: 'editor',
@@ -69,7 +67,7 @@ export function AIMenu() {
       model: useOpenAI().model.value,
       userId: session?.user?.email,
       assistantId,
-      threadId
+      threadId,
     },
     onError: (error) => {
       if (error.message.includes('API key')) {

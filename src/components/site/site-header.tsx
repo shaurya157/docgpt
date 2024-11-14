@@ -7,10 +7,9 @@ import {Session} from "next-auth";
 
 interface SiteHeaderProps {
   session: Session | null;
-  userFilesData: Array<Map<string, string>>;
 }
 
-export async function SiteHeader({session, userFilesData}: SiteHeaderProps) {
+export async function SiteHeader({session}: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
@@ -18,7 +17,7 @@ export async function SiteHeader({session, userFilesData}: SiteHeaderProps) {
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-1">
             <UserButton session={session} />
-            <FilesDropdownMenu session={session} userFilesData={userFilesData}/>
+            { session?.user ? <FilesDropdownMenu /> : <div></div>}
             <ThemeToggle />
           </nav>
         </div>

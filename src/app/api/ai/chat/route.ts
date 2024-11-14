@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     model = 'gpt-4o-mini',
     assistantId,
     threadId,
-    openAiFileIds,
+    fileIds,
     userId
   } = await req.json();
   console.log("System: ", system)
@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
   console.log("threadId: ", threadId)
   console.log("assistantId: ", assistantId)
   console.log("userId: ", userId)
+  console.log("fileIds: ", fileIds)
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -29,70 +30,71 @@ export async function POST(req: NextRequest) {
   });
 
   try {
-    // const messageData = {
-    //   role: "user" as "user",
-    //   content: convertToCoreMessages(messages)[0]["content"] as string,
-    //   // file_ids: openAiFileIds
-    // };
-    //
-    // const createdMessage = await openai.beta.threads.messages.create(
-    //   threadId,
-    //   messageData
-    // );
-    //
-    // console.log(messageData)
-    //
-    // return AssistantResponse(
-    //   { threadId, messageId: createdMessage.id },
-    //   async ({ sendMessage }) => {
-    //     // Run the assistant on the thread
-    //     const run = await openai.beta.threads.runs.create(threadId, {
-    //       assistant_id: assistantId
-    //     });
-    //
-    //     async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {
-    //       // Poll for status change
-    //       while (run.status === "queued" || run.status === "in_progress") {
-    //         // delay for 500ms
-    //         await new Promise((resolve) => setTimeout(resolve, 500));
-    //
-    //         run = await openai.beta.threads.runs.retrieve(threadId, run.id);
-    //       }
-    //
-    //       // Check the run status
-    //       if (
-    //         run.status === "cancelled" ||
-    //         run.status === "cancelling" ||
-    //         run.status === "failed" ||
-    //         run.status === "expired"
-    //       ) {
-    //         throw new Error(run.status);
-    //       }
-    //     }
-    //
-    //     await waitForRun(run);
-    //
-    //     // Get new thread messages (after our message)
-    //     const responseMessages = (
-    //       await openai.beta.threads.messages.list(threadId, {
-    //         after: createdMessage.id,
-    //         order: "asc"
-    //       })
-    //     ).data;
-    //
-    //     // Send the messages
-    //     for (const message of responseMessages) {
-    //       sendMessage({
-    //         id: message.id,
-    //         role: "assistant",
-    //         content: message.content.filter(
-    //           (content) => content.type === "text"
-    //         ) as Array<any>
-    //       });
-    //     }
-    //   }
-    // );
+    const messageData = {
+      role: "user" as "user",
+      content: convertToCoreMessages(messages)[0]["content"] as string,
+      // file_ids: fileIds <- deprecated
+    };
+
+    const createdMessage = await openai.beta.threads.messages.create(
+      threadId,
+      messageData
+    );
+
+    console.log(messageData)
+
+    return AssistantResponse(
+      { threadId, messageId: createdMessage.id },
+      async ({ sendMessage }) => {
+        // Run the assistant on the thread
+        const run = await openai.beta.threads.runs.create(threadId, {
+          assistant_id: assistantId
+        });
+
+        async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {
+          // Poll for status change
+          while (run.status === "queued" || run.status === "in_progress") {
+            // delay for 500ms
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            run = await openai.beta.threads.runs.retrieve(threadId, run.id);
+          }
+
+          // Check the run status
+          if (
+            run.status === "cancelled" ||
+            run.status === "cancelling" ||
+            run.status === "failed" ||
+            run.status === "expired"
+          ) {
+            throw new Error(run.status);
+          }
+        }
+
+        await waitForRun(run);
+
+        // Get new thread messages (after our message)
+        const responseMessages = (
+          await openai.beta.threads.messages.list(threadId, {
+            after: createdMessage.id,
+            order: "asc"
+          })
+        ).data;
+
+        // Send the messages
+        for (const message of responseMessages) {
+          sendMessage({
+            id: message.id,
+            role: "assistant",
+            content: message.content.filter(
+              (content) => content.type === "text"
+            ) as Array<any>
+          });
+        }
+      }
+    );
   } catch (e) {
+    console.log("An error has occured while running the thread: ", e.message);
     return NextResponse.json(
       { error: 'Failed to process AI request' },
       { status: 500 }
