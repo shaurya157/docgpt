@@ -41,8 +41,27 @@ export function AIMenu() {
   const { data: session } = useSession()
   const { assistantId, threadId } = useUserDataContext()
 
-  // const chat = useAssistant({
-  //   api: "/api/ai/chat",
+  const chat = useAssistant({
+    api: "/api/ai/chat",
+    body: {
+      apiKey: useOpenAI().apiKey,
+      model: useOpenAI().model.value,
+      userId: session?.user?.email,
+      assistantId,
+    },
+    threadId: threadId!,
+    onError(error: Error): void {
+      toast.error(`Something went wrong while creating/using the assistant. Error: ${error.message}`);
+    },
+  })
+
+  const { input, status, messages, setInput } = chat
+
+  let isLoading = status == 'in_progress';
+
+  // const chat = useChat({
+  //   id: 'editor',
+  //   api: `/api/ai/command`,
   //   body: {
   //     apiKey: useOpenAI().apiKey,
   //     model: useOpenAI().model.value,
@@ -50,36 +69,23 @@ export function AIMenu() {
   //     assistantId,
   //     threadId,
   //   },
-  //   onError(error: Error): void {
-  //     toast.error(`Something went wrong while creating/using the assistant. Error: ${error.message}`);
+  //   onError: (error) => {
+  //     if (error.message.includes('API key')) {
+  //       toast.error(error.message);
+  //     } else {
+  //       toast.error(error.message);
+  //     }
+  //     api.aiChat.hide();
   //   },
-  // })
+  //   onResponse: (response) => {
+  //     console.log("OnResponse:", response);
+  //   },
+  //   onFinish: (finish) => {
+  //     console.log("OnFinish:", finish)
+  //   }
+  // });
   //
-  // const { input, status, messages, setInput } = chat
-
-  // let isLoading = status == 'in_progress';
-
-  const chat = useChat({
-    id: 'editor',
-    api: `/api/ai/chat`,
-    body: {
-      apiKey: useOpenAI().apiKey,
-      model: useOpenAI().model.value,
-      userId: session?.user?.email,
-      assistantId,
-      threadId,
-    },
-    onError: (error) => {
-      if (error.message.includes('API key')) {
-        toast.error(error.message);
-      } else {
-        toast.error(error.message);
-      }
-      api.aiChat.hide();
-    },
-  });
-
-  const { input, isLoading, messages, setInput } = chat;
+  // const { input, isLoading, messages, setInput } = chat;
 
   const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(
     null

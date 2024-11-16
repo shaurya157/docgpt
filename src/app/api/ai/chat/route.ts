@@ -8,19 +8,12 @@ export async function POST(req: NextRequest) {
   console.log("HIT THE RUN ENDPOINT")
 
   let {
-    messages,
+    message,
     system,
     apiKey: key,
-    model = 'gpt-4o-mini',
     assistantId,
     threadId,
-    userId
   } = await req.json();
-  console.log("System: ", system)
-  console.log("messages: ", messages)
-  console.log("threadId: ", threadId)
-  console.log("assistantId: ", assistantId)
-  console.log("userId: ", userId)
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -28,28 +21,33 @@ export async function POST(req: NextRequest) {
   });
 
   try {
+    console.log("Trying to make message data")
     const messageData = {
       role: "user" as "user",
-      content: convertToCoreMessages(messages)[0]["content"] as string,
+      content: system + message as string,
     };
 
+    console.log("messageData", messageData)
     const createdMessage = await openai.beta.threads.messages.create(
       threadId,
       messageData
     );
 
-    console.log(messageData)
+    console.log("createdMessageStatus", createdMessage.status)
 
     return AssistantResponse(
       { threadId, messageId: createdMessage.id },
       async ({ sendMessage }) => {
         // Run the assistant on the thread
+        console.log("In async")
         const run = await openai.beta.threads.runs.create(threadId, {
           assistant_id: assistantId
         });
 
+        console.log('Run complete')
         async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {
           // Poll for status change
+          console.log("Waiting for run")
           while (run.status === "queued" || run.status === "in_progress") {
             // delay for 500ms
             await new Promise((resolve) => setTimeout(resolve, 500));
@@ -64,11 +62,14 @@ export async function POST(req: NextRequest) {
             run.status === "failed" ||
             run.status === "expired"
           ) {
+            console.log("Error polling")
             throw new Error(run.status);
           }
         }
 
+        console.log("Trying to run")
         await waitForRun(run);
+        console.log("run complete")
 
         // Get new thread messages (after our message)
         const responseMessages = (
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
           })
         ).data;
 
+        console.log("list thread complete. Here's the message:")
         // Send the messages
         for (const message of responseMessages) {
           console.log(message)
