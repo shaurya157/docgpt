@@ -105,6 +105,7 @@ export function AIMenu() {
   };
 
   useEditorChat({
+    // @ts-ignore
     chat,
     onOpenBlockSelection: (blocks: TNodeEntry[]) => {
       show(toDOMNode(editor, blocks.at(-1)![0])!);
