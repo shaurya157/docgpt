@@ -9,18 +9,10 @@ export async function POST(req: NextRequest) {
 
   let {
     message,
-    system,
     apiKey: key,
-    model = 'gpt-4o-mini',
     assistantId,
     threadId,
-    userId
   } = await req.json();
-  console.log("System: ", system)
-  console.log("messages: ", message)
-  console.log("threadId: ", threadId)
-  console.log("assistantId: ", assistantId)
-  console.log("userId: ", userId)
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -37,8 +29,6 @@ export async function POST(req: NextRequest) {
       threadId,
       messageData
     );
-
-    console.log(messageData)
 
     return AssistantResponse(
       { threadId, messageId: createdMessage.id },
@@ -94,7 +84,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.log("An error has occured while running the thread: ", e.message);
     return NextResponse.json(
-      { error: 'Failed to process AI request' },
+      { error: `Failed to process AI request, ${e.message}` },
       { status: 500 }
     );
   }

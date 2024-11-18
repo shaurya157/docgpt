@@ -1,8 +1,10 @@
-import { getBlockAbove } from '@udecode/plate-common';
+import {getBlockAbove, TText} from '@udecode/plate-common';
 import { useEditorPlugin } from '@udecode/plate-common/react';
 import { deserializeInlineMd } from '@udecode/plate-markdown';
 import {AIChatPluginConfig, AIPluginConfig, useChatChunk} from "@udecode/plate-ai/react";
 import {withAIBatch} from "@udecode/plate-ai";
+import {Transforms} from "slate";
+import {HEADING_KEYS} from "@udecode/plate-heading";
 
 export const useCustomAIChatHooks = () => {
   const { editor, tf } = useEditorPlugin<AIPluginConfig>({ key: 'ai' });
@@ -11,24 +13,50 @@ export const useCustomAIChatHooks = () => {
 
   useChatChunk({
     onChunk: ({ isFirst, nodes }) => {
-      // console.log("PROCESSING AI CHAT CHUNK. MORE INFO:")
-      // console.log("isFirst", isFirst);
-      // console.log("mode", mode);
       if (mode === 'insert' && nodes.length > 0) {
         withAIBatch(
           editor,
           () => {
-            // TODO: when we want to eventually move to comments, to remove ai previews, comment out below
-            tf.ai.insertNodes(nodes);
+            // TODO: Feels hacky
+            let nodesText = nodes[0].text
+            let splitText = nodesText.split("\n\n")
+
+            splitText.forEach((text) => {
+              let type: string;
+              if (text.startsWith("###### ")) {
+                type = HEADING_KEYS.h6
+              } else if (text.startsWith("###### ")) {
+                type = HEADING_KEYS.h5
+              } else if (text.startsWith("#### ")) {
+                type = HEADING_KEYS.h4
+              } else if (text.startsWith("### ")) {
+                type = HEADING_KEYS.h3
+              } else if (text.startsWith("## ")) {
+                type = HEADING_KEYS.h2
+              } else if (text.startsWith("# ")) {
+                type = HEADING_KEYS.h1
+              } else {
+                type = "paragraph"
+              }
+
+              Transforms.insertNodes(
+                editor,
+                // @ts-ignore
+                { type, children: [{ text: text + "\n\n" }] }
+              )
+            })
+            //
+            // tf.ai.insertNodes(nodes);
+            console.log("Editor children: ", editor.children)
           },
           { split: isFirst }
         );
       }
     },
     onFinish: ({ content }) => {
-      // console.log("FINISHED PROCESSING AI STUFF. More info:")
-      // console.log("Content: ", content);
-      // console.log("Mode: ", mode);
+      console.log("FINISHED PROCESSING AI STUFF. More info:")
+      console.log("Content: ", content);
+      console.log("Mode: ", mode);
       if (mode !== 'insert') return;
 
       const blockAbove = getBlockAbove(editor);

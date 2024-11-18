@@ -179,8 +179,7 @@ const systemBlockSelecting = `\
 `;
 
 const userDefault = `<Reminder>
-CRITICAL: DO NOT use block formatting. You can only use inline formatting.
-CRITICAL: DO NOT start new lines or paragraphs.
+CRITICAL: DO NOT use block formatting. You can only use html text formatting.
 NEVER write <Block>.
 </Reminder>
 {prompt}`;
