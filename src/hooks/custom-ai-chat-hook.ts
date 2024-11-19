@@ -1,6 +1,6 @@
 import {getBlockAbove, TText} from '@udecode/plate-common';
 import { useEditorPlugin } from '@udecode/plate-common/react';
-import { deserializeInlineMd } from '@udecode/plate-markdown';
+import {deserializeInlineMd, deserializeMd} from '@udecode/plate-markdown';
 import {AIChatPluginConfig, AIPluginConfig, useChatChunk} from "@udecode/plate-ai/react";
 import {withAIBatch} from "@udecode/plate-ai";
 import {Transforms} from "slate";
@@ -19,44 +19,20 @@ export const useCustomAIChatHooks = () => {
           () => {
             // TODO: Feels hacky
             let nodesText = nodes[0].text
-            let splitText = nodesText.split("\n\n")
+            let doubleNewLineSplit = nodesText.split("\n\n")
 
-            splitText.forEach((text) => {
-              let tempText = text;
-              let type: string;
-              if (text.startsWith("###### ")) {
-                type = HEADING_KEYS.h6
-                tempText = text.replace(/^(###### )/, "")
-              } else if (text.startsWith("###### ")) {
-                type = HEADING_KEYS.h5
-                tempText = text.replace(/^(##### )/, "")
-              } else if (text.startsWith("#### ")) {
-                type = HEADING_KEYS.h4
-                tempText = text.replace(/^(#### )/, "")
-              } else if (text.startsWith("### ")) {
-                type = HEADING_KEYS.h3
-                tempText = text.replace(/^(### )/, "")
-              } else if (text.startsWith("## ")) {
-                type = HEADING_KEYS.h2
-                tempText = text.replace(/^(## )/, "")
-              } else if (text.startsWith("# ")) {
-                type = HEADING_KEYS.h1
-                tempText = text.replace(/^(# )/, "")
-              } else {
-                type = "paragraph"
-              }
-
+            doubleNewLineSplit.forEach((text) => {
+              let tempText = deserializeMd(editor, text);
               Transforms.insertNodes(
                 editor,
                 // @ts-ignore
-                { type, children: [{ text: text + "\n" }] }
+                tempText
               )
             })
             //
-            // tf.ai.insertNodes(nodes);
-            console.log("Editor children: ", editor.children)
+            tf.ai.insertNodes(nodes);
           },
-          { split: isFirst }
+          // { split: isFirst }
         );
       }
     },

@@ -21,7 +21,6 @@ export const AIChatEditor = memo(
 
     const aiEditor = React.useMemo(() => {
       const editor = getOptions().createAIEditor();
-
       const fragment = deserializeMd(editor, content);
       editor.children =
         fragment.length > 0 ? fragment : editor.api.create.value();
