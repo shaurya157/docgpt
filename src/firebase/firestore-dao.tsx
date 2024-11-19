@@ -86,18 +86,24 @@ export async function getUserDocument(userid: string) {
 export async function saveCurrentDocumentState(userId: string, document: any) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userId);
-  let result;
+  let result, error;
 
-  const value = {
-    "document": document
+  console.log(document)
+  try {
+    const value = {
+      "document": document
+    }
+    result = await setDoc(
+      docRef,
+      value,
+      { merge: true }
+    );
+  } catch (e) {
+    error = e
   }
-  result = await setDoc(
-    docRef,
-    value,
-    { merge: true }
-  );
 
-  return { result };
+
+  return { result, error };
 }
 export async function saveUserActiveAssistant(userId: string, assistantId: string, vectoreStoreId: string) {
   let usersRef = collection(db, "users")

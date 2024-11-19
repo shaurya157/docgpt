@@ -60,7 +60,7 @@ import { KbdPlugin } from '@udecode/plate-kbd/react';
 import { ColumnItemPlugin, ColumnPlugin } from '@udecode/plate-layout/react';
 import { LineHeightPlugin } from '@udecode/plate-line-height/react';
 import { LinkPlugin } from '@udecode/plate-link/react';
-import { TodoListPlugin } from '@udecode/plate-list/react';
+import {ListPlugin, TodoListPlugin} from '@udecode/plate-list/react';
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { ImagePlugin, MediaEmbedPlugin } from '@udecode/plate-media/react';
 import {
@@ -201,8 +201,9 @@ export const useMyEditor = () => {
         {text: ' or use '},
         {text: '/', kbd: true},
         {text: ' to open the AI menu.'},
+
       ],
-    },
+    }
   ];
 
   return usePlateEditor({

@@ -18,12 +18,17 @@ export const useCustomAIChatHooks = () => {
           editor,
           () => {
             let nodesText = nodes[0].text
-            let doubleNewLineSplit = nodesText.split("\n\n")
-
-            doubleNewLineSplit.forEach((text) => {
-              let tempText = deserializeMd(editor, text);
-              tf.ai.insertNodes(tempText)
-            })
+            tf.ai.insertNodes(deserializeMd(editor, nodesText))
+            // let doubleNewLineSplitArr = nodesText.split("\n\n")
+            //
+            // doubleNewLineSplitArr.forEach((doubleLineSplitText) => {
+            //   console.log("doubleLineSplitText", doubleLineSplitText)
+            //   let singleNewLineSplit = doubleLineSplitText.split("\n")
+            //   singleNewLineSplit.forEach((singleNewLineSplitText) => {
+            //     console.log("singleNewLineSplitText", singleNewLineSplitText)
+            //     tf.ai.insertNodes(deserializeMd(editor, singleNewLineSplitText))
+            //   })
+            // })
           },
           // { split: isFirst }
         );
