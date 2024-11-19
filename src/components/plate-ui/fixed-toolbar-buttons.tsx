@@ -37,9 +37,12 @@ import { TableDropdownMenu } from './table-dropdown-menu';
 import { ToggleToolbarButton } from './toggle-toolbar-button';
 import { ToolbarGroup } from './toolbar';
 import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
+import {SaveButton} from "@/components/site/save-button";
+import {useSession} from "next-auth/react";
 
 export function FixedToolbarButtons() {
   const readOnly = useEditorReadOnly();
+  const {data: session} = useSession();
 
   return (
     <div className="w-full">
@@ -53,6 +56,9 @@ export function FixedToolbarButtons() {
         {!readOnly && (
           <>
             <ToolbarGroup>
+              <ToolbarGroup>
+                { session?.user ? <SaveButton /> : <div></div>}
+              </ToolbarGroup>
               <ToolbarGroup>
                 <AIToolbarButton
                   className="text-purple-500 hover:text-purple-600"

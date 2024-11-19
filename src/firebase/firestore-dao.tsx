@@ -28,7 +28,7 @@ export async function appendFileDataToUser(userId: string, data: Map<string, str
   return { result, error };
 }
 
-// TODO: refactor below 3 methods into a single method which accepts different params
+// TODO: refactor below 4 methods into a single method which accepts different params
 export async function getUserUploadedFilesData(userid: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userid);
@@ -68,6 +68,37 @@ export async function getUserActiveThreadId(userid: string) {
   return { result, error };
 }
 
+export async function getUserDocument(userid: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userid);
+  let result;
+  let error;
+
+  try {
+    result = await getDoc(docRef).then(data => data.get("document"))
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
+}
+
+export async function saveCurrentDocumentState(userId: string, document: any) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userId);
+  let result;
+
+  const value = {
+    "document": document
+  }
+  result = await setDoc(
+    docRef,
+    value,
+    { merge: true }
+  );
+
+  return { result };
+}
 export async function saveUserActiveAssistant(userId: string, assistantId: string, vectoreStoreId: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userId);

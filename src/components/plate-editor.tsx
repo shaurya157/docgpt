@@ -142,10 +142,11 @@ import { TocElement } from './plate-ui/toc-element';
 import { ToggleElement } from './plate-ui/toggle-element';
 import { aiPlugins } from './plugins/ai-plugins';
 import { copilotPlugins } from './plugins/copilot-plugins';
+import {useSession} from "next-auth/react";
+import {useUserDataContext} from "@/providers/UserDataContextProvider";
 
 export default function PlateEditor() {
   const containerRef = useRef(null);
-
   const editor = useMyEditor();
 
   return (
@@ -182,7 +183,10 @@ export default function PlateEditor() {
 }
 
 export const useMyEditor = () => {
-  const editorValues = [
+  const {userDocument} =  useUserDataContext();
+
+  console.log(userDocument);
+  const editorValues = userDocument ?  userDocument : [
     {
       id: '1',
       type: 'h1',

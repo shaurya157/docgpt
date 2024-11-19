@@ -4,6 +4,7 @@ import { ThemeToggle } from '@/components/site/theme-toggle';
 import {FilesDropdownMenu} from "@/components/site/files-dropdown-menu";
 import UserButton from "@/components/site/user-button";
 import {Session} from "next-auth";
+import {SaveButton} from "@/components/site/save-button";
 
 interface SiteHeaderProps {
   session: Session | null;
