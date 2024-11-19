@@ -15,6 +15,7 @@ import {UploadedFiles} from "@/components/site/uploaded-files";
 import {Session} from "next-auth";
 import {useSession} from "next-auth/react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
+import {appendFileDataToUser} from "@/firebase/firestore-dao";
 
 export function FilesDropdownMenu() {
     const openState = useOpenState();
@@ -33,15 +34,24 @@ export function FilesDropdownMenu() {
 
       // TODO: Maybe we can use useEffect() here?
         if (userEmail != null || userEmail != undefined) {
-            formData.append('file', data.file[0]);
-            formData.append("user_id", userEmail!!);
-            // @ts-ignore
-            formData.append("vector_store_id", vectorStoreId);
-            await fetch('/api/files', {
-                method: 'POST',
-                body: formData,
-            }).then(response => response.json())
-                .then(responseJson => console.log(responseJson)); // TODO: need to use setState to set the userFileDatas
+          formData.append('file', data.file[0]);
+          formData.append("user_id", userEmail!!);
+
+          // @ts-ignore
+          formData.append("vector_store_id", vectorStoreId);
+          let response = await fetch('/api/ai/files', {
+              method: 'POST',
+              body: formData,
+          })
+
+          let responseJson = await response.json()
+          console.log(`Saving ${responseJson.openAiFileId} to firebase`);
+          // Firebase save of file ID
+          const map = new Map<string, string>();
+          map.set('openAiFileId', responseJson.openAiFileId);
+          map.set('fileName', data.file[0]["name"]);
+
+          appendFileDataToUser(userEmail, map)
         } else {
             console.log("ERROR, user must be signed in to upload!")
         }

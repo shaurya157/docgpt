@@ -1,27 +1,29 @@
 import { FieldValue, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion, collection } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
-import {data} from "autoprefixer";
 
 const db = getFirestore(firebase_app)
-export async function appendFileDataToUser(userid, data: Map<string, string>) {
+export async function appendFileDataToUser(userId: string, data: Map<string, string>) {
   let result;
   let error;
 
-  const userRef = collection(db, "users")
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userId)
+
   const value = {
     "files": arrayUnion({
       "fileName": data.get("fileName"),
       "openAiFileId": data.get("openAiFileId")
     })
   }
-
   try {
     result = await setDoc(
-      doc(userRef, userid),
+      docRef,
       value,
       { merge: true }
     );
+    console.log("SUCCESS", result)
   } catch (e) {
+    console.log("ERROR", e)
     error = e;
   }
 
@@ -68,32 +70,19 @@ export async function getUserActiveThreadId(userid: string) {
   return { result, error };
 }
 
-export async function setUserAssistant(userid: string, assistantId: string) {
-  let usersRef = collection(db, "users")
-  let docRef = doc(usersRef, userid);
-  let result;
-
-  console.log(`Starting save to firestore for ${userid} with ${assistantId} `);
-  result = await setDoc(docRef, {
-    assistantId: assistantId
-  }, {
-    merge: true,
-  });
-
-  return { result };
-}
-
 export async function saveUserActiveAssistant(userId: string, assistantId: string, vectoreStoreId: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userId);
   let result;
 
-  result = await setDoc(docRef, {
-    assistantId: assistantId,
-    vectorStoreId: vectoreStoreId
-  }, {
-    merge: true,
-  });
+  result = await setDoc(
+    docRef,
+    {
+      assistantId: assistantId,
+      vectorStoreId: vectoreStoreId
+    },
+    { merge: true,}
+  );
 
   return { result };
 }

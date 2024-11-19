@@ -37,22 +37,9 @@ export async function POST(req: NextRequest) {
       file_id: fileUploadResponse.id
     })
 
-    console.log(`Saving ${fileUploadResponse.id} to firebase`);
-    // Firebase save of file ID
-    const map = new Map<string, string>();
-    map.set('openAiFileId', fileUploadResponse.id);
-    map.set('fileName', file.name);
-
-    appendFileDataToUser(userId, map).then((response) => {
-      if (response.error) {
-        console.log("Firebase response fail: ", response);
-        throw response.error;
-      } else {
-        console.log("Firebase response success: ", response);
-      }
+    return NextResponse.json({
+      openAiFileId: fileUploadResponse.id
     })
-
-    return NextResponse.json({message: `SUCCESS! Updated Vector store with uploaded file and saved to DB`})
   } catch (uploadError) {
     return NextResponse.json({ message: `ERROR! Error: ${uploadError}.` })
   }

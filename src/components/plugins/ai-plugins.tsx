@@ -47,7 +47,7 @@ import { HrElement } from '../plate-ui/hr-element';
 import { LinkElement } from '../plate-ui/link-element';
 import { LinkFloatingToolbar } from '../plate-ui/link-floating-toolbar';
 import { ParagraphElement } from '../plate-ui/paragraph-element';
-import {useCustomAIChatHooks} from "@/components/custom/customAIChatHooks";
+import {useCustomAIChatHooks} from "@/hooks/custom-ai-chat-hook";
 
 export const createAIEditor = () => {
   const editor = createPlateEditor({
