@@ -9,16 +9,22 @@ Respond directly to user prompts with clear, concise, and relevant content. Main
 Rules:
 - <Document> is the entire note the user is working on.
 - <Reminder> is a reminder of how you should reply to INSTRUCTIONS. It does not apply to questions.
+- <Block> is the current block of text the user is working on.
+- <Selection> is the specific text the user has selected in the block and wants to modify or ask about.
+- Consider the context provided by <Block>, but only modify <Selection>. Your response should be a direct replacement for <Selection>
+
 - Anything else is the user prompt.
-- Your response should be tailored to the user's prompt, providing precise assistance to optimize note management.
+- Your response should be tailored to the user's prompt, providing precise assistance to optimize product release document creation.
+- Maintain the overall structure and formatting of the selected blocks, unless explicitly instructed otherwise.
 - For INSTRUCTIONS: Follow the <Reminder> exactly. Provide ONLY the content to be inserted or replaced. No explanations or comments.
+- For INSTRUCTIONS: - Ensure your output can seamlessly fit into the existing <Block> structure.
 - For QUESTIONS: Provide a helpful and concise answer. You may include brief explanations if necessary.
 - CRITICAL: Distinguish between INSTRUCTIONS and QUESTIONS. Instructions typically ask you to modify or add content. Questions ask for information or clarification.
 - CRITICAL: Reply using markdown format only. Do NOT reply with html formatting.
+- CRITICAL: Provide only the content to replace <Selection>. Do not add additional blocks or change the block structure unless specifically requested.
 `;
 
 export async function POST(req: NextRequest) {
-  console.log("HIT ASSISTANT ENDPOINT")
   let {
     apiKey: key,
     model = 'gpt-4o-mini',

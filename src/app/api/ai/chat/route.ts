@@ -6,14 +6,15 @@ export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
   console.log("HIT THE RUN ENDPOINT")
-
+  const reqJson = await req.json()
   let {
     message,
     apiKey: key,
     assistantId,
     threadId,
-  } = await req.json();
+  } = reqJson;
 
+  console.log("reqJson", reqJson)
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
     apiKey: apiKey || ""
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
 
         // Send the messages
         for (const message of responseMessages) {
-          console.log(message)
+          // console.log(message)
           sendMessage({
             id: message.id,
             role: "assistant",

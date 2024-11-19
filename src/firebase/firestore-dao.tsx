@@ -88,7 +88,6 @@ export async function saveCurrentDocumentState(userId: string, document: any) {
   let docRef = doc(usersRef, userId);
   let result, error;
 
-  console.log(document)
   try {
     const value = {
       "document": document
