@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps } from "firebase/app";
 
+// Using client side firebase for now, TODO: move to server side when we move off firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBz0wkB78GBRu2ZPBUM5vSMI763jKZXDFY",
   authDomain: "docgpt-4d80b.firebaseapp.com",

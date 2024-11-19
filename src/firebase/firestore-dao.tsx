@@ -21,9 +21,7 @@ export async function appendFileDataToUser(userId: string, data: Map<string, str
       value,
       { merge: true }
     );
-    console.log("SUCCESS", result)
   } catch (e) {
-    console.log("ERROR", e)
     error = e;
   }
 

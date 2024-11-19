@@ -22,19 +22,26 @@ export const useCustomAIChatHooks = () => {
             let splitText = nodesText.split("\n\n")
 
             splitText.forEach((text) => {
+              let tempText = text;
               let type: string;
               if (text.startsWith("###### ")) {
                 type = HEADING_KEYS.h6
+                tempText = text.replace(/^(###### )/, "")
               } else if (text.startsWith("###### ")) {
                 type = HEADING_KEYS.h5
+                tempText = text.replace(/^(##### )/, "")
               } else if (text.startsWith("#### ")) {
                 type = HEADING_KEYS.h4
+                tempText = text.replace(/^(#### )/, "")
               } else if (text.startsWith("### ")) {
                 type = HEADING_KEYS.h3
+                tempText = text.replace(/^(### )/, "")
               } else if (text.startsWith("## ")) {
                 type = HEADING_KEYS.h2
+                tempText = text.replace(/^(## )/, "")
               } else if (text.startsWith("# ")) {
                 type = HEADING_KEYS.h1
+                tempText = text.replace(/^(# )/, "")
               } else {
                 type = "paragraph"
               }
@@ -42,7 +49,7 @@ export const useCustomAIChatHooks = () => {
               Transforms.insertNodes(
                 editor,
                 // @ts-ignore
-                { type, children: [{ text: text + "\n\n" }] }
+                { type, children: [{ text: text + "\n" }] }
               )
             })
             //

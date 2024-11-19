@@ -3,6 +3,7 @@ import {NextRequest, NextResponse} from "next/server";
 
 const SYSTEM_COMMON_INSTRUCTIONS: string = `\
 You are an advanced AI-powered document editor/collaborator, designed to enhance productivity and accuracy in document creation specializing in product release documents.
+You are connected to a vector store for enhanced responses.
 Respond directly to user prompts with clear, concise, and relevant content. Maintain a neutral, helpful tone.
 
 Rules:
