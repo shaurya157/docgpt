@@ -16,11 +16,14 @@ import {Session} from "next-auth";
 import {useSession} from "next-auth/react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
 import {appendFileDataToUser} from "@/firebase/firestore-dao";
+import {Button} from "@/components/plate-ui/button";
+import {Input} from "@/components/plate-ui/input";
+import {toast} from "sonner";
 
 export function FilesDropdownMenu() {
     const openState = useOpenState();
     const {data: session} = useSession()
-    const { fileIds, vectorStoreId } = useUserDataContext()
+    const { files, vectorStoreId } = useUserDataContext()
     const {
         register,
         handleSubmit,
@@ -39,21 +42,24 @@ export function FilesDropdownMenu() {
 
           // @ts-ignore
           formData.append("vector_store_id", vectorStoreId);
-          let response = await fetch('/api/ai/files', {
+          try {
+            let response = await fetch('/api/ai/files', {
               method: 'POST',
               body: formData,
-          })
+            })
 
-          let responseJson = await response.json()
-          console.log(`Saving ${responseJson.openAiFileId} to firebase`);
-          // Firebase save of file ID
-          const map = new Map<string, string>();
-          map.set('openAiFileId', responseJson.openAiFileId);
-          map.set('fileName', data.file[0]["name"]);
+            let responseJson = await response.json()
+            console.log(`Saving ${responseJson.openAiFileId} to firebase`);
+            // Firebase save of file ID
+            const map = new Map<string, string>();
+            map.set('openAiFileId', responseJson.openAiFileId);
+            map.set('fileName', data.file[0]["name"]);
 
-          appendFileDataToUser(userEmail, map)
-        } else {
-            console.log("ERROR, user must be signed in to upload!")
+            await appendFileDataToUser(userEmail, map)
+            toast.success("Success uploading file!")
+          } catch (e) {
+            toast.error("Something went wrong while uploading. Please refresh the page and try again.")
+          }
         }
 
         reset()
@@ -69,10 +75,10 @@ export function FilesDropdownMenu() {
                 className="flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto"
                 align="start"
             >
-                <UploadedFiles session={session} userFilesData={fileIds ? fileIds : []}/>
+                <UploadedFiles session={session} userFilesData={files ? files : []}/>
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <input type="file" {...register("file")} multiple={true}/>
-                    <button>Submit</button>
+                    <Input type="file" {...register("file")} multiple={true}/>
+                    <Button>Submit</Button>
                 </form>
             </DropdownMenuContent>
         </DropdownMenu>

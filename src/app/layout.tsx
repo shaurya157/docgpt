@@ -165,7 +165,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   openAiVectorStoreId={session?.user ? openAiVectorStoreId : null}
                   openAiThreadId={session?.user ? await createThreadIfNotExist(session) : null}
                   userDocument={session?.user ? await getPreviousUserDocument(session) : null}
-                  openAiFileIds={session?.user ? await getExistingUserUploadedFiles(session) : null}>
+                  filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}>
                   <div className="relative flex min-h-screen flex-col">
                     <SiteHeader session={session}/>
                     <div className="flex-1">{children}</div>

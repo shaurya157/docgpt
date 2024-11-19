@@ -7,8 +7,8 @@ type UserDataContext = {
     threadId?: string | null;
     setAssistantId: React.Dispatch<React.SetStateAction<string>>;
     setThreadId: React.Dispatch<React.SetStateAction<string>>;
-    fileIds: Map<string, string>[] | null;
-    setFileIds: React.Dispatch<React.SetStateAction<Map<string, string>[]>>,
+    files: Map<string, string>[] | null;
+    setFiles: React.Dispatch<React.SetStateAction<Map<string, string>[]>>,
     vectorStoreId?: string | null;
     setVectorStoreId: React.Dispatch<React.SetStateAction<string>>;
     userDocument?: any | null;
@@ -19,7 +19,7 @@ interface UserDataProviderProps {
     openAiAssistantId?: string | null,
     openAiVectorStoreId?: string | null,
     openAiThreadId?: string | null,
-    openAiFileIds: Map<string, string>[] | null,
+    filesData: Map<string, string>[] | null,
     children: React.ReactNode,
     userDocument?: any | null
 }
@@ -28,13 +28,13 @@ export default function UserDataContextProvider({
                                                     children,
                                                     openAiThreadId,
                                                     openAiAssistantId,
-                                                    openAiFileIds,
+                                                    filesData,
                                                     openAiVectorStoreId,
                                                     userDocument
                                                 }: UserDataProviderProps) {
     const [assistantId, setAssistantId] = useState(openAiAssistantId)
     const [threadId, setThreadId] = useState(openAiThreadId)
-    const [fileIds, setFileIds] = useState(openAiFileIds)
+    const [files, setFiles] = useState(filesData)
     const [vectorStoreId, setVectorStoreId] = useState(openAiVectorStoreId)
 
     return (
@@ -43,8 +43,8 @@ export default function UserDataContextProvider({
             setAssistantId,
             threadId,
             setThreadId,
-            fileIds,
-            setFileIds,
+            files,
+            setFiles,
             vectorStoreId,
             setVectorStoreId,
             userDocument
