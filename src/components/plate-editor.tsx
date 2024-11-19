@@ -184,8 +184,6 @@ export default function PlateEditor() {
 
 export const useMyEditor = () => {
   const {userDocument} =  useUserDataContext();
-
-  console.log(userDocument);
   const editorValues = userDocument ?  userDocument : [
     {
       id: '1',
