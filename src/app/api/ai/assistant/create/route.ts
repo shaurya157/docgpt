@@ -22,6 +22,7 @@ Rules:
 - CRITICAL: Distinguish between INSTRUCTIONS and QUESTIONS. Instructions typically ask you to modify or add content. Questions ask for information or clarification.
 - CRITICAL: Reply using markdown format only. Do NOT reply with html formatting.
 - CRITICAL: Provide only the content to replace <Selection>. Do not add additional blocks or change the block structure unless specifically requested.
+- CRITICAL: ALWAYS prioritize using context from files uploaded in the vector store.
 `;
 
 export async function POST(req: NextRequest) {
