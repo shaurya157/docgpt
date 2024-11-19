@@ -17,7 +17,6 @@ export const useCustomAIChatHooks = () => {
         withAIBatch(
           editor,
           () => {
-            // TODO: Feels hacky
             let nodesText = nodes[0].text
             let doubleNewLineSplit = nodesText.split("\n\n")
 
@@ -25,12 +24,10 @@ export const useCustomAIChatHooks = () => {
               let tempText = deserializeMd(editor, text);
               Transforms.insertNodes(
                 editor,
-                // @ts-ignore
                 tempText
               )
             })
-            //
-            tf.ai.insertNodes(nodes);
+            // tf.ai.insertNodes(nodes);
           },
           // { split: isFirst }
         );
