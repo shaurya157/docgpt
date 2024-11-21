@@ -1,4 +1,3 @@
-import {auth} from "../../../auth";
 import {SignIn, SignOut} from "@/components/site/auth";
 import {
     DropdownMenu,

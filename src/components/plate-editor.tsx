@@ -185,23 +185,23 @@ export default function PlateEditor() {
 export const useMyEditor = () => {
   const {userDocument} =  useUserDataContext();
   const editorValues = userDocument ?  userDocument : [
-    {
-      id: '1',
-      type: 'h1',
-      children: [{text: 'DocGPT'}],
-    },
-    {
-      id: '2',
-      type: ParagraphPlugin.key,
-      children: [
-        {text: 'A rich-text editor with AI capabilities. Try the '},
-        {text: 'AI commands', bold: true},
-        {text: ' or use '},
-        {text: '/', kbd: true},
-        {text: ' to open the AI menu.'},
-
-      ],
-    }
+    // {
+    //   id: '1',
+    //   type: 'p',
+    //   children: [{text: 'Write a list of facts about dogs. I want 3 facts only. Each fact should have a nested list explanaining more. Each nested explanation should have another nested list adding more context'}],
+    // },
+    // {
+    //   id: '2',
+    //   type: ParagraphPlugin.key,
+    //   children: [
+    //     {text: 'A rich-text editor with AI capabilities. Try the '},
+    //     {text: 'AI commands', bold: true},
+    //     {text: ' or use '},
+    //     {text: '/', kbd: true},
+    //     {text: ' to open the AI menu.'},
+    //
+    //   ],
+    // }
   ];
 
   return usePlateEditor({

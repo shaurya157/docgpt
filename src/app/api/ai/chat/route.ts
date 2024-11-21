@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 
         // Send the messages
         for (const message of responseMessages) {
-          // console.log(message)
+          console.log(message)
           sendMessage({
             id: message.id,
             role: "assistant",

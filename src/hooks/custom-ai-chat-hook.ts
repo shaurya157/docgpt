@@ -1,5 +1,5 @@
-import {getBlockAbove, TText} from '@udecode/plate-common';
-import { useEditorPlugin } from '@udecode/plate-common/react';
+import {getBlockAbove, TDescendant, TText} from '@udecode/plate-common';
+import {PlateEditor, useEditorPlugin} from '@udecode/plate-common/react';
 import {deserializeInlineMd, deserializeMd} from '@udecode/plate-markdown';
 import {AIChatPluginConfig, AIPluginConfig, useChatChunk} from "@udecode/plate-ai/react";
 import {withAIBatch} from "@udecode/plate-ai";
@@ -18,20 +18,31 @@ export const useCustomAIChatHooks = () => {
           editor,
           () => {
             let nodesText = nodes[0].text
-            tf.ai.insertNodes(deserializeMd(editor, nodesText))
-            // let doubleNewLineSplitArr = nodesText.split("\n\n")
-            //
-            // doubleNewLineSplitArr.forEach((doubleLineSplitText) => {
-            //   console.log("doubleLineSplitText", doubleLineSplitText)
-            //   let singleNewLineSplit = doubleLineSplitText.split("\n")
-            //   singleNewLineSplit.forEach((singleNewLineSplitText) => {
-            //     console.log("singleNewLineSplitText", singleNewLineSplitText)
-            //     tf.ai.insertNodes(deserializeMd(editor, singleNewLineSplitText))
-            //   })
-            // })
+            console.log("nodesText", nodesText)
+
+            let doubleNewLineSplitArr = nodesText.split("\n\n")
+
+            doubleNewLineSplitArr.forEach((doubleLineSplitText) => {
+              let singleNewLineSplit = doubleLineSplitText.split("\n")
+
+              singleNewLineSplit.forEach((singleNewLineSplitText) => {
+                const listStyleType = classifyStart(singleNewLineSplitText)
+                if (listStyleType) {
+                  const deserializedList = deserializeListMd(singleNewLineSplitText, editor, listStyleType)
+                  console.log(deserializedList)
+
+                  tf.ai.insertNodes(deserializedList)
+                } else {
+                  tf.ai.insertNodes(deserializeMd(editor, singleNewLineSplitText))
+                }
+
+              })
+            })
           },
           // { split: isFirst }
         );
+
+        console.log("Editor nodes: ", editor.children)
       }
     },
     onFinish: ({ content }) => {
@@ -60,3 +71,36 @@ export const useCustomAIChatHooks = () => {
     },
   });
 };
+
+function classifyStart(input: string): "disc" | "decimal" | null {
+  // Regex to match '- ' or a digit followed by '.'
+  const regex = /^\s*(-\s|\d+\.)/;
+
+  const match = input.match(regex);
+  if (!match) {
+    return null;
+  }
+
+  // Check the matched group
+  if (match[1].startsWith("-")) {
+    return "disc";
+  } else if (/\d+\./.test(match[1])) {
+    return "decimal";
+  }
+
+  return null;
+}
+
+function deserializeListMd(input: string, editor: PlateEditor, listStyleType: string) {
+  const match = input.match(/^\s*/);
+  const indent = match ? (match[0].length % 2) + 1  : 1;
+  const deserialized = deserializeInlineMd(editor, input.trim())
+
+  return [{
+    type: "p",
+    id: Math.floor(Math.random() * 1000).toString(),
+    listStyleType,
+    indent: indent,
+    children: deserialized
+  }] as TDescendant[]
+}

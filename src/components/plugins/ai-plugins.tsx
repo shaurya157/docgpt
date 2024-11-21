@@ -104,7 +104,7 @@ export const createAIEditor = () => {
       LinkPlugin.configure({
         render: { afterEditable: () => <LinkFloatingToolbar /> },
       }),
-      MarkdownPlugin.configure({ options: { indentList: true } }),
+      MarkdownPlugin.configure({ options: { indentList: false } }),
       // FIXME: Fixed the throw error: BlockSelectionPlugin is missing. readonly editor need'nt this plugin so using an empty plugin instead
       BlockSelectionPlugin.configure({
         api: {},

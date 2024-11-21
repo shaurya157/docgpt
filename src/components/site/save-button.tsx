@@ -8,33 +8,13 @@ import {useSession} from "next-auth/react";
 import {toast} from "sonner";
 import {TEditor} from "@udecode/plate-common";
 
-// function desctructureDocument(editor: TEditor) {
-//   const result = [];
-//   editor.children.forEach((child) => {
-//     let tempObj = {
-//       id: "",
-//       type: "",
-//       children: []
-//     }
-//     tempObj.id = child.id as string
-//     tempObj.type = child.type as string
-//     child.children.forEach(subChild => {
-//       tempObj.children.push(subChild)
-//     })
-//     result.push(tempObj)
-//   })
-//
-//   return result
-// }
-
 export function SaveButton() {
   const editor = useMyEditorRef();
   const {data: session} = useSession();
 
   const handleSave = async (event) => {
     event.preventDefault();
-    // const destructuredDoc = desctructureDocument(editor)
-    // console.log("destructuredDoc", destructuredDoc)
+    console.log("Editor children: ", editor.children)
     const res = await saveCurrentDocumentState(session!.user!.email!, editor.children)
     if (res.error) {
       toast.error(res.error.message);
