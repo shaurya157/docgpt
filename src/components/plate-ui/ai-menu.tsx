@@ -30,6 +30,7 @@ import type { TElement, TNodeEntry } from '@udecode/plate-common';
 import type { PlateEditor } from '@udecode/plate-common/react';
 import {useSession} from "next-auth/react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
+import {useUserSettings} from "@/providers/UserSettingsProvider";
 
 export function AIMenu() {
   const { api, editor, useOption } = useEditorPlugin(AIChatPlugin);
@@ -40,6 +41,7 @@ export function AIMenu() {
   const [value, setValue] = React.useState('');
   const { data: session } = useSession()
   const { assistantId, threadId } = useUserDataContext()
+  const { template } = useUserSettings()
 
   const chat = useAssistant({
     api: "/api/ai/chat",
@@ -48,6 +50,7 @@ export function AIMenu() {
       model: useOpenAI().model.value,
       userId: session?.user?.email,
       assistantId,
+      template: isSelecting ? "" : template
     },
     threadId: threadId!,
     onError(error: Error): void {

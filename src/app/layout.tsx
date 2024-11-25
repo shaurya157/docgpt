@@ -25,6 +25,7 @@ import {
 import {Session} from "next-auth";
 import UserDataContextProvider from "@/providers/UserDataContextProvider";
 import {SessionProvider} from "next-auth/react";
+import UserSettingsProvider from "@/providers/UserSettingsProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -166,10 +167,12 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   openAiThreadId={session?.user ? await createThreadIfNotExist(session) : null}
                   userDocument={session?.user ? await getPreviousUserDocument(session) : null}
                   filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}>
-                  <div className="relative flex min-h-screen flex-col">
-                    <SiteHeader session={session}/>
-                    <div className="flex-1">{children}</div>
-                  </div>
+                  <UserSettingsProvider>
+                    <div className="relative flex min-h-screen flex-col">
+                      <SiteHeader session={session}/>
+                      <div className="flex-1">{children}</div>
+                    </div>
+                  </UserSettingsProvider>
                 </UserDataContextProvider>
               </SessionProvider>
             </OpenAIProvider>

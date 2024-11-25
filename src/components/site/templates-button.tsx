@@ -6,9 +6,6 @@ import {
   DropdownMenuTrigger,
   useOpenState
 } from "@/components/plate-ui/dropdown-menu";
-import {UploadIcon} from "@radix-ui/react-icons";
-import {UploadedFiles} from "@/components/site/uploaded-files";
-import {Input} from "@/components/plate-ui/input";
 import * as React from "react";
 import {TemplateItems} from "@/components/site/template-items";
 

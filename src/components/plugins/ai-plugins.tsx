@@ -182,7 +182,8 @@ export const createAIEditor = () => {
 
 const userDefault = `\
 <Reminder>
-- CRITICAL: DO NOT use block formatting. You can only use markdown formatting.
+- CRITICAL: If a template is provided, adhere strictly to the template.
+- CRITICAL: DO NOT use block formatting. You can only use Markdown formatting.
 - NEVER write <Block>.
 </Reminder>
 {prompt}`;

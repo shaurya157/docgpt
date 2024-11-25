@@ -12,9 +12,8 @@ export async function POST(req: NextRequest) {
     apiKey: key,
     assistantId,
     threadId,
+    template
   } = reqJson;
-
-  console.log("reqJson", reqJson)
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
     apiKey: apiKey || ""
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
   try {
     const messageData = {
       role: "user" as "user",
-      content: message as string,
+      content: template + message as string,
     };
 
     const createdMessage = await openai.beta.threads.messages.create(
@@ -31,6 +30,7 @@ export async function POST(req: NextRequest) {
       messageData
     );
 
+    console.log("Created Message: ", createdMessage);
     return AssistantResponse(
       { threadId, messageId: createdMessage.id },
       async ({ sendMessage }) => {

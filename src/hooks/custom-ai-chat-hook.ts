@@ -18,7 +18,6 @@ export const useCustomAIChatHooks = () => {
           editor,
           () => {
             let nodesText = nodes[0].text
-            console.log("nodesText", nodesText)
 
             let doubleNewLineSplitArr = nodesText.split("\n\n")
 
@@ -29,8 +28,6 @@ export const useCustomAIChatHooks = () => {
                 const listStyleType = classifyStart(singleNewLineSplitText)
                 if (listStyleType) {
                   const deserializedList = deserializeListMd(singleNewLineSplitText, editor, listStyleType)
-                  console.log(deserializedList)
-
                   tf.ai.insertNodes(deserializedList)
                 } else {
                   tf.ai.insertNodes(deserializeMd(editor, singleNewLineSplitText))
@@ -41,11 +38,12 @@ export const useCustomAIChatHooks = () => {
           },
           // { split: isFirst }
         );
-
-        console.log("Editor nodes: ", editor.children)
       }
     },
     onFinish: ({ content }) => {
+      // This hook is run via the streamText api by vercel, currently it does nothing. Streaming is only supported via chat and not via assistants.
+      // Vercel also doesn't support streaming.
+
       console.log("FINISHED PROCESSING AI STUFF. More info:")
       console.log("Content: ", content);
       console.log("Mode: ", mode);
