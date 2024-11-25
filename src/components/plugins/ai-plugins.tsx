@@ -182,7 +182,8 @@ export const createAIEditor = () => {
 
 const userDefault = `\
 <Reminder>
-- CRITICAL: If a template is provided, adhere strictly to the template.
+- CRITICAL: If a <Template> is provided, adhere strictly to the template.
+- CRITICAL: if a <SectionInstruction> is provided, use the section instruction while generating content for the section. DO NOT use the same section instruction for other sections.
 - CRITICAL: DO NOT use block formatting. You can only use Markdown formatting.
 - NEVER write <Block>.
 </Reminder>

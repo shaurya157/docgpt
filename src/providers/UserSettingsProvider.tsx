@@ -3,13 +3,13 @@
 import React, {createContext, useContext, useState} from "react";
 
 type UserSettings = {
-  template?: string | null;
-  setTemplate?: React.Dispatch<React.SetStateAction<string>>
+  template?: Map<string, string> | null;
+  setTemplate?: React.Dispatch<React.SetStateAction<Map<string, string>>>
 }
 export const UserSettings = createContext<UserSettings | null>(null)
 
 interface UserSettingsProviderProps {
-  userTemplate?: string | null;
+  userTemplate?: Map<string, string> | null;
   children: React.ReactNode,
 }
 

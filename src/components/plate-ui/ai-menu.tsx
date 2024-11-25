@@ -43,6 +43,7 @@ export function AIMenu() {
   const { assistantId, threadId } = useUserDataContext()
   const { template } = useUserSettings()
 
+  console.log(template)
   const chat = useAssistant({
     api: "/api/ai/chat",
     body: {
@@ -50,7 +51,7 @@ export function AIMenu() {
       model: useOpenAI().model.value,
       userId: session?.user?.email,
       assistantId,
-      template: isSelecting ? "" : template
+      template: isSelecting ? "" : (template == undefined || false) ? "" : template["template"]
     },
     threadId: threadId!,
     onError(error: Error): void {
