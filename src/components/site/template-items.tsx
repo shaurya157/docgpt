@@ -8,13 +8,18 @@ const templates = [
     template: `\
     <Template>
    # Title
-   ## Overview
-   <SectionInstruction>A brief overview of the idea. A minimum of 5 lines should be written</SectionInstruction>
-   ## User stories
-   <SectionInstruction>Write a minimum of 5 user stories</SectionInstruction>
-   <SectionInstruction>Write a small paragraph at the end summarizing the user stories</SectionInstruction>
-   ## Launch plan
-   ## Conclusion
+   ## Metadata
+   <SectionInstruction>Should be a list of points. One point for author, one point for prct url, one for project summary, one for date started </SectionInstruction>
+   ## PROBLEM DEFINITION
+   ### Objectives
+   ### Context, Problems, Opportunities
+   ### Hypothesis & Risks
+   ## PRODUCT DEFINITION
+   ### Requirements
+   ### Designs
+   ### Data Requirements
+   ### Support Requirements
+   ### Other Product Teams Impacted
    </Template>
   `
   },

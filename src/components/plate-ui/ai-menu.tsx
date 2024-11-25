@@ -43,7 +43,6 @@ export function AIMenu() {
   const { assistantId, threadId } = useUserDataContext()
   const { template } = useUserSettings()
 
-  console.log(template)
   const chat = useAssistant({
     api: "/api/ai/chat",
     body: {
