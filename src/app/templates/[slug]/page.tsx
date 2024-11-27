@@ -20,15 +20,18 @@ async function getProvidedTemplates(slug: string) {
 }
 
 async function getUserOwnedTemplates(session: Session, slug: string) {
-  const userTemplates = (await getUserTemplates(session!.user!.email!)).result as Map<string, string | Map<string, string>[]>[]
-  let result: any = null
-  userTemplates.forEach(userTemplate => {
+  const userTemplates = await getUserTemplates(session!.user!.email!)
+  if (!userTemplates.result) {
+    return null
+  }
+
+  let res
+  (userTemplates.result as Map<string, string | Map<string, string>[]>[]).forEach(userTemplate => {
     if (userTemplate["templateName"] == slug) {
-      result = userTemplate
+      res = userTemplate
     }
   })
-
-  return result;
+  return res;
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
