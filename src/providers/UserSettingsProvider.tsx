@@ -3,23 +3,22 @@
 import React, {createContext, useContext, useState} from "react";
 
 type UserSettings = {
-  template?: Map<string, string> | null;
-  setTemplate?: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  activeTemplate?: Map<string, string | any> | null;
+  setActiveTemplate?: React.Dispatch<React.SetStateAction<Map<string, string>>>
 }
 export const UserSettings = createContext<UserSettings | null>(null)
 
 interface UserSettingsProviderProps {
-  userTemplate?: Map<string, string> | null;
+  userTemplate?: any | null;
   children: React.ReactNode,
 }
 
 export default function UserSettingsProvider({ children, userTemplate }: UserSettingsProviderProps) {
-  const [template, setTemplate] = useState(userTemplate)
-
+  const [activeTemplate, setActiveTemplate] = useState(userTemplate)
   return (
     <UserSettings.Provider value={{
-      template,
-      setTemplate
+      activeTemplate,
+      setActiveTemplate
     }}>
       {children}
     </UserSettings.Provider>

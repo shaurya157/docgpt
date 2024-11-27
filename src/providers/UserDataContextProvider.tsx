@@ -12,6 +12,7 @@ type UserDataContext = {
     vectorStoreId?: string | null;
     setVectorStoreId: React.Dispatch<React.SetStateAction<string>>;
     userDocument?: any | null;
+    userTemplates?: Map<string, string | any>[] | null;
 }
 export const UserDataContext = createContext<UserDataContext | null>(null)
 
@@ -21,7 +22,8 @@ interface UserDataProviderProps {
     openAiThreadId?: string | null,
     filesData: Map<string, string>[] | null,
     children: React.ReactNode,
-    userDocument?: any | null
+    userDocument?: any | null,
+    userDefinedTemplates?: Map<string, string | any>[] | null,
 }
 
 export default function UserDataContextProvider({
@@ -30,12 +32,14 @@ export default function UserDataContextProvider({
                                                     openAiAssistantId,
                                                     filesData,
                                                     openAiVectorStoreId,
-                                                    userDocument
+                                                    userDocument,
+                                                    userDefinedTemplates
                                                 }: UserDataProviderProps) {
     const [assistantId, setAssistantId] = useState(openAiAssistantId)
     const [threadId, setThreadId] = useState(openAiThreadId)
     const [files, setFiles] = useState(filesData)
     const [vectorStoreId, setVectorStoreId] = useState(openAiVectorStoreId)
+    const [userTemplates] = useState(userDefinedTemplates)
 
     return (
         <UserDataContext.Provider value={{
@@ -47,7 +51,8 @@ export default function UserDataContextProvider({
             setFiles,
             vectorStoreId,
             setVectorStoreId,
-            userDocument
+            userDocument,
+            userTemplates
         }}>
             {children}
         </UserDataContext.Provider>

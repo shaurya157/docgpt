@@ -18,7 +18,7 @@ import { OpenAIProvider } from '@/components/openai/openai-context';
 import {auth} from "../../auth";
 import {
   getUserActiveAssistantAndVectorIds,
-  getUserActiveThreadId, getUserDocument,
+  getUserActiveThreadId, getUserDocument, getUserTemplates,
   getUserUploadedFilesData,
   saveUserActiveAssistant, saveUserActiveThread
 } from "@/firebase/firestore-dao";
@@ -136,6 +136,11 @@ async function getPreviousUserDocument(session: Session) {
   return userDocResult.result
 }
 
+async function getUserDefinedTemplates(session: Session) {
+  const userTemplates = await getUserTemplates(session.user?.email!)
+  return userTemplates.result
+}
+
 export default async function RootLayout({ children }: RootLayoutProps) {
   const session = await auth()
   let openAiAssistantId, openAiVectorStoreId;
@@ -166,7 +171,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   openAiVectorStoreId={session?.user ? openAiVectorStoreId : null}
                   openAiThreadId={session?.user ? await createThreadIfNotExist(session) : null}
                   userDocument={session?.user ? await getPreviousUserDocument(session) : null}
-                  filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}>
+                  filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}
+                  userDefinedTemplates={session?.user ? await getUserDefinedTemplates(session) : null}>
                   <UserSettingsProvider>
                     <div className="relative flex min-h-screen flex-col">
                       <SiteHeader session={session}/>

@@ -31,7 +31,28 @@ import type { PlateEditor } from '@udecode/plate-common/react';
 import {useSession} from "next-auth/react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
 import {useUserSettings} from "@/providers/UserSettingsProvider";
+import {serializeMd} from "@udecode/plate-markdown";
 
+// TODO: this will NOT work for ordered and unordered lists
+const serializeToMarkdown = (template: any) => {
+  const templ = template["template"] as Map<string, string | Map<string, string>[]>
+  let result = "<Template>\n"
+
+  templ.forEach((item) => {
+    let headerSigns = ""
+    const itemType = item["type"] as string
+    if (itemType.includes("h") ) {
+      for (let i = Number(itemType[1]); i--;) {
+        headerSigns += "#"
+      }
+      result += headerSigns + item["children"][0]["text"] + "\n"
+    } else {
+      result += item["children"][0]["text"] + "\n"
+    }
+  })
+
+  return result += "</Template>";
+}
 export function AIMenu() {
   const { api, editor, useOption } = useEditorPlugin(AIChatPlugin);
   const open = useOption('open');
@@ -41,7 +62,7 @@ export function AIMenu() {
   const [value, setValue] = React.useState('');
   const { data: session } = useSession()
   const { assistantId, threadId } = useUserDataContext()
-  const { template } = useUserSettings()
+  const { activeTemplate } = useUserSettings()
 
   const chat = useAssistant({
     api: "/api/ai/chat",
@@ -50,7 +71,7 @@ export function AIMenu() {
       model: useOpenAI().model.value,
       userId: session?.user?.email,
       assistantId,
-      template: isSelecting ? "" : (template == undefined || false) ? "" : template["template"]
+      template: isSelecting ? "" : (activeTemplate == undefined || false) ? "" : serializeToMarkdown(activeTemplate)
     },
     threadId: threadId!,
     onError(error: Error): void {

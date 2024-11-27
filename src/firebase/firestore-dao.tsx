@@ -104,6 +104,31 @@ export async function saveCurrentDocumentState(userId: string, document: any) {
 
   return { result, error };
 }
+
+export async function saveUserTemplate(userId: string, templateName: string, template: any) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userId);
+  let result, error;
+
+  try {
+    const value = {
+      "templates": arrayUnion({
+        "templateName": templateName,
+        template
+      })
+    }
+    result = await setDoc(
+      docRef,
+      value,
+      { merge: true }
+    );
+  } catch (e) {
+    error = e
+  }
+
+  return { result, error };
+}
+
 export async function saveUserActiveAssistant(userId: string, assistantId: string, vectoreStoreId: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userId);
@@ -133,4 +158,34 @@ export async function saveUserActiveThread(userId: string, threadId: string) {
   });
 
   return { result };
+}
+
+export async function getDocgptOwnedTemplates(userId: string) {
+  let usersRef = collection(db, "templates")
+  let docRef = doc(usersRef, userId);
+  let result;
+  let error;
+
+  try {
+    result = await getDoc(docRef).then(data => data.get("templates"))
+  } catch (e) {
+    error = e
+  }
+
+  return { result, error };
+}
+
+export async function getUserTemplates(userId: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userId);
+  let result;
+  let error;
+
+  try {
+    result = await getDoc(docRef).then(data => data.get("templates"))
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
 }
