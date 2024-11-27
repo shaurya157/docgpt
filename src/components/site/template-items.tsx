@@ -65,7 +65,8 @@ export function TemplateItems() {
           </div>
         })
       }
-      <Button onClick={handleSelect(defaultTemplate)}>Reset to default</Button>
+      <Button>
+        <Link href={`/templates/create`} target="_blank">Create New Template</Link></Button>
     </div>
   )
 }
