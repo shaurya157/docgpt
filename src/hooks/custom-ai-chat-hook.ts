@@ -13,6 +13,7 @@ export const useCustomAIChatHooks = () => {
 
   useChatChunk({
     onChunk: ({ isFirst, nodes }) => {
+      console.log("CHAT CHUNK", nodes)
       if (mode === 'insert' && nodes.length > 0) {
         withAIBatch(
           editor,

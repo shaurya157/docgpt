@@ -197,6 +197,9 @@ const userSelecting = `\
 - NEVER write <Block> or <Selection>.
 - Consider the context provided by <Block>, but only modify <Selection>. Your response should be a direct replacement for <Selection>
 </Reminder>
+<Document>
+{editor}
+</Document>
 <Block>
 {block}
 </Block>
@@ -213,6 +216,9 @@ const userBlockSelecting = `\
 - NEVER write <Block> or <Selection>.
 - Consider the context provided by <Block>, but only modify <Selection>. Your response should be a direct replacement for <Selection>
 </Reminder>
+<Document>
+{editor}
+</Document>
 <Block>
 {block}
 </Block>
