@@ -1,4 +1,4 @@
-import { FieldValue, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion, collection } from "firebase/firestore";
+import { FieldValue, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion, collection, arrayRemove } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 
 const db = getFirestore(firebase_app)
@@ -183,6 +183,31 @@ export async function getUserTemplates(userId: string) {
 
   try {
     result = await getDoc(docRef).then(data => data.get("templates"))
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
+}
+
+export async function deleteUserUploadedFile(userId: string, fileName: string, openAiFileId: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userId);
+  let result, error;
+
+  const value = {
+    "files": arrayRemove({
+      "fileName": fileName,
+      "openAiFileId": openAiFileId
+    })
+  }
+
+  try {
+    result = await setDoc(
+      docRef,
+      value,
+      { merge: true }
+    );
   } catch (e) {
     error = e;
   }

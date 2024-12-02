@@ -3,6 +3,34 @@ import {NextRequest, NextResponse} from "next/server";
 import {appendFileDataToUser} from "@/firebase/firestore-dao";
 import OpenAI from "openai";
 
+export async function DELETE(req: NextRequest) {
+  const reqJson = await req.json();
+  let { openAiFileId } = reqJson;
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  const openai = new OpenAI({
+    apiKey: apiKey || ""
+  });
+
+  try {
+    const deleteFileResponse = await openai.files.del(openAiFileId)
+
+    if (deleteFileResponse.deleted) {
+      return NextResponse.json({
+        message: "File deleted successfully."
+      })
+    } else {
+      return NextResponse.json({
+        message: `Encountered an error while deleting from Open AI, non 200 status code`
+      })
+    }
+  } catch (deleteError) {
+    return NextResponse.json({
+      message: `Error deleting file. Error: ${deleteError}`
+    })
+  }
+}
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get('file') as File;

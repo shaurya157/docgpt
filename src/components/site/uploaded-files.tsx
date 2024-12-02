@@ -1,7 +1,7 @@
-import {auth} from "../../../auth";
-import {SignIn, SignOut} from "@/components/site/auth";
-import {useSession} from "next-auth/react";
 import {Session} from "next-auth";
+import {Trash2} from "lucide-react";
+import {deleteUserUploadedFile} from "@/firebase/firestore-dao";
+import {toast} from "sonner";
 
 interface UploadedFilesProps {
   session?: Session | null | undefined,
@@ -9,14 +9,38 @@ interface UploadedFilesProps {
 }
 
 export function UploadedFiles({session, userFilesData}: UploadedFilesProps) {
+  const handleDeleteFile =  (openAiFileId: string, fileName: string) => {
+    return async () => {
+      let response = await fetch('/api/ai/files', {
+        method: "DELETE",
+        body: JSON.stringify({ openAiFileId })
+      })
+
+      let responseJson = await response.json()
+      console.log(responseJson)
+      if (response.ok) {
+        const res = await deleteUserUploadedFile(session!.user!.email!, fileName, openAiFileId)
+
+        if (!res.error) {
+          toast.success("Successfully deleted");
+        } else {
+          toast.error(`Error deleting file. Error: ${res.error.message}`);
+        }
+      } else {
+        console.log(`Error deleting! Error: ${responseJson.message}`);
+      }
+    }
+  }
+
   if (!session?.user) {
     return <div>Please sign in to view uploaded files</div>
   } else {
     return <div>
       {
         userFilesData.map((file: Map<string, string>) => {
-          return <div key={file["openAiFileId"]}>
+          return <div className={"relative flex"} key={file["openAiFileId"]}>
             {file["fileName"]}
+            <Trash2 className={"cursor-pointer"} onClick={handleDeleteFile(file["openAiFileId"], file["fileName"])}/>
           </div>
         })
       }
