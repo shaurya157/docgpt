@@ -30,7 +30,7 @@ import type { TElement, TNodeEntry } from '@udecode/plate-common';
 import type { PlateEditor } from '@udecode/plate-common/react';
 import {useSession} from "next-auth/react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
-import {useUserSettings} from "@/providers/UserSettingsProvider";
+import {useTemplate} from "@/providers/TemplateProvider";
 import {serializeMd} from "@udecode/plate-markdown";
 
 // TODO: this will NOT work for ordered and unordered lists
@@ -38,18 +38,20 @@ const serializeToMarkdown = (template: any) => {
   const templ = template["template"] as Map<string, string | Map<string, string>[]>
   let result = "<Template>\n"
 
-  templ.forEach((item) => {
-    let headerSigns = ""
-    const itemType = item["type"] as string
-    if (itemType.includes("h") ) {
-      for (let i = Number(itemType[1]); i--;) {
-        headerSigns += "#"
+  if (templ != undefined) {
+    templ.forEach((item) => {
+      let headerSigns = ""
+      const itemType = item["type"] as string
+      if (itemType.includes("h") ) {
+        for (let i = Number(itemType[1]); i--;) {
+          headerSigns += "#"
+        }
+        result += headerSigns + item["children"][0]["text"] + "\n"
+      } else {
+        result += item["children"][0]["text"] + "\n"
       }
-      result += headerSigns + item["children"][0]["text"] + "\n"
-    } else {
-      result += item["children"][0]["text"] + "\n"
-    }
-  })
+    })
+  }
 
   return result += "</Template>";
 }
@@ -62,7 +64,7 @@ export function AIMenu() {
   const [value, setValue] = React.useState('');
   const { data: session } = useSession()
   const { assistantId, threadId } = useUserDataContext()
-  const { activeTemplate } = useUserSettings()
+  const { activeTemplate } = useTemplate()
 
   // @ts-ignore
   const chat = useAssistant({

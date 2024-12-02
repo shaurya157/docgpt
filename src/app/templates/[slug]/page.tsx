@@ -7,44 +7,50 @@ import {toast} from "sonner";
 import {useSession} from "next-auth/react";
 import {auth} from "../../../../auth";
 import {Session} from "next-auth";
-import UserSettingsProvider from "@/providers/UserSettingsProvider";
+import TemplateProvider from "@/providers/TemplateProvider";
 
-async function getProvidedTemplates(slug: string) {
-  const result = await getDocgptOwnedTemplates("docgpt")
-  if (!result.result[slug]){
-    console.error(`No template found for ${slug}, using default template instead`);
-    return result.result["default"]
-  }
+async function getProvidedTemplates() {
+  const result = await getDocgptOwnedTemplates()
 
-  return result.result[slug];
+  return result.result;
 }
 
-async function getUserOwnedTemplates(session: Session, slug: string) {
+async function getUserOwnedTemplates(session: Session) {
   const userTemplates = await getUserTemplates(session!.user!.email!)
   if (!userTemplates.result) {
     return null
   }
 
-  let res
-  (userTemplates.result as Map<string, string | Map<string, string>[]>[]).forEach(userTemplate => {
-    if (userTemplate["templateName"] == slug) {
-      res = userTemplate
-    }
-  })
-  return res;
+  return userTemplates.result;
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const slug = (await params).slug
   const session = await auth()
+  const providedTemplates = await getProvidedTemplates()
+  const userTemplates = session?.user?.email ? await getUserOwnedTemplates(session) : null
+
+  let displayedTemplate: any | null = null
+  if (!slug.startsWith("docgpt")) {
+    displayedTemplate = userTemplates.find(templ => templ["templateName"] === slug)
+  } else {
+    displayedTemplate =  providedTemplates.find(templ => templ["templateName"] === slug)
+  }
+
+  if (!displayedTemplate) {
+    displayedTemplate = providedTemplates.find(templ => templ["templateName"] === "docgpt-default")
+  }
 
   return (
     <section className="container grid items-center gap-6 px-4 pb-8 pt-6 sm:px-8 md:py-10">
       <div
         className="max-w-[calc(100vw-32px)] rounded-lg border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]">
-        <UserSettingsProvider userTemplate={session?.user ? await getUserOwnedTemplates(session!, slug) : null}>
+        <TemplateProvider
+          displayedTemplate={session?.user ? displayedTemplate : null}
+          docgptProvidedTemplates={ session?.user ? await getProvidedTemplates() : null }
+        >
           <PlateEditor/>
-        </UserSettingsProvider>
+        </TemplateProvider>
 
       </div>
     </section>

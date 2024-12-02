@@ -17,6 +17,7 @@ import { Metadata, Viewport } from 'next';
 import { OpenAIProvider } from '@/components/openai/openai-context';
 import {auth} from "../../auth";
 import {
+  getDocgptOwnedTemplates,
   getUserActiveAssistantAndVectorIds,
   getUserActiveThreadId, getUserDocument, getUserTemplates,
   getUserUploadedFilesData,
@@ -25,7 +26,7 @@ import {
 import {Session} from "next-auth";
 import UserDataContextProvider from "@/providers/UserDataContextProvider";
 import {SessionProvider} from "next-auth/react";
-import UserSettingsProvider from "@/providers/UserSettingsProvider";
+import TemplateProvider from "@/providers/TemplateProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -141,6 +142,12 @@ async function getUserDefinedTemplates(session: Session) {
   return userTemplates.result
 }
 
+async function getProvidedTemplates() {
+  const result = await getDocgptOwnedTemplates()
+
+  return result.result;
+}
+
 export default async function RootLayout({ children }: RootLayoutProps) {
   const session = await auth()
   let openAiAssistantId, openAiVectorStoreId;
@@ -173,12 +180,12 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   userDocument={session?.user ? await getPreviousUserDocument(session) : null}
                   filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}
                   userDefinedTemplates={session?.user ? await getUserDefinedTemplates(session) : null}>
-                  <UserSettingsProvider>
+                  <TemplateProvider docgptProvidedTemplates={session?.user ? await getProvidedTemplates() : null}>
                     <div className="relative flex min-h-screen flex-col">
                       <SiteHeader session={session}/>
                       <div className="flex-1">{children}</div>
                     </div>
-                  </UserSettingsProvider>
+                  </TemplateProvider>
                 </UserDataContextProvider>
               </SessionProvider>
             </OpenAIProvider>

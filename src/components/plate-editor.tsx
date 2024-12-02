@@ -144,7 +144,7 @@ import {aiPlugins} from './plugins/ai-plugins';
 import {copilotPlugins} from './plugins/copilot-plugins';
 import {useSession} from "next-auth/react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
-import {useUserSettings} from "@/providers/UserSettingsProvider";
+import {useTemplate} from "@/providers/TemplateProvider";
 
 export default function PlateEditor() {
     const containerRef = useRef(null);
@@ -185,7 +185,7 @@ export default function PlateEditor() {
 
 export const useMyEditor = () => {
     const {userDocument} = useUserDataContext();
-    const {activeTemplate} = useUserSettings();
+    const {activeTemplate} = useTemplate();
 
     const editorValues = activeTemplate ?  activeTemplate["template"] : userDocument ? userDocument : [
         // {

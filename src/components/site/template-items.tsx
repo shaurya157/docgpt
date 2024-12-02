@@ -1,5 +1,5 @@
 import {Button} from "@/components/plate-ui/button";
-import {useUserSettings} from "@/providers/UserSettingsProvider";
+import {useTemplate} from "@/providers/TemplateProvider";
 import {toast} from "sonner";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
 import Link from "next/link";
@@ -42,7 +42,7 @@ const defaultTemplate = {
 
 export function TemplateItems() {
   const { userTemplates } = useUserDataContext()
-  const { setActiveTemplate } = useUserSettings()
+  const { providedTemplates, setActiveTemplate } = useTemplate()
 
   const handleSelect = (template) => {
     return () => {
@@ -55,8 +55,20 @@ export function TemplateItems() {
     <div>
       <p>Pick one of these popular templates to help you generate your first doc</p>
       {
+        providedTemplates?.map((templ, idx) => {
+          return <div key={"provided-templates-" + templ["templateName"] + idx}>
+            {templ["templateName"]}
+            <Button onClick={handleSelect(templ)}>Use Template</Button>
+            <Button>
+              <Link href={`/templates/${templ["templateName"]}`} target="_blank">View Template</Link>
+            </Button>
+          </div>
+        })
+      }
+      <p>Or pick one of your own</p>
+      {
         userTemplates?.map((templ, idx) => {
-          return <div key={templ["templateName"] + idx}>
+          return <div key={"user-templates-" + templ["templateName"] + idx}>
             {templ["templateName"]}
             <Button onClick={handleSelect(templ)}>Use Template</Button>
             <Button>

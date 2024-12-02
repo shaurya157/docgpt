@@ -160,9 +160,9 @@ export async function saveUserActiveThread(userId: string, threadId: string) {
   return { result };
 }
 
-export async function getDocgptOwnedTemplates(userId: string) {
-  let usersRef = collection(db, "templates")
-  let docRef = doc(usersRef, userId);
+export async function getDocgptOwnedTemplates() {
+  let templatesRef = collection(db, "templates")
+  let docRef = doc(templatesRef, "docgpt");
   let result;
   let error;
 
