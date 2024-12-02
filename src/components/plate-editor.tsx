@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {cn, withProps} from '@udecode/cn';
 import {AIPlugin} from '@udecode/plate-ai/react';
 import {AlignPlugin} from '@udecode/plate-alignment/react';
@@ -144,371 +144,387 @@ import {aiPlugins} from './plugins/ai-plugins';
 import {copilotPlugins} from './plugins/copilot-plugins';
 import {useSession} from "next-auth/react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
-import {useTemplate} from "@/providers/TemplateProvider";
+import {useDocument} from "@/providers/document-provider";
 
 export default function PlateEditor() {
-    const containerRef = useRef(null);
-    const editor = useMyEditor();
+  const containerRef = useRef(null);
+  const {activeUserDocument} = useDocument();
+  const editor = useMyEditor();
 
-    return (
-        <DndProvider backend={HTML5Backend}>
-            <Plate editor={editor}>
-                <div
-                    id="scroll_container"
-                    ref={containerRef}
-                    className={cn(
-                        'relative',
-                        // Block selection
-                        '[&_.slate-start-area-left]:!w-[64px] [&_.slate-start-area-right]:!w-[64px] [&_.slate-start-area-top]:!h-4'
-                    )}
-                >
-                    <FixedToolbar>
-                        <FixedToolbarButtons/>
-                    </FixedToolbar>
+  const useForceUpdate = () => {
+    const [, setState] = useState<number>(0);
 
-                    <Editor autoFocus focusRing={false} variant="demo" size="md"/>
+    const forceUpdate = useCallback(() => {
+      setState(n => n + 1);
+    }, []);
 
-                    <FloatingToolbar>
-                        <FloatingToolbarButtons/>
-                    </FloatingToolbar>
+    return forceUpdate;
+  };
 
-                    <CommentsPopover/>
+  const forceUpdate = useForceUpdate();
+  useEffect(() => {
+    if (activeUserDocument) {
+      editor.children = activeUserDocument;
+    }
+    forceUpdate();
+  }, [editor, activeUserDocument, forceUpdate]);
 
-                    <CursorOverlay containerRef={containerRef}/>
-                </div>
+  return (
+      <DndProvider backend={HTML5Backend}>
+          <Plate editor={editor}>
+              <div
+                  id="scroll_container"
+                  ref={containerRef}
+                  className={cn(
+                      'relative',
+                      // Block selection
+                      '[&_.slate-start-area-left]:!w-[64px] [&_.slate-start-area-right]:!w-[64px] [&_.slate-start-area-top]:!h-4'
+                  )}
+              >
+                  <FixedToolbar>
+                      <FixedToolbarButtons/>
+                  </FixedToolbar>
 
-                <SettingsDialog/>
-            </Plate>
-        </DndProvider>
-    );
+                  <Editor autoFocus focusRing={false} variant="demo" size="md"/>
+
+                  <FloatingToolbar>
+                      <FloatingToolbarButtons/>
+                  </FloatingToolbar>
+
+                  <CommentsPopover/>
+
+                  <CursorOverlay containerRef={containerRef}/>
+              </div>
+
+              <SettingsDialog/>
+          </Plate>
+      </DndProvider>
+  );
 }
 
 export const useMyEditor = () => {
-    const {userDocument} = useUserDataContext();
-    const {activeTemplate} = useTemplate();
+  const {activeTemplate} = useDocument();
+  const editorValues = activeTemplate ?  activeTemplate["template"] : [
+      // {
+      //   id: '1',
+      //   type: 'p',
+      //   children: [{text: 'Write a list of facts about dogs. I want 3 facts only. Each fact should have a nested list explanaining more. Each nested explanation should have another nested list adding more context'}],
+      // },
+      // {
+      //   id: '2',
+      //   type: ParagraphPlugin.key,
+      //   children: [
+      //     {text: 'A rich-text editor with AI capabilities. Try the '},
+      //     {text: 'AI commands', bold: true},
+      //     {text: ' or use '},
+      //     {text: '/', kbd: true},
+      //     {text: ' to open the AI menu.'},
+      //
+      //   ],
+      // }
+  ];
+  return usePlateEditor({
+      plugins: [
+          // AI
+          ...aiPlugins,
+          ...copilotPlugins,
+          // Nodes
+          HeadingPlugin,
+          TocPlugin,
+          BlockquotePlugin,
+          CodeBlockPlugin,
+          CodeLinePlugin,
+          CodeSyntaxPlugin,
+          HorizontalRulePlugin,
+          LinkPlugin.configure({
+              render: {afterEditable: () => <LinkFloatingToolbar/>},
+          }),
+          ImagePlugin,
+          MediaEmbedPlugin,
+          CaptionPlugin.configure({
+              options: {plugins: [ImagePlugin, MediaEmbedPlugin]},
+          }),
+          MentionPlugin,
+          MentionInputPlugin,
+          TablePlugin,
+          TableRowPlugin,
+          TableCellPlugin,
+          TableCellHeaderPlugin,
+          TodoListPlugin,
+          ExcalidrawPlugin,
+          ColumnPlugin,
+          ColumnItemPlugin,
 
-    const editorValues = activeTemplate ?  activeTemplate["template"] : userDocument ? userDocument : [
-        // {
-        //   id: '1',
-        //   type: 'p',
-        //   children: [{text: 'Write a list of facts about dogs. I want 3 facts only. Each fact should have a nested list explanaining more. Each nested explanation should have another nested list adding more context'}],
-        // },
-        // {
-        //   id: '2',
-        //   type: ParagraphPlugin.key,
-        //   children: [
-        //     {text: 'A rich-text editor with AI capabilities. Try the '},
-        //     {text: 'AI commands', bold: true},
-        //     {text: ' or use '},
-        //     {text: '/', kbd: true},
-        //     {text: ' to open the AI menu.'},
-        //
-        //   ],
-        // }
-    ];
+          // Marks
+          BoldPlugin,
+          ItalicPlugin,
+          UnderlinePlugin,
+          StrikethroughPlugin,
+          CodePlugin,
+          SubscriptPlugin,
+          SuperscriptPlugin,
+          FontColorPlugin,
+          FontBackgroundColorPlugin,
+          FontSizePlugin,
+          HighlightPlugin,
+          KbdPlugin,
 
-    return usePlateEditor({
-        plugins: [
-            // AI
-            ...aiPlugins,
-            ...copilotPlugins,
-            // Nodes
-            HeadingPlugin,
-            TocPlugin,
-            BlockquotePlugin,
-            CodeBlockPlugin,
-            CodeLinePlugin,
-            CodeSyntaxPlugin,
-            HorizontalRulePlugin,
-            LinkPlugin.configure({
-                render: {afterEditable: () => <LinkFloatingToolbar/>},
-            }),
-            ImagePlugin,
-            MediaEmbedPlugin,
-            CaptionPlugin.configure({
-                options: {plugins: [ImagePlugin, MediaEmbedPlugin]},
-            }),
-            MentionPlugin,
-            MentionInputPlugin,
-            TablePlugin,
-            TableRowPlugin,
-            TableCellPlugin,
-            TableCellHeaderPlugin,
-            TodoListPlugin,
-            ExcalidrawPlugin,
-            ColumnPlugin,
-            ColumnItemPlugin,
+          // Block Style
+          DatePlugin,
+          TogglePlugin,
+          AlignPlugin.configure({
+              inject: {
+                  targetPlugins: [ParagraphPlugin.key, ...HEADING_LEVELS],
+              },
+          }),
+          IndentPlugin.configure({
+              inject: {
+                  targetPlugins: [
+                      ParagraphPlugin.key,
+                      BlockquotePlugin.key,
+                      CodeBlockPlugin.key,
+                      ...HEADING_LEVELS,
+                  ],
+              },
+          }),
+          IndentListPlugin.configure({
+              inject: {
+                  targetPlugins: [
+                      ParagraphPlugin.key,
+                      BlockquotePlugin.key,
+                      CodeBlockPlugin.key,
+                      ...HEADING_LEVELS,
+                  ],
+              },
+              options: {
+                  listStyleTypes: {
+                      todo: {
+                          liComponent: TodoLi,
+                          markerComponent: TodoMarker,
+                          type: 'todo',
+                      },
+                  },
+              },
+          }),
+          LineHeightPlugin.configure({
+              inject: {
+                  nodeProps: {
+                      defaultNodeValue: 1.5,
+                      validNodeValues: [1, 1.2, 1.5, 2, 3],
+                  },
+                  targetPlugins: [ParagraphPlugin.key, ...HEADING_LEVELS],
+              },
+          }),
 
-            // Marks
-            BoldPlugin,
-            ItalicPlugin,
-            UnderlinePlugin,
-            StrikethroughPlugin,
-            CodePlugin,
-            SubscriptPlugin,
-            SuperscriptPlugin,
-            FontColorPlugin,
-            FontBackgroundColorPlugin,
-            FontSizePlugin,
-            HighlightPlugin,
-            KbdPlugin,
+          // Functionality
+          SlashPlugin,
+          AutoformatPlugin.configure({
+              options: {
+                  rules: autoformatRules,
+                  enableUndoOnDelete: true,
+              },
+          }),
+          BlockSelectionPlugin.configure({
+              options: {
+                  areaOptions: {
+                      behaviour: {
+                          scrolling: {
+                              startScrollMargins: {x: 0, y: 0},
+                          },
+                      },
+                      boundaries: '#scroll_container',
+                      container: '#scroll_container',
+                      selectables: '#scroll_container .slate-selectable',
+                      selectionAreaClass: 'slate-selection-area',
+                  },
+                  enableContextMenu: true,
+              },
+          }),
+          BlockMenuPlugin.configure({
+              render: {aboveEditable: BlockContextMenu},
+          }),
+          DndPlugin.configure({
+              options: {enableScroller: true},
+          }),
+          EmojiPlugin,
+          ExitBreakPlugin.configure({
+              options: {
+                  rules: [
+                      {
+                          hotkey: 'mod+enter',
+                      },
+                      {
+                          hotkey: 'mod+shift+enter',
+                          before: true,
+                      },
+                      {
+                          hotkey: 'enter',
+                          query: {
+                              start: true,
+                              end: true,
+                              allow: HEADING_LEVELS,
+                          },
+                          relative: true,
+                          level: 1,
+                      },
+                  ],
+              },
+          }),
+          NodeIdPlugin,
+          ResetNodePlugin.configure({
+              options: {
+                  rules: [
+                      {
+                          types: [BlockquotePlugin.key, TodoListPlugin.key],
+                          defaultType: ParagraphPlugin.key,
+                          hotkey: 'Enter',
+                          predicate: isBlockAboveEmpty,
+                      },
+                      {
+                          types: [BlockquotePlugin.key, TodoListPlugin.key],
+                          defaultType: ParagraphPlugin.key,
+                          hotkey: 'Backspace',
+                          predicate: isSelectionAtBlockStart,
+                      },
+                      {
+                          types: [CodeBlockPlugin.key],
+                          defaultType: ParagraphPlugin.key,
+                          onReset: unwrapCodeBlock,
+                          hotkey: 'Enter',
+                          predicate: isCodeBlockEmpty,
+                      },
+                      {
+                          types: [CodeBlockPlugin.key],
+                          defaultType: ParagraphPlugin.key,
+                          onReset: unwrapCodeBlock,
+                          hotkey: 'Backspace',
+                          predicate: isSelectionAtCodeBlockStart,
+                      },
+                  ],
+              },
+          }),
+          SelectOnBackspacePlugin.configure({
+              options: {
+                  query: {
+                      allow: [ImagePlugin.key, HorizontalRulePlugin.key],
+                  },
+              },
+          }),
+          SoftBreakPlugin.configure({
+              options: {
+                  rules: [
+                      {hotkey: 'shift+enter'},
+                      {
+                          hotkey: 'enter',
+                          query: {
+                              allow: [
+                                  CodeBlockPlugin.key,
+                                  BlockquotePlugin.key,
+                                  TableCellPlugin.key,
+                                  TableCellHeaderPlugin.key,
+                              ],
+                          },
+                      },
+                  ],
+              },
+          }),
+          TabbablePlugin.configure(({editor}) => ({
+              options: {
+                  query: () => {
+                      if (isSelectionAtBlockStart(editor)) return false;
 
-            // Block Style
-            DatePlugin,
-            TogglePlugin,
-            AlignPlugin.configure({
-                inject: {
-                    targetPlugins: [ParagraphPlugin.key, ...HEADING_LEVELS],
-                },
-            }),
-            IndentPlugin.configure({
-                inject: {
-                    targetPlugins: [
-                        ParagraphPlugin.key,
-                        BlockquotePlugin.key,
-                        CodeBlockPlugin.key,
-                        ...HEADING_LEVELS,
-                    ],
-                },
-            }),
-            IndentListPlugin.configure({
-                inject: {
-                    targetPlugins: [
-                        ParagraphPlugin.key,
-                        BlockquotePlugin.key,
-                        CodeBlockPlugin.key,
-                        ...HEADING_LEVELS,
-                    ],
-                },
-                options: {
-                    listStyleTypes: {
-                        todo: {
-                            liComponent: TodoLi,
-                            markerComponent: TodoMarker,
-                            type: 'todo',
-                        },
-                    },
-                },
-            }),
-            LineHeightPlugin.configure({
-                inject: {
-                    nodeProps: {
-                        defaultNodeValue: 1.5,
-                        validNodeValues: [1, 1.2, 1.5, 2, 3],
-                    },
-                    targetPlugins: [ParagraphPlugin.key, ...HEADING_LEVELS],
-                },
-            }),
+                      return !someNode(editor, {
+                          match: (n) => {
+                              return !!(
+                                  n.type &&
+                                  ([
+                                          TablePlugin.key,
+                                          TodoListPlugin.key,
+                                          CodeBlockPlugin.key,
+                                      ].includes(n.type as string) ||
+                                      n.listStyleType)
+                              );
+                          },
+                      });
+                  },
+              },
+          })),
+          TrailingBlockPlugin.configure({
+              options: {type: ParagraphPlugin.key},
+          }),
+          SelectionOverlayPlugin,
+          DragOverCursorPlugin,
+          // Collaboration
+          CommentsPlugin.configure({
+              options: {
+                  users: {
+                      1: {
+                          id: '1',
+                          name: 'docgpt',
+                          avatarUrl:
+                              'https://static-00.iconduck.com/assets.00/user-avatar-robot-icon-1023x1024-jdufmigd.png',
+                      },
+                      2: {
+                          id: '2',
+                          name: 'AnonPanda',
+                          avatarUrl: 'https://img.freepik.com/free-vector/cute-panda-gaming-cartoon-icon-illustration-animal-technology-icon-concept-premium-flat-cartoon-style_138676-2685.jpg'
+                      },
+                  },
+                  myUserId: '2',
+              },
+          }),
 
-            // Functionality
-            SlashPlugin,
-            AutoformatPlugin.configure({
-                options: {
-                    rules: autoformatRules,
-                    enableUndoOnDelete: true,
-                },
-            }),
-            BlockSelectionPlugin.configure({
-                options: {
-                    areaOptions: {
-                        behaviour: {
-                            scrolling: {
-                                startScrollMargins: {x: 0, y: 0},
-                            },
-                        },
-                        boundaries: '#scroll_container',
-                        container: '#scroll_container',
-                        selectables: '#scroll_container .slate-selectable',
-                        selectionAreaClass: 'slate-selection-area',
-                    },
-                    enableContextMenu: true,
-                },
-            }),
-            BlockMenuPlugin.configure({
-                render: {aboveEditable: BlockContextMenu},
-            }),
-            DndPlugin.configure({
-                options: {enableScroller: true},
-            }),
-            EmojiPlugin,
-            ExitBreakPlugin.configure({
-                options: {
-                    rules: [
-                        {
-                            hotkey: 'mod+enter',
-                        },
-                        {
-                            hotkey: 'mod+shift+enter',
-                            before: true,
-                        },
-                        {
-                            hotkey: 'enter',
-                            query: {
-                                start: true,
-                                end: true,
-                                allow: HEADING_LEVELS,
-                            },
-                            relative: true,
-                            level: 1,
-                        },
-                    ],
-                },
-            }),
-            NodeIdPlugin,
-            ResetNodePlugin.configure({
-                options: {
-                    rules: [
-                        {
-                            types: [BlockquotePlugin.key, TodoListPlugin.key],
-                            defaultType: ParagraphPlugin.key,
-                            hotkey: 'Enter',
-                            predicate: isBlockAboveEmpty,
-                        },
-                        {
-                            types: [BlockquotePlugin.key, TodoListPlugin.key],
-                            defaultType: ParagraphPlugin.key,
-                            hotkey: 'Backspace',
-                            predicate: isSelectionAtBlockStart,
-                        },
-                        {
-                            types: [CodeBlockPlugin.key],
-                            defaultType: ParagraphPlugin.key,
-                            onReset: unwrapCodeBlock,
-                            hotkey: 'Enter',
-                            predicate: isCodeBlockEmpty,
-                        },
-                        {
-                            types: [CodeBlockPlugin.key],
-                            defaultType: ParagraphPlugin.key,
-                            onReset: unwrapCodeBlock,
-                            hotkey: 'Backspace',
-                            predicate: isSelectionAtCodeBlockStart,
-                        },
-                    ],
-                },
-            }),
-            SelectOnBackspacePlugin.configure({
-                options: {
-                    query: {
-                        allow: [ImagePlugin.key, HorizontalRulePlugin.key],
-                    },
-                },
-            }),
-            SoftBreakPlugin.configure({
-                options: {
-                    rules: [
-                        {hotkey: 'shift+enter'},
-                        {
-                            hotkey: 'enter',
-                            query: {
-                                allow: [
-                                    CodeBlockPlugin.key,
-                                    BlockquotePlugin.key,
-                                    TableCellPlugin.key,
-                                    TableCellHeaderPlugin.key,
-                                ],
-                            },
-                        },
-                    ],
-                },
-            }),
-            TabbablePlugin.configure(({editor}) => ({
-                options: {
-                    query: () => {
-                        if (isSelectionAtBlockStart(editor)) return false;
-
-                        return !someNode(editor, {
-                            match: (n) => {
-                                return !!(
-                                    n.type &&
-                                    ([
-                                            TablePlugin.key,
-                                            TodoListPlugin.key,
-                                            CodeBlockPlugin.key,
-                                        ].includes(n.type as string) ||
-                                        n.listStyleType)
-                                );
-                            },
-                        });
-                    },
-                },
-            })),
-            TrailingBlockPlugin.configure({
-                options: {type: ParagraphPlugin.key},
-            }),
-            SelectionOverlayPlugin,
-            DragOverCursorPlugin,
-            // Collaboration
-            CommentsPlugin.configure({
-                options: {
-                    users: {
-                        1: {
-                            id: '1',
-                            name: 'docgpt',
-                            avatarUrl:
-                                'https://static-00.iconduck.com/assets.00/user-avatar-robot-icon-1023x1024-jdufmigd.png',
-                        },
-                        2: {
-                            id: '2',
-                            name: 'AnonPanda',
-                            avatarUrl: 'https://img.freepik.com/free-vector/cute-panda-gaming-cartoon-icon-illustration-animal-technology-icon-concept-premium-flat-cartoon-style_138676-2685.jpg'
-                        },
-                    },
-                    myUserId: '2',
-                },
-            }),
-
-            // Deserialization
-            DocxPlugin,
-            MarkdownPlugin,
-            JuicePlugin,
-        ],
-        override: {
-            components: withDraggables(
-                withPlaceholders({
-                    [AIPlugin.key]: AILeaf,
-                    [DatePlugin.key]: DateElement,
-                    [SlashInputPlugin.key]: SlashInputElement,
-                    [TogglePlugin.key]: ToggleElement,
-                    [BlockquotePlugin.key]: BlockquoteElement,
-                    [CodeBlockPlugin.key]: CodeBlockElement,
-                    [CodeLinePlugin.key]: CodeLineElement,
-                    [TocPlugin.key]: TocElement,
-                    [ColumnItemPlugin.key]: ColumnElement,
-                    [ColumnPlugin.key]: ColumnGroupElement,
-                    [CodeSyntaxPlugin.key]: CodeSyntaxLeaf,
-                    [HorizontalRulePlugin.key]: HrElement,
-                    [HEADING_KEYS.h1]: withProps(HeadingElement, {variant: 'h1'}),
-                    [HEADING_KEYS.h2]: withProps(HeadingElement, {variant: 'h2'}),
-                    [HEADING_KEYS.h3]: withProps(HeadingElement, {variant: 'h3'}),
-                    [HEADING_KEYS.h4]: withProps(HeadingElement, {variant: 'h4'}),
-                    [HEADING_KEYS.h5]: withProps(HeadingElement, {variant: 'h5'}),
-                    [HEADING_KEYS.h6]: withProps(HeadingElement, {variant: 'h6'}),
-                    [ImagePlugin.key]: ImageElement,
-                    [LinkPlugin.key]: LinkElement,
-                    [MediaEmbedPlugin.key]: MediaEmbedElement,
-                    [MentionPlugin.key]: MentionElement,
-                    [MentionInputPlugin.key]: MentionInputElement,
-                    [ParagraphPlugin.key]: ParagraphElement,
-                    [TablePlugin.key]: TableElement,
-                    [TableRowPlugin.key]: TableRowElement,
-                    [TableCellPlugin.key]: TableCellElement,
-                    [TableCellHeaderPlugin.key]: TableCellHeaderElement,
-                    [TodoListPlugin.key]: TodoListElement,
-                    [ExcalidrawPlugin.key]: ExcalidrawElement,
-                    [BoldPlugin.key]: withProps(PlateLeaf, {as: 'strong'}),
-                    [CodePlugin.key]: CodeLeaf,
-                    [HighlightPlugin.key]: HighlightLeaf,
-                    [ItalicPlugin.key]: withProps(PlateLeaf, {as: 'em'}),
-                    [KbdPlugin.key]: KbdLeaf,
-                    [StrikethroughPlugin.key]: withProps(PlateLeaf, {as: 's'}),
-                    [SubscriptPlugin.key]: withProps(PlateLeaf, {as: 'sub'}),
-                    [SuperscriptPlugin.key]: withProps(PlateLeaf, {as: 'sup'}),
-                    [UnderlinePlugin.key]: withProps(PlateLeaf, {as: 'u'}),
-                    [CommentsPlugin.key]: CommentLeaf,
-                })
-            ),
-        },
-        value: editorValues,
-    });
+          // Deserialization
+          DocxPlugin,
+          MarkdownPlugin,
+          JuicePlugin,
+      ],
+      override: {
+          components: withDraggables(
+              withPlaceholders({
+                  [AIPlugin.key]: AILeaf,
+                  [DatePlugin.key]: DateElement,
+                  [SlashInputPlugin.key]: SlashInputElement,
+                  [TogglePlugin.key]: ToggleElement,
+                  [BlockquotePlugin.key]: BlockquoteElement,
+                  [CodeBlockPlugin.key]: CodeBlockElement,
+                  [CodeLinePlugin.key]: CodeLineElement,
+                  [TocPlugin.key]: TocElement,
+                  [ColumnItemPlugin.key]: ColumnElement,
+                  [ColumnPlugin.key]: ColumnGroupElement,
+                  [CodeSyntaxPlugin.key]: CodeSyntaxLeaf,
+                  [HorizontalRulePlugin.key]: HrElement,
+                  [HEADING_KEYS.h1]: withProps(HeadingElement, {variant: 'h1'}),
+                  [HEADING_KEYS.h2]: withProps(HeadingElement, {variant: 'h2'}),
+                  [HEADING_KEYS.h3]: withProps(HeadingElement, {variant: 'h3'}),
+                  [HEADING_KEYS.h4]: withProps(HeadingElement, {variant: 'h4'}),
+                  [HEADING_KEYS.h5]: withProps(HeadingElement, {variant: 'h5'}),
+                  [HEADING_KEYS.h6]: withProps(HeadingElement, {variant: 'h6'}),
+                  [ImagePlugin.key]: ImageElement,
+                  [LinkPlugin.key]: LinkElement,
+                  [MediaEmbedPlugin.key]: MediaEmbedElement,
+                  [MentionPlugin.key]: MentionElement,
+                  [MentionInputPlugin.key]: MentionInputElement,
+                  [ParagraphPlugin.key]: ParagraphElement,
+                  [TablePlugin.key]: TableElement,
+                  [TableRowPlugin.key]: TableRowElement,
+                  [TableCellPlugin.key]: TableCellElement,
+                  [TableCellHeaderPlugin.key]: TableCellHeaderElement,
+                  [TodoListPlugin.key]: TodoListElement,
+                  [ExcalidrawPlugin.key]: ExcalidrawElement,
+                  [BoldPlugin.key]: withProps(PlateLeaf, {as: 'strong'}),
+                  [CodePlugin.key]: CodeLeaf,
+                  [HighlightPlugin.key]: HighlightLeaf,
+                  [ItalicPlugin.key]: withProps(PlateLeaf, {as: 'em'}),
+                  [KbdPlugin.key]: KbdLeaf,
+                  [StrikethroughPlugin.key]: withProps(PlateLeaf, {as: 's'}),
+                  [SubscriptPlugin.key]: withProps(PlateLeaf, {as: 'sub'}),
+                  [SuperscriptPlugin.key]: withProps(PlateLeaf, {as: 'sup'}),
+                  [UnderlinePlugin.key]: withProps(PlateLeaf, {as: 'u'}),
+                  [CommentsPlugin.key]: CommentLeaf,
+              })
+          ),
+      },
+      value: editorValues,
+  });
 };

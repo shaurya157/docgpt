@@ -1,4 +1,15 @@
-import { FieldValue, getFirestore, doc, updateDoc, setDoc, getDoc, arrayUnion, collection, arrayRemove } from "firebase/firestore";
+import {
+  arrayRemove,
+  arrayUnion,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  query,
+  setDoc,
+  where
+} from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 
 const db = getFirestore(firebase_app)
@@ -68,6 +79,10 @@ export async function getUserActiveThreadId(userid: string) {
   return { result, error };
 }
 
+export async function getUserOwnedDocuments(userId: string) {
+  return await getDocs(query(collection(db, "documents"), where("documentOwnerId", "==", userId)))
+}
+
 export async function getUserDocument(userid: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userid);
@@ -83,14 +98,16 @@ export async function getUserDocument(userid: string) {
   return { result, error };
 }
 
-export async function saveCurrentDocumentState(userId: string, document: any) {
-  let usersRef = collection(db, "users")
-  let docRef = doc(usersRef, userId);
+export async function saveCurrentDocumentState(userId: string, documentName: string, threadId: string, document: any) {
+  let usersRef = collection(db, "documents")
+  let docRef = doc(usersRef, documentName);
   let result, error;
 
   try {
     const value = {
-      "document": document
+      "documentOwnerId": userId,
+      "document": document,
+      "threadId": threadId
     }
     result = await setDoc(
       docRef,

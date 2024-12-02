@@ -4,8 +4,9 @@ import { ThemeToggle } from '@/components/site/theme-toggle';
 import {FilesDropdownMenu} from "@/components/site/files-dropdown-menu";
 import UserButton from "@/components/site/user-button";
 import {Session} from "next-auth";
-import {TemplatesButton} from "@/components/site/templates-button";
+import {TemplatesDropdown} from "@/components/site/templates-dropdown";
 import {UserGuideButton} from "@/components/site/user-guide-button";
+import {DocumentsDropdown} from "@/components/site/documents-dropdown";
 
 interface SiteHeaderProps {
   session: Session | null;
@@ -19,7 +20,8 @@ export async function SiteHeader({session}: SiteHeaderProps) {
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-1">
             <UserGuideButton />
-            { session?.user ? <TemplatesButton /> : <div></div>}
+            { session?.user ? <DocumentsDropdown /> : <div></div>}
+            { session?.user ? <TemplatesDropdown /> : <div></div>}
             { session?.user ? <FilesDropdownMenu /> : <div></div>}
             <UserButton session={session} />
             <ThemeToggle />

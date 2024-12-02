@@ -30,7 +30,7 @@ import type { TElement, TNodeEntry } from '@udecode/plate-common';
 import type { PlateEditor } from '@udecode/plate-common/react';
 import {useSession} from "next-auth/react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
-import {useTemplate} from "@/providers/TemplateProvider";
+import {useDocument} from "@/providers/document-provider";
 import {serializeMd} from "@udecode/plate-markdown";
 
 // TODO: this will NOT work for ordered and unordered lists
@@ -64,7 +64,7 @@ export function AIMenu() {
   const [value, setValue] = React.useState('');
   const { data: session } = useSession()
   const { assistantId, threadId } = useUserDataContext()
-  const { activeTemplate } = useTemplate()
+  const { activeTemplate } = useDocument()
 
   // @ts-ignore
   const chat = useAssistant({

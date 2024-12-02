@@ -2,38 +2,42 @@
 
 import React, {createContext, useContext, useState} from "react";
 
-type UserSettings = {
+type DocumentSettings = {
   activeTemplate?: Map<string, string | any> | null;
   setActiveTemplate?: React.Dispatch<React.SetStateAction<Map<string, string>>>;
   providedTemplates?: any[] | null;
+  activeUserDocument?: any[] | null;
+  setActiveUserDocument: React.Dispatch<React.SetStateAction<any>>;
 }
-export const TemplateSettings = createContext<UserSettings | null>(null)
+export const TemplateSettings = createContext<DocumentSettings | null>(null)
 
-interface TemplateProviderProps {
+interface DocumentProviderProps {
   displayedTemplate?: any | null;
   docgptProvidedTemplates?: any | null;
   children: React.ReactNode;
-  slug?: string
+  userDocument?: any | null;
 }
 
-export default function TemplateProvider({ children, displayedTemplate, docgptProvidedTemplates, slug }: TemplateProviderProps) {
+export default function DocumentProvider({ children, displayedTemplate, docgptProvidedTemplates, userDocument }: DocumentProviderProps) {
 
   const [activeTemplate, setActiveTemplate] = useState(displayedTemplate)
   const [providedTemplates] = useState(docgptProvidedTemplates)
-
+  const [activeUserDocument, setActiveUserDocument] = useState(userDocument)
 
   return (
     <TemplateSettings.Provider value={{
       activeTemplate,
       setActiveTemplate,
-      providedTemplates
+      providedTemplates,
+      activeUserDocument,
+      setActiveUserDocument
     }}>
       {children}
     </TemplateSettings.Provider>
   )
 }
 
-export function useTemplate() {
+export function useDocument() {
   const context = useContext(TemplateSettings);
   if (!context) {
     throw new Error('useUserSettings must be used within an UserSettingsProvider');

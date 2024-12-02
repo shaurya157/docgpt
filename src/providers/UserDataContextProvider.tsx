@@ -11,8 +11,8 @@ type UserDataContext = {
     setFiles: React.Dispatch<React.SetStateAction<Map<string, string>[]>>,
     vectorStoreId?: string | null;
     setVectorStoreId: React.Dispatch<React.SetStateAction<string>>;
-    userDocument?: any | null;
     userTemplates?: Map<string, string | any>[] | null;
+    userOwnedDocuments?: any[] | null,
 }
 export const UserDataContext = createContext<UserDataContext | null>(null)
 
@@ -24,6 +24,7 @@ interface UserDataProviderProps {
     children: React.ReactNode,
     userDocument?: any | null,
     userDefinedTemplates?: Map<string, string | any>[] | null,
+    userDocuments?: any[] | null,
 }
 
 export default function UserDataContextProvider({
@@ -32,14 +33,15 @@ export default function UserDataContextProvider({
                                                     openAiAssistantId,
                                                     filesData,
                                                     openAiVectorStoreId,
-                                                    userDocument,
-                                                    userDefinedTemplates
+                                                    userDefinedTemplates,
+                                                    userDocuments
                                                 }: UserDataProviderProps) {
     const [assistantId, setAssistantId] = useState(openAiAssistantId)
     const [threadId, setThreadId] = useState(openAiThreadId)
     const [files, setFiles] = useState(filesData)
     const [vectorStoreId, setVectorStoreId] = useState(openAiVectorStoreId)
     const [userTemplates] = useState(userDefinedTemplates)
+    const [userOwnedDocuments] = useState(userDocuments)
 
     return (
         <UserDataContext.Provider value={{
@@ -51,8 +53,8 @@ export default function UserDataContextProvider({
             setFiles,
             vectorStoreId,
             setVectorStoreId,
-            userDocument,
-            userTemplates
+            userTemplates,
+            userOwnedDocuments,
         }}>
             {children}
         </UserDataContext.Provider>

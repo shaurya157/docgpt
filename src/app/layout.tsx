@@ -8,6 +8,9 @@ import { TailwindIndicator } from '@/components/site/tailwind-indicator';
 import { ThemeProvider } from '@/components/site/theme-provider';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
+import {
+  onSnapshot
+} from "firebase/firestore";
 
 
 import '@/styles/globals.css';
@@ -19,14 +22,14 @@ import {auth} from "../../auth";
 import {
   getDocgptOwnedTemplates,
   getUserActiveAssistantAndVectorIds,
-  getUserActiveThreadId, getUserDocument, getUserTemplates,
+  getUserActiveThreadId, getUserDocument, getUserOwnedDocuments, getUserTemplates,
   getUserUploadedFilesData,
   saveUserActiveAssistant, saveUserActiveThread
 } from "@/firebase/firestore-dao";
 import {Session} from "next-auth";
 import UserDataContextProvider from "@/providers/UserDataContextProvider";
 import {SessionProvider} from "next-auth/react";
-import TemplateProvider from "@/providers/TemplateProvider";
+import DocumentProvider from "@/providers/document-provider";
 
 export const metadata: Metadata = {
   title: {
@@ -148,6 +151,21 @@ async function getProvidedTemplates() {
   return result.result;
 }
 
+async function getUserDocs(session) {
+  let result: any[] = []
+  const resSnapshot = await getUserOwnedDocuments(session!.user!.email!)
+  resSnapshot.docs.forEach((doc) => {
+    const res = {
+      "documentName": doc.id,
+      "document": doc.get("document"),
+      "threadId": doc.get("threadId"),
+    }
+
+    result.push(res)
+  })
+  return result
+}
+
 export default async function RootLayout({ children }: RootLayoutProps) {
   const session = await auth()
   let openAiAssistantId, openAiVectorStoreId;
@@ -179,13 +197,15 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   openAiThreadId={session?.user ? await createThreadIfNotExist(session) : null}
                   userDocument={session?.user ? await getPreviousUserDocument(session) : null}
                   filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}
-                  userDefinedTemplates={session?.user ? await getUserDefinedTemplates(session) : null}>
-                  <TemplateProvider docgptProvidedTemplates={session?.user ? await getProvidedTemplates() : null}>
+                  userDefinedTemplates={session?.user ? await getUserDefinedTemplates(session) : null}
+                  userDocuments={session?.user ? await getUserDocs(session) : null}
+                >
+                  <DocumentProvider docgptProvidedTemplates={session?.user ? await getProvidedTemplates() : null}>
                     <div className="relative flex min-h-screen flex-col">
                       <SiteHeader session={session}/>
                       <div className="flex-1">{children}</div>
                     </div>
-                  </TemplateProvider>
+                  </DocumentProvider>
                 </UserDataContextProvider>
               </SessionProvider>
             </OpenAIProvider>

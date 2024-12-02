@@ -7,7 +7,6 @@ import {
   useOpenState
 } from "@/components/plate-ui/dropdown-menu";
 import * as React from "react";
-import {TemplateItems} from "@/components/site/template-items";
 import Link from "next/link";
 
 export function UserGuideButton() {
