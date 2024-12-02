@@ -5,6 +5,7 @@ import {FilesDropdownMenu} from "@/components/site/files-dropdown-menu";
 import UserButton from "@/components/site/user-button";
 import {Session} from "next-auth";
 import {TemplatesButton} from "@/components/site/templates-button";
+import {UserGuideButton} from "@/components/site/user-guide-button";
 
 interface SiteHeaderProps {
   session: Session | null;
@@ -17,9 +18,10 @@ export async function SiteHeader({session}: SiteHeaderProps) {
         <MainNav items={siteConfig.mainNav} />
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-1">
+            <UserGuideButton />
             { session?.user ? <TemplatesButton /> : <div></div>}
-            <UserButton session={session} />
             { session?.user ? <FilesDropdownMenu /> : <div></div>}
+            <UserButton session={session} />
             <ThemeToggle />
           </nav>
         </div>

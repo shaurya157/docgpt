@@ -53,7 +53,7 @@ export function TemplateItems() {
 
   return(
     <div>
-      <p>Pick one of these popular templates to help you generate your first doc</p>
+      <p>Docgpt provided templates</p>
       {
         providedTemplates?.map((templ, idx) => {
           return <div key={"provided-templates-" + templ["templateName"] + idx}>
@@ -65,7 +65,7 @@ export function TemplateItems() {
           </div>
         })
       }
-      <p>Or pick one of your own</p>
+      <p>User defined templates</p>
       {
         userTemplates?.map((templ, idx) => {
           return <div key={"user-templates-" + templ["templateName"] + idx}>

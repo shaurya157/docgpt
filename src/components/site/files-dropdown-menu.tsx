@@ -68,7 +68,7 @@ export function FilesDropdownMenu() {
     return (
         <DropdownMenu modal={false} {...openState} >
             <DropdownMenuTrigger asChild>
-                <UploadIcon/>
+                <Button>Uploads</Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
