@@ -46,7 +46,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       <div
         className="max-w-[calc(100vw-32px)] rounded-lg border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]">
         <DocumentProvider
-          displayedTemplate={session?.user ? displayedTemplate : null}
+          template={session?.user ? displayedTemplate : null}
           docgptProvidedTemplates={ session?.user ? await getProvidedTemplates() : null }
         >
           <PlateEditor/>

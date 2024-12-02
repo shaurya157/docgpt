@@ -22,7 +22,7 @@ import {auth} from "../../auth";
 import {
   getDocgptOwnedTemplates,
   getUserActiveAssistantAndVectorIds,
-  getUserActiveThreadId, getUserDocument, getUserOwnedDocuments, getUserTemplates,
+  getUserActiveThreadId, getUserOwnedDocuments, getOwnerTemplates, getUserTemplates,
   getUserUploadedFilesData,
   saveUserActiveAssistant, saveUserActiveThread
 } from "@/firebase/firestore-dao";
@@ -135,20 +135,18 @@ async function getExistingUserUploadedFiles(session: Session) {
   return result
 }
 
-async function getPreviousUserDocument(session: Session) {
-  const userDocResult = await getUserDocument(session.user?.email!)
-  return userDocResult.result
-}
+async function getTemplates(templateOwnerId: string) {
+  let result: any[] = []
+  const userTemplatesSnapshot = await getOwnerTemplates(templateOwnerId)
+  userTemplatesSnapshot.docs.forEach((doc) => {
+    const res = {
+      "templateName": doc.id,
+      "template": doc.get("template")
+    }
 
-async function getUserDefinedTemplates(session: Session) {
-  const userTemplates = await getUserTemplates(session.user?.email!)
-  return userTemplates.result
-}
-
-async function getProvidedTemplates() {
-  const result = await getDocgptOwnedTemplates()
-
-  return result.result;
+    result.push(res)
+  })
+  return result
 }
 
 async function getUserDocs(session) {
@@ -195,12 +193,11 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   openAiAssistantId={session?.user ? openAiAssistantId : null}
                   openAiVectorStoreId={session?.user ? openAiVectorStoreId : null}
                   openAiThreadId={session?.user ? await createThreadIfNotExist(session) : null}
-                  userDocument={session?.user ? await getPreviousUserDocument(session) : null}
                   filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}
-                  userDefinedTemplates={session?.user ? await getUserDefinedTemplates(session) : null}
+                  userDefinedTemplates={session?.user ? await getTemplates(session!.user!.email!) : null}
                   userDocuments={session?.user ? await getUserDocs(session) : null}
                 >
-                  <DocumentProvider docgptProvidedTemplates={session?.user ? await getProvidedTemplates() : null}>
+                  <DocumentProvider docgptProvidedTemplates={session?.user ? await getTemplates("docgpt") : null}>
                     <div className="relative flex min-h-screen flex-col">
                       <SiteHeader session={session}/>
                       <div className="flex-1">{children}</div>

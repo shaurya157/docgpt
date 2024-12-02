@@ -83,21 +83,6 @@ export async function getUserOwnedDocuments(userId: string) {
   return await getDocs(query(collection(db, "documents"), where("documentOwnerId", "==", userId)))
 }
 
-export async function getUserDocument(userid: string) {
-  let usersRef = collection(db, "users")
-  let docRef = doc(usersRef, userid);
-  let result;
-  let error;
-
-  try {
-    result = await getDoc(docRef).then(data => data.get("document"))
-  } catch (e) {
-    error = e;
-  }
-
-  return { result, error };
-}
-
 export async function saveCurrentDocumentState(userId: string, documentName: string, threadId: string, document: any) {
   let usersRef = collection(db, "documents")
   let docRef = doc(usersRef, documentName);
@@ -123,16 +108,14 @@ export async function saveCurrentDocumentState(userId: string, documentName: str
 }
 
 export async function saveUserTemplate(userId: string, templateName: string, template: any) {
-  let usersRef = collection(db, "users")
-  let docRef = doc(usersRef, userId);
+  let usersRef = collection(db, "templates")
+  let docRef = doc(usersRef, templateName);
   let result, error;
 
   try {
     const value = {
-      "templates": arrayUnion({
-        "templateName": templateName,
-        template
-      })
+      "templateOwnerId": userId,
+      "template": template
     }
     result = await setDoc(
       docRef,
@@ -205,6 +188,10 @@ export async function getUserTemplates(userId: string) {
   }
 
   return { result, error };
+}
+
+export async function getOwnerTemplates(templateOwnerId: string) {
+  return await getDocs(query(collection(db, "templates"), where("templateOwnerId", "==", templateOwnerId)))
 }
 
 export async function deleteUserUploadedFile(userId: string, fileName: string, openAiFileId: string) {

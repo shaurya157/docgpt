@@ -16,20 +16,23 @@ import * as React from "react";
 import {Input} from "@/components/plate-ui/input";
 import {useState} from "react";
 import {useUserDataContext} from "@/providers/UserDataContextProvider";
+import {useDocument} from "@/providers/document-provider";
 
 export function SaveButton() {
   const editor = useMyEditorRef();
   const {data: session} = useSession();
   const params = useParams();
   const openState = useOpenState();
+  const { activeUserDocument, activeTemplate } = useDocument()
   const [ templateName, setTemplateName ] = useState("");
   const [ documentName, setDocumentName ] = useState("");
   const { threadId } = useUserDataContext()
 
   const handleSaveDocument = async (event: React.FormEvent) => {
     event.preventDefault();
-    const res = await saveCurrentDocumentState(session!.user!.email!, documentName, threadId!, editor.children )
-    console.log(editor.children)
+    const docName = documentName ? documentName : activeUserDocument!["documentName"]
+
+    const res = await saveCurrentDocumentState(session!.user!.email!, docName, threadId!, editor.children )
     if (res.error) {
       toast.error(res.error.message);
     } else {
@@ -39,8 +42,8 @@ export function SaveButton() {
 
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await saveUserTemplate(session!.user!.email!, templateName, editor.children)
-    console.log(editor.children)
+    const templName = templateName ? templateName : activeTemplate!["templateName"]
+    const res = await saveUserTemplate(session!.user!.email!, templName, editor.children)
     if (res.error) {
       toast.error(res.error.message);
     } else {
@@ -64,7 +67,7 @@ export function SaveButton() {
             <Input
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
-              placeholder={"name"}
+              placeholder={activeTemplate ? activeTemplate["templateName"] : templateName}
               required={true}
               className="pr-10"></Input>
             <Button type="submit">Save Template</Button>
@@ -87,7 +90,7 @@ export function SaveButton() {
             <Input
               value={documentName}
               onChange={(e) => setDocumentName(e.target.value)}
-              placeholder={"Name"}
+              placeholder={activeUserDocument ? activeUserDocument["documentName"] : documentName}
               required={true}
               className="pr-10"></Input>
             <Button type="submit">Save</Button>

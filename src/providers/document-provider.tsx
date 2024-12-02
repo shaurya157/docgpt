@@ -12,15 +12,15 @@ type DocumentSettings = {
 export const TemplateSettings = createContext<DocumentSettings | null>(null)
 
 interface DocumentProviderProps {
-  displayedTemplate?: any | null;
+  template?: any | null;
   docgptProvidedTemplates?: any | null;
   children: React.ReactNode;
   userDocument?: any | null;
 }
 
-export default function DocumentProvider({ children, displayedTemplate, docgptProvidedTemplates, userDocument }: DocumentProviderProps) {
+export default function DocumentProvider({ children, template, docgptProvidedTemplates, userDocument }: DocumentProviderProps) {
 
-  const [activeTemplate, setActiveTemplate] = useState(displayedTemplate)
+  const [activeTemplate, setActiveTemplate] = useState(template)
   const [providedTemplates] = useState(docgptProvidedTemplates)
   const [activeUserDocument, setActiveUserDocument] = useState(userDocument)
 

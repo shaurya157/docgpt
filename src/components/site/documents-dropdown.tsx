@@ -17,9 +17,7 @@ export function DocumentsDropdown() {
 
   const setDoc = (doc) => {
     return () => {
-      console.log("SETTING")
-      console.log(doc["document"])
-      setActiveUserDocument(doc["document"])
+      setActiveUserDocument(doc)
     }
   }
   return(

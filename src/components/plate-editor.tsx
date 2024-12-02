@@ -164,7 +164,7 @@ export default function PlateEditor() {
   const forceUpdate = useForceUpdate();
   useEffect(() => {
     if (activeUserDocument) {
-      editor.children = activeUserDocument;
+      editor.children = activeUserDocument["document"];
     }
     forceUpdate();
   }, [editor, activeUserDocument, forceUpdate]);
