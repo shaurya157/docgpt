@@ -2,43 +2,42 @@ import Link from 'next/link';
 
 import { siteConfig } from '@/config/site';
 import PlateEditor from '@/components/plate-editor';
-import {getDocgptOwnedTemplates, getUserTemplates} from "@/firebase/firestore-dao";
+import {getDocgptOwnedTemplates, getOwnerTemplates, getUserTemplates} from "@/firebase/firestore-dao";
 import {toast} from "sonner";
 import {useSession} from "next-auth/react";
 import {auth} from "../../../../auth";
 import {Session} from "next-auth";
 import DocumentProvider from "@/providers/document-provider";
 
-async function getProvidedTemplates() {
-  const result = await getDocgptOwnedTemplates()
+async function getTemplates(templateOwnerId: string) {
+  let result: any[] = []
+  const userTemplatesSnapshot = await getOwnerTemplates(templateOwnerId)
+  userTemplatesSnapshot.docs.forEach((doc) => {
+    const res = {
+      "templateName": doc.id,
+      "template": doc.get("template")
+    }
 
-  return result.result;
-}
-
-async function getUserOwnedTemplates(session: Session) {
-  const userTemplates = await getUserTemplates(session!.user!.email!)
-  if (!userTemplates.result) {
-    return null
-  }
-
-  return userTemplates.result;
+    result.push(res)
+  })
+  return result
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const slug = (await params).slug
   const session = await auth()
-  const providedTemplates = await getProvidedTemplates()
-  const userTemplates = session?.user?.email ? await getUserOwnedTemplates(session) : null
+  const providedTemplates = await getTemplates("docgpt")
+  const userTemplates = session?.user?.email ? await getTemplates(session!.user!.email!) : null
 
   let displayedTemplate: any | null
-  if (!slug.startsWith("docgpt") && userTemplates != null) {
+  if (userTemplates != null) {
     displayedTemplate = userTemplates.find(templ => templ["templateName"] === slug)
-  } else {
+  }
+  if (!displayedTemplate) {
     displayedTemplate =  providedTemplates.find(templ => templ["templateName"] === slug)
   }
-
   if (!displayedTemplate) {
-    displayedTemplate = providedTemplates.find(templ => templ["templateName"] === "docgpt-default")
+    displayedTemplate = providedTemplates.find(templ => templ["templateName"] === "default")
   }
 
   return (
@@ -47,7 +46,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         className="max-w-[calc(100vw-32px)] rounded-lg border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]">
         <DocumentProvider
           template={session?.user ? displayedTemplate : null}
-          docgptProvidedTemplates={ session?.user ? await getProvidedTemplates() : null }
+          docgptProvidedTemplates={ session?.user ? providedTemplates : null }
         >
           <PlateEditor/>
         </DocumentProvider>
