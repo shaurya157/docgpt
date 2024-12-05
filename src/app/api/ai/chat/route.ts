@@ -5,7 +5,6 @@ import {NextRequest, NextResponse} from "next/server";
 export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
-  console.log("HIT THE RUN ENDPOINT")
   const reqJson = await req.json()
   let {
     message,
@@ -19,6 +18,7 @@ export async function POST(req: NextRequest) {
     apiKey: apiKey || ""
   });
 
+  console.log("template: ", template)
   try {
     const messageData = {
       role: "user" as "user",
@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
         async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {
           // Poll for status change
           while (run.status === "queued" || run.status === "in_progress") {
+
             // delay for 500ms
             await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
             run.status === "failed" ||
             run.status === "expired"
           ) {
-            throw new Error(run.status);
+            throw new Error(run.last_error ? run.last_error.message : run.status);
           }
         }
 

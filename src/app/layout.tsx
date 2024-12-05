@@ -20,9 +20,8 @@ import { Metadata, Viewport } from 'next';
 import { OpenAIProvider } from '@/components/openai/openai-context';
 import {auth} from "../../auth";
 import {
-  getDocgptOwnedTemplates,
   getUserActiveAssistantAndVectorIds,
-  getUserActiveThreadId, getUserOwnedDocuments, getOwnerTemplates, getUserTemplates,
+  getUserActiveThreadId, getUserOwnedDocuments, getOwnedTemplates,
   getUserUploadedFilesData,
   saveUserActiveAssistant, saveUserActiveThread
 } from "@/firebase/firestore-dao";
@@ -137,7 +136,7 @@ async function getExistingUserUploadedFiles(session: Session) {
 
 async function getTemplates(templateOwnerId: string) {
   let result: any[] = []
-  const userTemplatesSnapshot = await getOwnerTemplates(templateOwnerId)
+  const userTemplatesSnapshot = await getOwnedTemplates(templateOwnerId)
   userTemplatesSnapshot.docs.forEach((doc) => {
     const res = {
       "templateName": doc.id,

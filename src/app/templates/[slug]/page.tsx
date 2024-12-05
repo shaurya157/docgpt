@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { siteConfig } from '@/config/site';
 import PlateEditor from '@/components/plate-editor';
-import {getDocgptOwnedTemplates, getOwnerTemplates, getUserTemplates} from "@/firebase/firestore-dao";
+import {getOwnedTemplates} from "@/firebase/firestore-dao";
 import {toast} from "sonner";
 import {useSession} from "next-auth/react";
 import {auth} from "../../../../auth";
@@ -11,7 +11,7 @@ import DocumentProvider from "@/providers/document-provider";
 
 async function getTemplates(templateOwnerId: string) {
   let result: any[] = []
-  const userTemplatesSnapshot = await getOwnerTemplates(templateOwnerId)
+  const userTemplatesSnapshot = await getOwnedTemplates(templateOwnerId)
   userTemplatesSnapshot.docs.forEach((doc) => {
     const res = {
       "templateName": doc.id,

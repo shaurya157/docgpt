@@ -160,37 +160,7 @@ export async function saveUserActiveThread(userId: string, threadId: string) {
   return { result };
 }
 
-export async function getDocgptOwnedTemplates() {
-  let templatesRef = collection(db, "templates")
-  let docRef = doc(templatesRef, "docgpt");
-  let result;
-  let error;
-
-  try {
-    result = await getDoc(docRef).then(data => data.get("templates"))
-  } catch (e) {
-    error = e
-  }
-
-  return { result, error };
-}
-
-export async function getUserTemplates(userId: string) {
-  let usersRef = collection(db, "users")
-  let docRef = doc(usersRef, userId);
-  let result;
-  let error;
-
-  try {
-    result = await getDoc(docRef).then(data => data.get("templates"))
-  } catch (e) {
-    error = e;
-  }
-
-  return { result, error };
-}
-
-export async function getOwnerTemplates(templateOwnerId: string) {
+export async function getOwnedTemplates(templateOwnerId: string) {
   return await getDocs(query(collection(db, "templates"), where("templateOwnerId", "==", templateOwnerId)))
 }
 

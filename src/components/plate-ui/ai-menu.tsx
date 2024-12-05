@@ -53,6 +53,7 @@ const serializeToMarkdown = (template: any) => {
     })
   }
 
+  console.log("RESULT TEMPLATE: ", result)
   return result += "</Template>";
 }
 export function AIMenu() {
