@@ -29,7 +29,7 @@ import { Popover, PopoverAnchor, PopoverContent } from './popover';
 import type { TElement, TNodeEntry } from '@udecode/plate-common';
 import type { PlateEditor } from '@udecode/plate-common/react';
 import {useSession} from "next-auth/react";
-import {useUserDataContext} from "@/providers/UserDataContextProvider";
+import {useUserDataContext} from "@/providers/user-data-context-provider";
 import {useDocument} from "@/providers/document-provider";
 import {serializeMd} from "@udecode/plate-markdown";
 
@@ -69,11 +69,10 @@ export function AIMenu() {
 
   // @ts-ignore
   const chat = useAssistant({
-    api: "/api/ai/chat",
+    api: "/api/ai/chat/editorassistant",
     body: {
       apiKey: useOpenAI().apiKey,
       model: useOpenAI().model.value,
-      userId: session?.user?.email,
       assistantId,
       template: isSelecting ? "" : (activeTemplate == undefined || false) ? "" : serializeToMarkdown(activeTemplate)
     },

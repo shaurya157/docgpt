@@ -14,7 +14,7 @@ import {useForm, SubmitHandler} from 'react-hook-form';
 import {UploadedFiles} from "@/components/site/uploaded-files";
 import {Session} from "next-auth";
 import {useSession} from "next-auth/react";
-import {useUserDataContext} from "@/providers/UserDataContextProvider";
+import {useUserDataContext} from "@/providers/user-data-context-provider";
 import {appendFileDataToUser} from "@/firebase/firestore-dao";
 import {Button} from "@/components/plate-ui/button";
 import {Input} from "@/components/plate-ui/input";

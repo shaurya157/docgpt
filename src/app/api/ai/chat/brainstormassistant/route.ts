@@ -5,26 +5,23 @@ import {NextRequest, NextResponse} from "next/server";
 export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
-  const reqJson = await req.json()
-  let {
-    message,
-    apiKey: key,
-    assistantId,
-    threadId,
-    template
-  } = reqJson;
-  const apiKey = key || process.env.OPENAI_API_KEY;
+  const formData = await req.formData()
+  const message = formData.get("message")
+  const threadId = formData.get("threadId") as string
+  // TODO: get file from formdata too and process it
+  const assistantId = formData.get("assistantId")
+  const apiKey = process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
     apiKey: apiKey || ""
   });
 
-  console.log("template: ", template)
   try {
     const messageData = {
       role: "user" as "user",
-      content: template + message as string,
+      content:  message as string,
     };
 
+    console.log("message: ", messageData)
     const createdMessage = await openai.beta.threads.messages.create(
       threadId,
       messageData
@@ -36,6 +33,7 @@ export async function POST(req: NextRequest) {
       async ({ sendMessage }) => {
         // Run the assistant on the thread
         const run = await openai.beta.threads.runs.create(threadId, {
+          // @ts-ignore
           assistant_id: assistantId
         });
 
@@ -56,6 +54,10 @@ export async function POST(req: NextRequest) {
             run.status === "failed" ||
             run.status === "expired"
           ) {
+
+            if(run.status == "failed") {
+              console.log(`There was an error with the thread run. Error: ${run.status}`)
+            }
             throw new Error(run.last_error ? run.last_error.message : run.status);
           }
         }

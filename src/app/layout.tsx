@@ -8,10 +8,6 @@ import { TailwindIndicator } from '@/components/site/tailwind-indicator';
 import { ThemeProvider } from '@/components/site/theme-provider';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
-import {
-  onSnapshot
-} from "firebase/firestore";
-
 
 import '@/styles/globals.css';
 
@@ -26,7 +22,7 @@ import {
   saveUserActiveAssistant, saveUserActiveThread
 } from "@/firebase/firestore-dao";
 import {Session} from "next-auth";
-import UserDataContextProvider from "@/providers/UserDataContextProvider";
+import UserDataContextProvider from "@/providers/user-data-context-provider";
 import {SessionProvider} from "next-auth/react";
 import DocumentProvider from "@/providers/document-provider";
 

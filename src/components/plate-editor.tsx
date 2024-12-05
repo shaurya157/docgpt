@@ -143,7 +143,7 @@ import {ToggleElement} from './plate-ui/toggle-element';
 import {aiPlugins} from './plugins/ai-plugins';
 import {copilotPlugins} from './plugins/copilot-plugins';
 import {useSession} from "next-auth/react";
-import {useUserDataContext} from "@/providers/UserDataContextProvider";
+import {useUserDataContext} from "@/providers/user-data-context-provider";
 import {useDocument} from "@/providers/document-provider";
 
 export default function PlateEditor() {
