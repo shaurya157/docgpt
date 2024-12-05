@@ -14,9 +14,9 @@ import {useSession} from "next-auth/react";
 
 const roleToColorMap: Record<any, string> = {
   system: "lightred",
-  user: "white",
+  user: "orange",
   function: "lightblue",
-  assistant: "lightgreen"
+  assistant: "green"
 };
 
 const DotAnimation = () => {
@@ -134,9 +134,9 @@ export function ChatWindow(){
   };
 
   return (
-    <main className="flex min-h-screen flex-col p-24">
-      <div className="flex flex-col w-full max-w-xl mx-auto stretch">
-        <h1 className="text-3xl text-zinc-100 font-extrabold pb-4">
+    <main className="flex min-h-screen flex-col p-24 ">
+      <div className="flex flex-col w-full max-w-xl mx-auto stretch ">
+        <h1 className="text-3xl text-zinc-100 font-extrabold pb-4 text-indigo-400">
           Ask DocGPT Anything🤖
         </h1>
         {error != null && (
@@ -170,7 +170,7 @@ export function ChatWindow(){
 
         <form
           onSubmit={handleFormSubmit}
-          className="flex items-start flex-col p-4 pb-2 text-white max-w-xl bg-black mx-auto fixed bottom-0 w-full mb-8 border border-gray-300 rounded-xl shadow-xl"
+          className="flex items-start flex-col p-4 pb-2 text-white max-w-xl bg-black mx-auto fixed bottom-0 w-full mb-8"
         >
           <div className="flex items-start w-full">
             <Input
@@ -180,7 +180,7 @@ export function ChatWindow(){
               onChange={handleMessageChange}
             />
             <Button
-              className="flex-0 ml-2 cursor-pointer"
+              className="flex ml-2 cursor-pointer"
               variant="ghost"
               type="submit"
               disabled={status !== "awaiting_message"}
