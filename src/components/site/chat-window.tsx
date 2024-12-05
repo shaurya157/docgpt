@@ -135,8 +135,8 @@ export function ChatWindow(){
 
   return (
     <main className="flex min-h-screen flex-col p-24 ">
-      <div className="flex flex-col w-full max-w-xl mx-auto stretch ">
-        <h1 className="text-3xl text-zinc-100 font-extrabold pb-4 text-indigo-400">
+      <div className="flex flex-col w-full max-w-xl mx-auto ">
+        <h1 className="text-3xl font-extrabold pb-4 text-indigo-400">
           Ask DocGPT Anything🤖
         </h1>
         {error != null && (
