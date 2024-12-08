@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import {NextRequest, NextResponse} from "next/server";
+import { Message } from "openai/resources/beta/threads/messages.mjs";
 
 export const runtime = "edge";
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     )
   } catch (e) {
     return NextResponse.json(
-      { error: 'Failed to create Open AI Thread' },
+      { error: `Failed to create Open AI Thread. Error: ${e.message}` },
       { status: 500 }
     );
   }

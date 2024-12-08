@@ -60,12 +60,13 @@ export async function getUserActiveAssistantAndVectorIds(userid: string) {
   let docRef = doc(usersRef, userid);
   let savedAssistantId;
   let savedVectorStoreId;
+  let savedOpenAiChatAssistantId;
 
   const result = await getDoc(docRef)
   savedAssistantId = result.get("assistantId")
   savedVectorStoreId = result.get("vectorStoreId")
-
-  return { savedAssistantId, savedVectorStoreId };
+  savedOpenAiChatAssistantId = result.get("openAiChatAssistantId")
+  return { savedAssistantId, savedVectorStoreId, savedOpenAiChatAssistantId };
 }
 
 export async function getUserActiveThreadId(userid: string) {
@@ -129,7 +130,7 @@ export async function saveUserTemplate(userId: string, templateName: string, tem
   return { result, error };
 }
 
-export async function saveUserActiveAssistant(userId: string, assistantId: string, vectoreStoreId: string) {
+export async function saveUserActiveAssistant(userId: string, assistantId: string, vectoreStoreId: string, openAiChatAssistantId: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userId);
   let result;
@@ -138,7 +139,8 @@ export async function saveUserActiveAssistant(userId: string, assistantId: strin
     docRef,
     {
       assistantId: assistantId,
-      vectorStoreId: vectoreStoreId
+      vectorStoreId: vectoreStoreId,
+      openAiChatAssistantId: openAiChatAssistantId
     },
     { merge: true,}
   );

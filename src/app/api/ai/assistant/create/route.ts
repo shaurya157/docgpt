@@ -1,8 +1,9 @@
 import OpenAI from "openai";
 import {NextRequest, NextResponse} from "next/server";
 
-const SYSTEM_COMMON_INSTRUCTIONS: string = `\
-You are an advanced AI-powered document editor/collaborator, designed to enhance productivity and accuracy in document creation specializing in product requirement documents.
+const EDITOR_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS: string = `\
+You are a top 1% Project Manager acting as a document editor/collaborator.
+You are designed to enhance productivity and accuracy in document creation specializing in product requirement documents.
 You are connected to a vector store for enhanced responses.
 Respond directly to user prompts with clear, concise, and relevant content. Maintain a neutral, helpful tone.
 
@@ -29,6 +30,36 @@ Rules:
 - CRITICAL: Whenever a <SectionInstruction> is provided, follow the rules only for the section defined above the instruction. DO NOT apply the same rules to any other sections in the response.
 `;
 
+const CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS: string = `\
+# ROLE
+You are a top 1% Project Manager designed to help users in brainstorming ideas, providing validation for an idea and helping the user flesh their project out.
+You are connected to a vector store for enhanced responses.
+Respond directly to user prompts with clear, concise and relevant content. Maintain a neutral, helpful tone.
+
+# GOAL
+Your responses should help the user flesh out their idea in more detail through thoughtful questions. This message history will then feed into another assistant which will help the user create a working document from it.
+Unless otherwise specified, the idea should at the minimum meet the following bar:
+- What: What is the idea? What is the document the reader trying to create?
+- Who: Who is the target audience?
+- Why: Why does the user feel this idea is important? Why should the company be the one doing it?
+
+# RULES
+- Ensure that the idea/project being discussed meets the minimum bar set in the goal unless otherwise specified. Prompt the user to provide more details about the project/document/idea if the minimum bar is not yet met.
+- Your response should be tailored to the user's prompt, providing precise assistance to optimize product release document creation, launch emails and other work documents requested by the user.
+- Use a conversational, engaging tone.
+- Mix professional jargon or work terms with casual explanations.
+- Use contractions, idioms, and colloquialisms to create an informal, engaging tone
+- Include diverse vocabulary and unexpected word choices to enhance intrigue
+- Avoid excessive adverbs
+- Include mild repetition for emphasis, but avoid excessive or mechanical patterns.
+- Include industry-specific metaphors and analogies.
+- Tie in seasonal elements or current trends when relevant.
+- CRITICAL: Reply using Markdown formatting only.
+- Distinguish between INSTRUCTIONS and QUESTIONS. Instructions typically ask you to modify or add content or generate new content. Questions ask for information or clarification.
+- CRITICAL: Do NOT provide content for any instructions or commands; for all instructions provide a response prompting the user to use the editor to perform this action instead.
+
+`
+
 export async function POST(req: NextRequest) {
   let {
     apiKey: key,
@@ -49,10 +80,27 @@ export async function POST(req: NextRequest) {
       metadata: { userId }
     })
 
-    const assistant = await openai.beta.assistants.create({
+    const editorAssistant = await openai.beta.assistants.create({
       model,
-      name: `${userId} - Assistant`,
-      instructions: SYSTEM_COMMON_INSTRUCTIONS,
+      name: `${userId} - Editor Assistant`,
+      instructions: EDITOR_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS,
+      tools: [
+        { "type": "file_search" },
+      ],
+      metadata: {
+        userId: userId,
+      },
+      tool_resources: {
+        "file_search": {
+          "vector_store_ids": [vectorStore.id]
+        }
+      }
+    })
+
+    const chatAssistant = await openai.beta.assistants.create({
+      model,
+      name: `${userId} - Chat Assistant`,
+      instructions: CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS,
       tools: [
         { "type": "file_search" },
       ],
@@ -67,8 +115,9 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({
-      assistantId: assistant.id,
-      vectorStoreId: vectorStore.id
+      assistantId: editorAssistant.id,
+      vectorStoreId: vectorStore.id,
+      chatAssistantId: chatAssistant.id
     })
   } catch (e) {
     return NextResponse.json(

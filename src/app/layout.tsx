@@ -54,6 +54,7 @@ interface RootLayoutProps {
 async function createAssistantIfNotExist(session: Session) {
   let openAiAssistantId;
   let openAiVectorStoreId;
+  let openAiChatAssistantId;
   // TODO: this is very inelegant. We are making the call in the site header/page and then passing all the children the user uploaded files.
   // I've done this due to a lack of knowledge about how to make server side callbacks when a user signs in. This is also potentially running multiple times...
   // Ideally, when the user signs in, we should:
@@ -64,11 +65,11 @@ async function createAssistantIfNotExist(session: Session) {
   // The same is done on layout.tsx, once refactor make the same change there
   // Maybe we can use useEffect() here?
   try {
-    const { savedAssistantId, savedVectorStoreId } =  await getUserActiveAssistantAndVectorIds(session.user?.email!)
-
-    if (savedAssistantId && savedVectorStoreId) {
+    const { savedAssistantId, savedVectorStoreId, savedOpenAiChatAssistantId } =  await getUserActiveAssistantAndVectorIds(session.user?.email!)
+    if (savedAssistantId && savedVectorStoreId && savedOpenAiChatAssistantId) {
       openAiAssistantId = savedAssistantId
       openAiVectorStoreId = savedVectorStoreId
+      openAiChatAssistantId = savedOpenAiChatAssistantId
     } else {
       let userId = session.user?.email!
       // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
@@ -80,15 +81,16 @@ async function createAssistantIfNotExist(session: Session) {
       const responseJson = await createAssistantResult.json()
       openAiAssistantId = responseJson["assistantId"]
       openAiVectorStoreId = responseJson["vectorStoreId"]
+      openAiChatAssistantId = responseJson["chatAssistantId"]
 
       // TODO: Move this to the server, no need for this to happen here, potentially unsafe
-      await saveUserActiveAssistant(userId, openAiAssistantId, openAiVectorStoreId)
+      await saveUserActiveAssistant(userId, openAiAssistantId, openAiVectorStoreId, openAiChatAssistantId)
     }
   } catch (error) {
     console.error(error)
   }
 
-  return {openAiAssistantId, openAiVectorStoreId};
+  return {openAiAssistantId, openAiVectorStoreId, openAiChatAssistantId};
 }
 
 async function createThreadIfNotExist(session: Session) {
@@ -103,7 +105,7 @@ async function createThreadIfNotExist(session: Session) {
       let userId = session.user?.email!
       // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
       // Find a better way
-      const createThreadResult = await fetch(process.env.NEXTAUTH_URL + '/api/ai/thread', {
+      const createThreadResult = await fetch(process.env.NEXTAUTH_URL + '/api/ai/thread/create', {
         method: 'POST',
         body: JSON.stringify({ userId }),
       })
@@ -161,11 +163,12 @@ async function getUserDocs(session) {
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   const session = await auth()
-  let openAiAssistantId, openAiVectorStoreId;
+  let openAiAssistantId, openAiVectorStoreId, openAiChatAssistantId;
   if (session?.user) {
     const res = await createAssistantIfNotExist(session)
     openAiAssistantId = res.openAiAssistantId
     openAiVectorStoreId = res.openAiVectorStoreId
+    openAiChatAssistantId = res.openAiChatAssistantId
   }
 
   return (
@@ -187,6 +190,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                 <UserDataContextProvider
                   openAiAssistantId={session?.user ? openAiAssistantId : null}
                   openAiVectorStoreId={session?.user ? openAiVectorStoreId : null}
+                  openAiChatAssistantId={session?.user ? openAiChatAssistantId : null}
                   openAiThreadId={session?.user ? await createThreadIfNotExist(session) : null}
                   filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}
                   userDefinedTemplates={session?.user ? await getTemplates(session!.user!.email!) : null}

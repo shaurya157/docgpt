@@ -2,7 +2,7 @@
 
 import { Icons } from "@/components/icons";
 import { readDataStream } from "@/lib/read-data-stream";
-import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import {ChangeEvent, FormEvent, useEffect, useRef, useState} from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import {AssistantStatus, Message} from "ai";
@@ -11,6 +11,7 @@ import {Input} from "@/components/plate-ui/input";
 import {Paperclip} from "lucide-react";
 import {useUserDataContext} from "@/providers/user-data-context-provider";
 import {useSession} from "next-auth/react";
+import {toast} from "sonner";
 
 const roleToColorMap: Record<any, string> = {
   system: "lightred",
@@ -57,10 +58,12 @@ const DotAnimation = () => {
 
 export function ChatWindow(){
   const prompt = "Help me brainstorm ideas for...";
+  const initialized = useRef(false)
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState<string>(prompt);
   const [file, setFile] = useState<File | undefined>(undefined);
-  const {threadId, assistantId} = useUserDataContext();
+  const {data: session} = useSession();
+  const {threadId, chatAssistantId} = useUserDataContext();
   const [error, setError] = useState<unknown | undefined>(undefined);
   const [status, setStatus] = useState<AssistantStatus>("awaiting_message");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -78,7 +81,7 @@ export function ChatWindow(){
     formData.append("message", message as string);
     formData.append("threadId", threadId!);
     formData.append("file", file as File);
-    formData.append("assistantId", assistantId!);
+    formData.append("assistantId", chatAssistantId!);
 
     const result = await fetch("/api/ai/chat/brainstormassistant", {
       method: "POST",
@@ -133,6 +136,44 @@ export function ChatWindow(){
     fileInputRef.current?.click();
   };
 
+  useEffect(() => {
+    (async function() {
+      if (!initialized.current) {
+        console.log("RUNING")
+        initialized.current = true
+        try {
+          const chatHistoryResponse = await fetch('/api/ai/thread/messages', {
+            method: 'POST',
+            body: JSON.stringify({
+              userId: session!.user!.email!,
+              threadId,
+              chatAssistantId
+            }),
+          })
+          const json = await chatHistoryResponse.json();
+          if (!chatHistoryResponse.ok) {
+            toast.error(json["error"])
+          } else {
+            const messages = json["messages"] as Message[]
+            messages.reverse().forEach((message) => {
+              setMessages((messages: Message[]) => [
+                ...messages,
+                {
+                  id: message.id,
+                  role: message.role,
+                  content: message.content[0]["text"]["value"]
+                }
+              ]);
+            })
+          }
+        } catch (e) {
+          toast.error("Something unexpected happened...")
+          console.error(e);
+        }
+      }
+    })();
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col p-24 ">
       <div className="flex flex-col w-full max-w-xl mx-auto ">
@@ -170,7 +211,7 @@ export function ChatWindow(){
 
         <form
           onSubmit={handleFormSubmit}
-          className="flex items-start flex-col p-4 pb-2 text-white max-w-xl bg-black mx-auto fixed bottom-0 w-full mb-8"
+          className="flex items-start flex-col p-4 pb-2 text-white max-w-xl bg-black mx-auto fixed bottom-0 w-full mb-8 bg-inherit"
         >
           <div className="flex items-start w-full">
             <Input
@@ -180,12 +221,12 @@ export function ChatWindow(){
               onChange={handleMessageChange}
             />
             <Button
-              className="flex ml-2 cursor-pointer"
-              variant="ghost"
+              className="flex ml-2 cursor-pointer "
+              variant="outline"
               type="submit"
               disabled={status !== "awaiting_message"}
             >
-              <Icons.arrowRight className="text-gray-200 hover:text-white transition-colors duration-200 ease-in-out" />
+              <Icons.arrowRight className="text-gray-500 hover:text-white transition-colors duration-200 ease-in-out" />
             </Button>
           </div>
 
