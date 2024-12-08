@@ -211,7 +211,7 @@ export function ChatWindow(){
 
         <form
           onSubmit={handleFormSubmit}
-          className="flex items-start flex-col p-4 pb-2 text-white max-w-xl bg-black mx-auto fixed bottom-0 w-full mb-8 bg-inherit"
+          className="flex items-start flex-col p-4 pb-2 text-white max-w-xl mx-auto fixed bottom-0 w-full mb-8 bg-inherit"
         >
           <div className="flex items-start w-full">
             <Input
