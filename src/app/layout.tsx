@@ -137,7 +137,8 @@ async function getUserDocs(session) {
   const resSnapshot = await getUserOwnedDocuments(session!.user!.email!)
   resSnapshot.docs.forEach((doc) => {
     const res = {
-      "documentName": doc.id,
+      "id": doc.id,
+      "documentName": doc.get("documentName"),
       "document": doc.get("document"),
       "threadId": doc.get("threadId"),
     }
@@ -158,11 +159,18 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     let activeDocumentName = res.activeDocumentName
 
     userDocuments = await getUserDocs(session)
+
+    // TODO: there MUST be a better way to do this...
     if (userDocuments.length > 0) {
       if (activeDocumentName) {
         let doc = userDocuments.find(doc => doc["documentName"] === activeDocumentName)
-        initialOpenAiThreadId = doc["threadId"]
-        userDocument = doc
+        if (doc) {
+          initialOpenAiThreadId = doc["threadId"]
+          userDocument = doc
+        } else {
+          initialOpenAiThreadId = userDocuments[userDocuments.length - 1]["threadId"]
+          userDocument = userDocuments[userDocuments.length - 1]
+        }
       } else {
         initialOpenAiThreadId = userDocuments[userDocuments.length - 1]["threadId"]
         userDocument = userDocuments[userDocuments.length - 1]

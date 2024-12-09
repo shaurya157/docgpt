@@ -8,6 +8,7 @@ import {
   getFirestore,
   query,
   setDoc,
+  addDoc,
   where
 } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
@@ -86,22 +87,22 @@ export async function getUserOwnedDocuments(userId: string) {
   return await getDocs(query(collection(db, "documents"), where("documentOwnerId", "==", userId)))
 }
 
-export async function saveCurrentDocumentState(userId: string, documentName: string, threadId: string, document: any) {
-  let usersRef = collection(db, "documents")
-  let docRef = doc(usersRef, documentName);
+export async function saveCurrentDocumentState(userId: string, documentName: string, threadId: string, document: any, documentId?: string) {
+  let documentsRef = collection(db, "documents")
   let result, error;
-
   try {
     const value = {
       "documentOwnerId": userId,
       "document": document,
-      "threadId": threadId
+      "threadId": threadId,
+      "documentName": documentName
     }
-    result = await setDoc(
-      docRef,
+
+    result = documentId ? await setDoc(
+      doc(documentsRef, documentId),
       value,
       { merge: true }
-    );
+    ) : await addDoc(documentsRef, value)
   } catch (e) {
     error = e
   }
