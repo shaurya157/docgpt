@@ -32,7 +32,7 @@ export function SaveButton() {
     event.preventDefault();
     const docName = documentName ? documentName : activeUserDocument!["documentName"]
 
-    const res = await saveCurrentDocumentState(session!.user!.email!, docName, threadId!, editor.children )
+    const res = await saveCurrentDocumentState(session!.user!.email!, docName, threadId!, editor.children, activeUserDocument!["id"] )
     if (res.error) {
       toast.error(res.error.message);
     } else {
@@ -43,7 +43,13 @@ export function SaveButton() {
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     const templName = templateName ? templateName : activeTemplate!["templateName"]
-    const res = await saveUserTemplate(session!.user!.email!, templName, editor.children)
+    const res = await saveUserTemplate(
+      session!.user!.email!,
+      templName,
+      editor.children,
+      activeTemplate!["templateOwnerId"] == session!.user!.email!,
+      activeTemplate!["id"]
+    )
     if (res.error) {
       toast.error(res.error.message);
     } else {
@@ -51,7 +57,7 @@ export function SaveButton() {
     }
   }
 
-  // TODO: Need to changes this based on url, not just the slug
+  // TODO: Need to change this based on url, not just the slug
   if (params.slug) {
     return (
       <DropdownMenu modal={false} {...openState} >

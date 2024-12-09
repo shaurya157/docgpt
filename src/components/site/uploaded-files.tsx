@@ -35,11 +35,11 @@ export function UploadedFiles({session, userFilesData}: UploadedFilesProps) {
   if (!session?.user) {
     return <div>Please sign in to view uploaded files</div>
   } else {
-    return <div>
+    return <div className="p-2 flex flex-row space-y-1 items-center">
       {
         userFilesData.map((file: Map<string, string>) => {
           return <div className={"relative flex"} key={file["openAiFileId"]}>
-            {file["fileName"]}
+            <p className="w-64">{file["fileName"]}</p>
             <Trash2 className={"cursor-pointer"} onClick={handleDeleteFile(file["openAiFileId"], file["fileName"])}/>
           </div>
         })

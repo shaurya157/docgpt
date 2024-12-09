@@ -123,8 +123,9 @@ async function getTemplates(templateOwnerId: string) {
   const userTemplatesSnapshot = await getOwnedTemplates(templateOwnerId)
   userTemplatesSnapshot.docs.forEach((doc) => {
     const res = {
-      "templateName": doc.id,
-      "template": doc.get("template")
+      "templateName": doc.get("templateName"),
+      "template": doc.get("template"),
+      "id": doc.id,
     }
 
     result.push(res)

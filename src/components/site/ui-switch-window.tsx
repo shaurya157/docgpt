@@ -5,10 +5,12 @@ import {useUserSettings} from "@/providers/user-settings-provider";
 import PlateEditor from "@/components/plate-editor";
 import {ChatWindow} from "@/components/site/chat-window";
 import {useSession} from "next-auth/react";
+import {useDocument} from "@/providers/document-provider";
 
 export function UiSwitchWindow() {
   const {ui, setUi} = useUserSettings()
   const {data: session} = useSession()
+  const {activeTemplate} = useDocument()
   const toggleUi = () => {
     ui == "document" ? setUi("chat") : setUi("document")
   }
@@ -36,6 +38,11 @@ export function UiSwitchWindow() {
             <PlateEditor/>
           </div>
         )
+      }
+      {
+        activeTemplate ? (
+          <div>Current template: {activeTemplate["templateName"]}</div>
+        ) : <></>
       }
     </div>
   )

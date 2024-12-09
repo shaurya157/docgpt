@@ -67,8 +67,8 @@ export function DocumentsDropdown() {
       >
         {
           userOwnedDocuments?.map((doc, idx) => {
-            return <div key={`documentId-${doc}-${idx}`}>
-              {doc["documentName"]}
+            return <div key={`documentId-${doc}-${idx}`} className="p-2 flex flex-row space-y-1 items-center">
+              <p className="w-64">{doc["documentName"]}</p>
               <Button onClick={setDoc(doc)}>Use doc</Button>
             </div>
           })

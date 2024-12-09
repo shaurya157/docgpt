@@ -17,6 +17,7 @@ export function TemplatesDropdown() {
   const { userTemplates } = useUserDataContext()
   const { providedTemplates, setActiveTemplate } = useDocument()
 
+  console.log(userTemplates)
   const handleSelect = (template) => {
     return () => {
       setActiveTemplate?.(template)
@@ -36,8 +37,8 @@ export function TemplatesDropdown() {
         <p>Docgpt provided templates</p>
         {
           providedTemplates?.map((templ, idx) => {
-            return <div key={"provided-templates-" + templ["templateName"] + idx}>
-              {templ["templateName"]}
+            return <div key={"provided-templates-" + templ["templateName"] + idx} className="p-2 flex flex-row space-y-1 items-center">
+              <p className="w-64 ">{templ["templateName"]}</p>
               <Button onClick={handleSelect(templ)}>Use Template</Button>
               <Button>
                 <Link href={`/templates/${templ["templateName"]}`} target="_blank">View Template</Link>
@@ -48,8 +49,8 @@ export function TemplatesDropdown() {
         <p>User defined templates</p>
         {
           userTemplates?.map((templ, idx) => {
-            return <div key={"user-templates-" + templ["templateName"] + idx}>
-              {templ["templateName"]}
+            return <div key={"user-templates-" + templ["templateName"] + idx} className="p-2 flex flex-row space-y-1 items-center">
+              <p className="w-64">{templ["templateName"]}</p>
               <Button onClick={handleSelect(templ)}>Use Template</Button>
               <Button>
                 <Link href={`/templates/${templ["templateName"]}`} target="_blank">View Template</Link>

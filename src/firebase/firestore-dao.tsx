@@ -107,25 +107,25 @@ export async function saveCurrentDocumentState(userId: string, documentName: str
     error = e
   }
 
-
   return { result, error };
 }
 
-export async function saveUserTemplate(userId: string, templateName: string, template: any) {
-  let usersRef = collection(db, "templates")
-  let docRef = doc(usersRef, templateName);
+export async function saveUserTemplate(userId: string, templateName: string, template: any, isTemplateOwner: boolean, templateId?: string) {
+  let templatesRef = collection(db, "templates")
   let result, error;
 
   try {
     const value = {
       "templateOwnerId": userId,
-      "template": template
+      "template": template,
+      "templateName": templateName
     }
-    result = await setDoc(
-      docRef,
+
+    result = templateId && isTemplateOwner ? await setDoc(
+      doc(templatesRef, templateId),
       value,
       { merge: true }
-    );
+    ) : await addDoc(templatesRef, value)
   } catch (e) {
     error = e
   }
