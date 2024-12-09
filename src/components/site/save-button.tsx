@@ -36,7 +36,7 @@ export function SaveButton() {
     if (res.error) {
       toast.error(res.error.message);
     } else {
-      toast.success("Successfully Saved");
+      toast.success(`Successfully saved ${docName} with thread ${threadId}`);
     }
   }
 

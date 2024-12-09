@@ -25,7 +25,6 @@ interface UserDataProviderProps {
   openAiThreadId?: string | null,
   filesData: Map<string, string>[] | null,
   children: React.ReactNode,
-  userDocument?: any | null,
   userDefinedTemplates?: Map<string, string | any>[] | null,
   userDocuments?: any[] | null,
 }

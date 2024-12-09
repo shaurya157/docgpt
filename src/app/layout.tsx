@@ -93,32 +93,16 @@ async function createAssistantIfNotExist(session: Session) {
   return {openAiAssistantId, openAiVectorStoreId, openAiChatAssistantId};
 }
 
-async function createThreadIfNotExist(session: Session) {
-  let threadId;
-  // TODO: same as above
-  try {
-    const fireBaseResult =  await getUserActiveThreadId(session.user?.email!)
-
-    if (fireBaseResult.result != undefined) {
-      threadId = fireBaseResult.result
-    } else {
-      let userId = session.user?.email!
-      // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
-      // Find a better way
-      const createThreadResult = await fetch(process.env.NEXTAUTH_URL + '/api/ai/thread/create', {
-        method: 'POST',
-        body: JSON.stringify({ userId }),
-      })
-      const responseJson = await createThreadResult.json()
-      threadId = responseJson["threadId"]
-
-      await saveUserActiveThread(userId, threadId)
-    }
-  } catch (error) {
-    console.error(error)
-  }
-
-  return threadId;
+async function createThread(session: Session) {
+  let userId = session.user?.email!
+  // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
+  // Find a better way
+  const createThreadResult = await fetch(process.env.NEXTAUTH_URL + '/api/ai/thread/create', {
+    method: 'POST',
+    body: JSON.stringify({ userId }),
+  })
+  const responseJson = await createThreadResult.json()
+  return responseJson["threadId"]
 }
 
 async function getExistingUserUploadedFiles(session: Session) {
@@ -163,14 +147,25 @@ async function getUserDocs(session) {
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   const session = await auth()
-  let openAiAssistantId, openAiVectorStoreId, openAiChatAssistantId;
+  let openAiAssistantId, openAiVectorStoreId, openAiChatAssistantId, initialOpenAiThreadId, userDocuments, userDocument;
   if (session?.user) {
     const res = await createAssistantIfNotExist(session)
     openAiAssistantId = res.openAiAssistantId
     openAiVectorStoreId = res.openAiVectorStoreId
     openAiChatAssistantId = res.openAiChatAssistantId
+    userDocuments = await getUserDocs(session)
+    initialOpenAiThreadId = userDocuments ? userDocuments[0]["threadId"] : await createThread(session)
+    userDocument = userDocuments ? userDocuments[0] : null
+    console.log(userDocument)
   }
 
+  // if (userDocs) {
+  //   initialOpenAiThreadId =
+  //   initialDocumentId = userDocs[0]["document"]
+  // } else {
+  //   initialOpenAiThreadId = session?.user ?  : null
+  // }
+  //
   return (
     <>
       <html lang="en" suppressHydrationWarning>
@@ -191,12 +186,15 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   openAiAssistantId={session?.user ? openAiAssistantId : null}
                   openAiVectorStoreId={session?.user ? openAiVectorStoreId : null}
                   openAiChatAssistantId={session?.user ? openAiChatAssistantId : null}
-                  openAiThreadId={session?.user ? await createThreadIfNotExist(session) : null}
+                  openAiThreadId={initialOpenAiThreadId}
                   filesData={session?.user ? await getExistingUserUploadedFiles(session) : null}
                   userDefinedTemplates={session?.user ? await getTemplates(session!.user!.email!) : null}
-                  userDocuments={session?.user ? await getUserDocs(session) : null}
+                  userDocuments={userDocuments}
                 >
-                  <DocumentProvider docgptProvidedTemplates={session?.user ? await getTemplates("docgpt") : null}>
+                  <DocumentProvider
+                    docgptProvidedTemplates={session?.user ? await getTemplates("docgpt") : null}
+                    userDocument={userDocument}
+                  >
                     <div className="relative flex min-h-screen flex-col">
                       <SiteHeader session={session}/>
                       <div className="flex-1">{children}</div>
