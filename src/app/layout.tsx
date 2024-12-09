@@ -16,7 +16,7 @@ import { Metadata, Viewport } from 'next';
 import { OpenAIProvider } from '@/components/openai/openai-context';
 import {auth} from "../../auth";
 import {
-  getUserActiveAssistantAndVectorIds,
+  getUserInfo,
   getUserActiveThreadId, getUserOwnedDocuments, getOwnedTemplates,
   getUserUploadedFilesData,
   saveUserActiveAssistant, saveUserActiveThread
@@ -55,6 +55,7 @@ async function createAssistantIfNotExist(session: Session) {
   let openAiAssistantId;
   let openAiVectorStoreId;
   let openAiChatAssistantId;
+  let activeDocumentName;
   // TODO: this is very inelegant. We are making the call in the site header/page and then passing all the children the user uploaded files.
   // I've done this due to a lack of knowledge about how to make server side callbacks when a user signs in. This is also potentially running multiple times...
   // Ideally, when the user signs in, we should:
@@ -65,11 +66,12 @@ async function createAssistantIfNotExist(session: Session) {
   // The same is done on layout.tsx, once refactor make the same change there
   // Maybe we can use useEffect() here?
   try {
-    const { savedAssistantId, savedVectorStoreId, savedOpenAiChatAssistantId } =  await getUserActiveAssistantAndVectorIds(session.user?.email!)
+    const { savedAssistantId, savedVectorStoreId, savedOpenAiChatAssistantId, savedActiveDocumentName } =  await getUserInfo(session.user?.email!)
     if (savedAssistantId && savedVectorStoreId && savedOpenAiChatAssistantId) {
       openAiAssistantId = savedAssistantId
       openAiVectorStoreId = savedVectorStoreId
       openAiChatAssistantId = savedOpenAiChatAssistantId
+      activeDocumentName = savedActiveDocumentName
     } else {
       let userId = session.user?.email!
       // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
@@ -90,7 +92,7 @@ async function createAssistantIfNotExist(session: Session) {
     console.error(error)
   }
 
-  return {openAiAssistantId, openAiVectorStoreId, openAiChatAssistantId};
+  return {openAiAssistantId, openAiVectorStoreId, openAiChatAssistantId, activeDocumentName};
 }
 
 async function createThread(session: Session) {
@@ -153,19 +155,23 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     openAiAssistantId = res.openAiAssistantId
     openAiVectorStoreId = res.openAiVectorStoreId
     openAiChatAssistantId = res.openAiChatAssistantId
+    let activeDocumentName = res.activeDocumentName
+
     userDocuments = await getUserDocs(session)
-    initialOpenAiThreadId = userDocuments ? userDocuments[0]["threadId"] : await createThread(session)
-    userDocument = userDocuments ? userDocuments[0] : null
-    console.log(userDocument)
+    if (userDocuments.length > 0) {
+      if (activeDocumentName) {
+        let doc = userDocuments.find(doc => doc["documentName"] === activeDocumentName)
+        initialOpenAiThreadId = doc["threadId"]
+        userDocument = doc
+      } else {
+        initialOpenAiThreadId = userDocuments[userDocuments.length - 1]["threadId"]
+        userDocument = userDocuments[userDocuments.length - 1]
+      }
+    } else {
+      initialOpenAiThreadId = await createThread(session)
+    }
   }
 
-  // if (userDocs) {
-  //   initialOpenAiThreadId =
-  //   initialDocumentId = userDocs[0]["document"]
-  // } else {
-  //   initialOpenAiThreadId = session?.user ?  : null
-  // }
-  //
   return (
     <>
       <html lang="en" suppressHydrationWarning>

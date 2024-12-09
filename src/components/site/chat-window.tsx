@@ -139,7 +139,6 @@ export function ChatWindow(){
   useEffect(() => {
     (async function() {
       if (!initialized.current) {
-        console.log("RUNING")
         initialized.current = true
         try {
           const chatHistoryResponse = await fetch('/api/ai/thread/messages', {

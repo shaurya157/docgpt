@@ -11,6 +11,7 @@ import {useUserDataContext} from "@/providers/user-data-context-provider";
 import {useDocument} from "@/providers/document-provider";
 import {toast} from "sonner";
 import {useSession} from "next-auth/react";
+import {setActiveUserDoc} from "@/firebase/firestore-dao";
 
 export function DocumentsDropdown() {
   const openState = useOpenState();
@@ -23,6 +24,7 @@ export function DocumentsDropdown() {
     return () => {
       setActiveUserDocument(doc)
       setThreadId(doc["threadId"])
+      setActiveUserDoc(session!.user!.email!, doc["documentName"])
       toast.info(`Setting document to ${doc["documentName"]} and using thread ${doc["threadId"]}`)
     }
   }

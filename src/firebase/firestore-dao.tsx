@@ -55,18 +55,20 @@ export async function getUserUploadedFilesData(userid: string) {
   return { result, error };
 }
 
-export async function getUserActiveAssistantAndVectorIds(userid: string) {
+export async function getUserInfo(userid: string) {
   let usersRef = collection(db, "users")
   let docRef = doc(usersRef, userid);
   let savedAssistantId;
   let savedVectorStoreId;
   let savedOpenAiChatAssistantId;
+  let savedActiveDocumentName;
 
   const result = await getDoc(docRef)
   savedAssistantId = result.get("assistantId")
   savedVectorStoreId = result.get("vectorStoreId")
   savedOpenAiChatAssistantId = result.get("openAiChatAssistantId")
-  return { savedAssistantId, savedVectorStoreId, savedOpenAiChatAssistantId };
+  savedActiveDocumentName = result.get("activeDocumentName")
+  return { savedAssistantId, savedVectorStoreId, savedOpenAiChatAssistantId, savedActiveDocumentName };
 }
 
 export async function getUserActiveThreadId(userid: string) {
@@ -186,6 +188,25 @@ export async function deleteUserUploadedFile(userId: string, fileName: string, o
     );
   } catch (e) {
     error = e;
+  }
+
+  return { result, error };
+}
+
+export async function setActiveUserDoc(userId: string, documentName: string) {
+  let usersRef = collection(db, "users")
+  let docRef = doc(usersRef, userId);
+  let result;
+  let error;
+
+  try {
+    result = await setDoc(
+      docRef,
+      { activeDocumentName: documentName },
+      { merge: true,}
+    );
+  } catch (e) {
+    error = e
   }
 
   return { result, error };
