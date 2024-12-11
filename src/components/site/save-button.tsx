@@ -32,7 +32,14 @@ export function SaveButton() {
     event.preventDefault();
     const docName = documentName ? documentName : activeUserDocument!["documentName"]
 
-    const res = await saveCurrentDocumentState(session!.user!.email!, docName, threadId!, editor.children, activeUserDocument!["id"] )
+    const res = await saveCurrentDocumentState(
+      session!.user!.email!,
+      docName,
+      threadId!,
+      editor.children,
+      activeUserDocument!["id"]
+    )
+
     if (res.error) {
       toast.error(res.error.message);
     } else {

@@ -18,12 +18,16 @@ interface DocumentProviderProps {
   userDocument?: any | null;
 }
 
-export default function DocumentProvider({ children, template, docgptProvidedTemplates, userDocument }: DocumentProviderProps) {
+export default function DocumentProvider({
+                                           children,
+                                           template,
+                                           docgptProvidedTemplates,
+                                           userDocument
+}: DocumentProviderProps) {
 
   const [activeTemplate, setActiveTemplate] = useState(template)
   const [providedTemplates] = useState(docgptProvidedTemplates)
   const [activeUserDocument, setActiveUserDocument] = useState(userDocument)
-
   return (
     <TemplateSettings.Provider value={{
       activeTemplate,

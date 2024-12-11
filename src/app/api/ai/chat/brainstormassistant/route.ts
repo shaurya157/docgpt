@@ -7,6 +7,8 @@ export const runtime = "edge";
 export async function POST(req: NextRequest) {
   const formData = await req.formData()
   const message = formData.get("message")
+  const files = formData.getAll("files") as File[]
+
   const threadId = formData.get("threadId") as string
   // TODO: get file from formdata too and process it
   const assistantId = formData.get("assistantId")
@@ -16,18 +18,20 @@ export async function POST(req: NextRequest) {
   });
 
   try {
+    if (files) {
+      console.log("Files: ", files)
+    }
+
     const messageData = {
       role: "user" as "user",
       content:  message as string,
     };
 
-    console.log("message: ", messageData)
     const createdMessage = await openai.beta.threads.messages.create(
       threadId,
       messageData
     );
 
-    console.log("Created Message: ", createdMessage);
     return AssistantResponse(
       { threadId, messageId: createdMessage.id },
       async ({ sendMessage }) => {

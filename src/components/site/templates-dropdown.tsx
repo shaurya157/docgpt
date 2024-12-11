@@ -17,7 +17,6 @@ export function TemplatesDropdown() {
   const { userTemplates } = useUserDataContext()
   const { providedTemplates, setActiveTemplate } = useDocument()
 
-  console.log(userTemplates)
   const handleSelect = (template) => {
     return () => {
       setActiveTemplate?.(template)

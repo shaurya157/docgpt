@@ -104,7 +104,11 @@ async function createThread(session: Session) {
     body: JSON.stringify({ userId }),
   })
   const responseJson = await createThreadResult.json()
-  return responseJson["threadId"]
+  console.log(responseJson)
+  return {
+    threadId: responseJson["threadId"],
+    documentVectorStoreId: responseJson["vectorStoreId"]
+  }
 }
 
 async function getExistingUserUploadedFiles(session: Session) {

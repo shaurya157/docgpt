@@ -61,7 +61,7 @@ export function ChatWindow(){
   const initialized = useRef(false)
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState<string>(prompt);
-  const [file, setFile] = useState<File | undefined>(undefined);
+  const [files, setFiles] = useState<File[] | null>(null);
   const {data: session} = useSession();
   const {threadId, chatAssistantId} = useUserDataContext();
   const [error, setError] = useState<unknown | undefined>(undefined);
@@ -80,7 +80,8 @@ export function ChatWindow(){
     const formData = new FormData();
     formData.append("message", message as string);
     formData.append("threadId", threadId!);
-    formData.append("file", file as File);
+    files?.forEach((file) => formData.append("files", file));
+
     formData.append("assistantId", chatAssistantId!);
 
     const result = await fetch("/api/ai/chat/brainstormassistant", {
@@ -88,7 +89,7 @@ export function ChatWindow(){
       body: formData
     });
 
-    setFile(undefined);
+    setFiles(null);
 
     if (result.body == null) {
       throw new Error("The response body is empty.");
@@ -124,8 +125,7 @@ export function ChatWindow(){
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setFile(file);
+    setFiles(Array.from(e.target.files as FileList));
   };
 
   const handleMessageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -193,25 +193,42 @@ export function ChatWindow(){
             className="whitespace-pre-wrap"
             style={{ color: roleToColorMap[m.role] }}
           >
-            <strong>{`${m.role}: `}</strong>
+            <strong>{`${m.role.toUpperCase()}: `}</strong>
             <ReactMarkdown>{m.content}</ReactMarkdown>
-            <br />
             <br />
           </div>
         ))}
 
         {status === "in_progress" && (
           <span className="text-white flex gap-x-2">
-						<Icons.spinner className="animate-spin w-5 h-5" />
-						Thinking
-						<DotAnimation />
+						<Icons.spinner className="animate-spin w-5 h-5 text-cyan-600" />
+            <p className="text-cyan-600">Thinking</p>
+						<DotAnimation/>
 					</span>
         )}
 
         <form
           onSubmit={handleFormSubmit}
-          className="flex items-start flex-col p-4 pb-2 text-white max-w-xl mx-auto fixed bottom-0 w-full mb-8 bg-inherit"
+          className="flex items-start text-white max-w-xl mx-auto fixed bottom-0 w-full mb-8 bg-inherit"
         >
+          <Button
+            type="button"
+            disabled={status !== "awaiting_message"}
+            onClick={handleOpenFileExplorer}
+            className="flex gap-x-1 group cursor-pointer text-gray-200"
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="sr-only"
+              multiple={true}
+            />
+            <Paperclip className="group-hover:text-white transition-colors duration-200 ease-in-out w-4 h-4" />
+            {/*<span className="group-hover:text-white transition-colors duration-200 ease-in-out text-xs">*/}
+						{/*	{file ? file.name : "Add a file"}*/}
+						{/*</span>*/}
+          </Button>
           <div className="flex items-start w-full">
             <Input
               disabled={status !== "awaiting_message"}
@@ -228,24 +245,6 @@ export function ChatWindow(){
               <Icons.arrowRight className="text-gray-500 hover:text-white transition-colors duration-200 ease-in-out" />
             </Button>
           </div>
-
-          {/*<Button*/}
-          {/*  type="button"*/}
-          {/*  disabled={status !== "awaiting_message"}*/}
-          {/*  onClick={handleOpenFileExplorer}*/}
-          {/*  className="flex gap-x-1 group cursor-pointer text-gray-200 px-1 pb-0"*/}
-          {/*>*/}
-          {/*  <input*/}
-          {/*    type="file"*/}
-          {/*    ref={fileInputRef}*/}
-          {/*    onChange={handleFileChange}*/}
-          {/*    className="sr-only"*/}
-          {/*  />*/}
-          {/*  <Paperclip className="group-hover:text-white transition-colors duration-200 ease-in-out w-4 h-4" />*/}
-          {/*  <span className="group-hover:text-white transition-colors duration-200 ease-in-out text-xs">*/}
-					{/*		{file ? file.name : "Add a file"}*/}
-					{/*	</span>*/}
-          {/*</Button>*/}
         </form>
       </div>
     </main>
