@@ -38,10 +38,10 @@ export function FilesDropdownMenu() {
       // TODO: Maybe we can use useEffect() here?
         if (userEmail != null || userEmail != undefined) {
           formData.append('file', data.file[0]);
-          formData.append("user_id", userEmail!!);
+          formData.append("userId", userEmail!!);
 
           // @ts-ignore
-          formData.append("vector_store_id", vectorStoreId);
+          formData.append("vectorStoreId", vectorStoreId);
           try {
             let response = await fetch('/api/ai/files', {
               method: 'POST',

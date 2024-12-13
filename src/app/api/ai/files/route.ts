@@ -33,9 +33,11 @@ export async function DELETE(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
-  const file = formData.get('file') as File;
-  const userId = formData.get('user_id');
-  const vectorStoreId = formData.get('vector_store_id');
+  const files = formData.getAll('files') as File[];
+  // const prependString = formData.get("prependString") as string;
+
+  const userId = formData.get('userId');
+  const vectorStoreId = formData.get('vectorStoreId');
 
   const apiKey = process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -47,26 +49,31 @@ export async function POST(req: NextRequest) {
       throw new Error('No user ID provided with upload. Please login before uploading files.');
     }
 
+    let result: any[] = []
     // Prepare file for upload
-    const formData = new FormData();
-    formData.append('file', file, file.name);
-    formData.append("purpose", "assistants")
+    for (const file of files) {
+      // OpenAI API file upload
+      // TODO: add polling here similar to /chat route where we check upload status
+      const fileUploadResponse = await openai.files.create({
+        file,
+        purpose: "assistants"
+      })
 
-    // OpenAI API file upload
-    // TODO: add polling here similar to /chat route where we check upload status
-    const fileUploadResponse = await openai.files.create({
-      file,
-      purpose: "assistants"
-    })
+      result.push({
+        fileName: file.name,
+        openAiFileId: fileUploadResponse.id
+      })
 
-    // TODO: add polling here similar to /chat route where we check upload status
-    // @ts-ignore
-    const batchResponse = await openai.beta.vectorStores.files.create(vectorStoreId, {
-      file_id: fileUploadResponse.id
-    })
+      // TODO: add polling here similar to /chat route where we check upload status
+      // @ts-ignore
+      const batchResponse = await openai.beta.vectorStores.files.create(vectorStoreId, {
+        file_id: fileUploadResponse.id
+      })
+    }
 
+    console.log(result);
     return NextResponse.json({
-      openAiFileId: fileUploadResponse.id
+      openAiFileIds: result
     })
   } catch (uploadError) {
     return NextResponse.json({ message: `ERROR! Error: ${uploadError}.` })

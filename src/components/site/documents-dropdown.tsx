@@ -47,7 +47,9 @@ export function DocumentsDropdown() {
             }
           ]
         }
-      ]
+      ],
+      threadId: responseJson["threadId"],
+      vectorStoreId: responseJson["vectorStoreId"]
     })
     // Create thread
     // Set doc state to nothing

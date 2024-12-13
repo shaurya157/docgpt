@@ -146,6 +146,7 @@ async function getUserDocs(session) {
       "documentName": doc.get("documentName"),
       "document": doc.get("document"),
       "threadId": doc.get("threadId"),
+      "vectorStoreId": doc.get("vectorStoreId")
     }
 
     result.push(res)
@@ -181,7 +182,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         userDocument = userDocuments[userDocuments.length - 1]
       }
     } else {
-      initialOpenAiThreadId = await createThread(session)
+      let res = await createThread(session)
+      initialOpenAiThreadId = res.threadId
     }
   }
 

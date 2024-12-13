@@ -12,6 +12,8 @@ import {Paperclip} from "lucide-react";
 import {useUserDataContext} from "@/providers/user-data-context-provider";
 import {useSession} from "next-auth/react";
 import {toast} from "sonner";
+import {useDocument} from "@/providers/document-provider";
+import {appendDocumentSpecificFileIds} from "@/firebase/firestore-dao";
 
 const roleToColorMap: Record<any, string> = {
   system: "lightred",
@@ -64,6 +66,7 @@ export function ChatWindow(){
   const [files, setFiles] = useState<File[] | null>(null);
   const {data: session} = useSession();
   const {threadId, chatAssistantId} = useUserDataContext();
+  const { activeUserDocument } = useDocument();
   const [error, setError] = useState<unknown | undefined>(undefined);
   const [status, setStatus] = useState<AssistantStatus>("awaiting_message");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -77,13 +80,25 @@ export function ChatWindow(){
       { id: "", role: "user" as "user", content: message! }
     ]);
 
+
+    const filesFormData = new FormData();
+    filesFormData.append("vectorStoreId", activeUserDocument!["vectorStoreId"]);
+    filesFormData.append("userId", session!.user!.email!)
+    files?.forEach((file) => {
+      filesFormData.append("files", file)
+    });
+    const filesResult = await fetch("/api/ai/files", {
+      method: 'POST',
+      body: filesFormData
+    })
+    const filesResultJson: Map<string, string>[] = (await filesResult.json())["openAiFileIds"]
+
+    appendDocumentSpecificFileIds(activeUserDocument!["id"], filesResultJson)
+
     const formData = new FormData();
     formData.append("message", message as string);
     formData.append("threadId", threadId!);
-    files?.forEach((file) => formData.append("files", file));
-
     formData.append("assistantId", chatAssistantId!);
-
     const result = await fetch("/api/ai/chat/brainstormassistant", {
       method: "POST",
       body: formData
@@ -207,45 +222,58 @@ export function ChatWindow(){
 					</span>
         )}
 
-        <form
-          onSubmit={handleFormSubmit}
-          className="flex items-start text-white max-w-xl mx-auto fixed bottom-0 w-full mb-8 bg-inherit"
-        >
-          <Button
-            type="button"
-            disabled={status !== "awaiting_message"}
-            onClick={handleOpenFileExplorer}
-            className="flex gap-x-1 group cursor-pointer text-gray-200"
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="sr-only"
-              multiple={true}
-            />
-            <Paperclip className="group-hover:text-white transition-colors duration-200 ease-in-out w-4 h-4" />
-            {/*<span className="group-hover:text-white transition-colors duration-200 ease-in-out text-xs">*/}
-						{/*	{file ? file.name : "Add a file"}*/}
-						{/*</span>*/}
-          </Button>
-          <div className="flex items-start w-full">
-            <Input
-              disabled={status !== "awaiting_message"}
-              className="flex-1 placeholder:text-white bg-neutral-900"
-              placeholder={prompt}
-              onChange={handleMessageChange}
-            />
-            <Button
-              className="flex ml-2 cursor-pointer "
-              variant="outline"
-              type="submit"
-              disabled={status !== "awaiting_message"}
-            >
-              <Icons.arrowRight className="text-gray-500 hover:text-white transition-colors duration-200 ease-in-out" />
-            </Button>
+
+        <div className="flex items-start flex-col text-white max-w-xl mx-auto fixed bottom-0 w-full mb-8 bg-inherit">
+          <div className="bg-amber-500 flex flex-col">
+            {
+              files?.map((file, idx) => {
+                return (
+                  <span key={`${file.name} + idx`}>
+                  <p>{file.name}</p>
+                </span>
+                )
+              })
+            }
           </div>
-        </form>
+
+          <form
+            onSubmit={handleFormSubmit}
+            className="flex items-start text-white max-w-xl mx-auto w-full mb-8 bg-inherit"
+          >
+            <Button
+              type="button"
+              disabled={status !== "awaiting_message"}
+              onClick={handleOpenFileExplorer}
+              className="flex gap-x-1 group cursor-pointer text-gray-200"
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="sr-only"
+                multiple={true}
+              />
+              <Paperclip className="group-hover:text-white transition-colors duration-200 ease-in-out w-4 h-4"/>
+            </Button>
+            <div className="flex items-start w-full">
+              <Input
+                disabled={status !== "awaiting_message"}
+                className="flex-1 placeholder:text-white bg-neutral-900"
+                placeholder={prompt}
+                onChange={handleMessageChange}
+              />
+              <Button
+                className="flex ml-2 cursor-pointer "
+                variant="outline"
+                type="submit"
+                disabled={status !== "awaiting_message"}
+              >
+                <Icons.arrowRight
+                  className="text-gray-500 hover:text-white transition-colors duration-200 ease-in-out"/>
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </main>
   );

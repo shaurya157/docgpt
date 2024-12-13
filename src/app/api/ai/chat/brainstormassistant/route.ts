@@ -7,7 +7,7 @@ export const runtime = "edge";
 export async function POST(req: NextRequest) {
   const formData = await req.formData()
   const message = formData.get("message")
-  const files = formData.getAll("files") as File[]
+  // const files = formData.getAll("files") as File[]
 
   const threadId = formData.get("threadId") as string
   // TODO: get file from formdata too and process it
@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
   });
 
   try {
-    if (files) {
-      console.log("Files: ", files)
-    }
+    // if (files) {
+    //   console.log("Files: ", files)
+    // }
 
     const messageData = {
       role: "user" as "user",

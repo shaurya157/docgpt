@@ -16,25 +16,27 @@ interface DocumentProviderProps {
   docgptProvidedTemplates?: any | null;
   children: React.ReactNode;
   userDocument?: any | null;
+  docVectorStoreId?: string | null;
 }
 
 export default function DocumentProvider({
-                                           children,
-                                           template,
-                                           docgptProvidedTemplates,
-                                           userDocument
+                                          children,
+                                          template,
+                                          docgptProvidedTemplates,
+                                          userDocument,
 }: DocumentProviderProps) {
 
   const [activeTemplate, setActiveTemplate] = useState(template)
   const [providedTemplates] = useState(docgptProvidedTemplates)
   const [activeUserDocument, setActiveUserDocument] = useState(userDocument)
+
   return (
     <TemplateSettings.Provider value={{
       activeTemplate,
       setActiveTemplate,
       providedTemplates,
       activeUserDocument,
-      setActiveUserDocument
+      setActiveUserDocument,
     }}>
       {children}
     </TemplateSettings.Provider>

@@ -40,6 +40,38 @@ export async function appendFileDataToUser(userId: string, data: Map<string, str
   return { result, error };
 }
 
+
+export async function appendDocumentSpecificFileIds(documentId: string, files: Map<string, string>[]) {
+  let result: any[] = [];
+  let error: Error[] = [];
+
+  console.log(files)
+  console.log("documentId", documentId)
+  let documentsRef = collection(db, "documents")
+  let docRef = doc(documentsRef, documentId)
+
+  for (const file of files) {
+    const value = {
+      "files": arrayUnion({
+        "fileName": file["fileName"],
+        "openAiFileId": file["openAiFileId"]
+      })
+    }
+
+    try {
+      result.push(await setDoc(
+        docRef,
+        value,
+        { merge: true }
+      ))
+    } catch (e) {
+      error.push(e)
+    }
+  }
+
+  return { result, error };
+}
+
 // TODO: refactor below 4 methods into a single method which accepts different params
 export async function getUserUploadedFilesData(userid: string) {
   let usersRef = collection(db, "users")
@@ -87,7 +119,8 @@ export async function getUserOwnedDocuments(userId: string) {
   return await getDocs(query(collection(db, "documents"), where("documentOwnerId", "==", userId)))
 }
 
-export async function saveCurrentDocumentState(userId: string, documentName: string, threadId: string, document: any, documentId?: string) {
+export async function saveCurrentDocumentState(userId: string, documentName: string, threadId: string, documentVectorStoreId: string, document: any, documentId?: string) {
+  console.log(documentVectorStoreId)
   let documentsRef = collection(db, "documents")
   let result, error;
   try {
@@ -95,7 +128,8 @@ export async function saveCurrentDocumentState(userId: string, documentName: str
       "documentOwnerId": userId,
       "document": document,
       "threadId": threadId,
-      "documentName": documentName
+      "documentName": documentName,
+      "vectorStoreId": documentVectorStoreId
     }
 
     result = documentId ? await setDoc(
