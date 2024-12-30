@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MenuItem } from "../types";
 import Image from "next/image";
@@ -11,6 +11,8 @@ import HelpIcon from "../assets/icons/help.svg";
 import ProfileIcon from "../assets/icons/profile.svg";
 import LogoutIcon from "../assets/icons/logout.svg";
 import CloseIcon from "../assets/icons/x.svg";
+import DeleteIcon from "../assets/icons/delete.svg";
+import MoreIcon from "../assets/icons/moreHorizontal.svg";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ interface SidebarProps {
   activeItem: string;
   setActiveItem: (id: string) => void;
   activeTab: "chat" | "document";
+  onDeleteChat?: (chatId: string) => void;
 }
 
 interface PopoverState {
@@ -26,17 +29,122 @@ interface PopoverState {
   activeItem: string | null;
 }
 
+interface ChatMenuState {
+  isOpen: boolean;
+  chatId: string | null;
+  position: { top: number; left: number };
+  buttonRect: DOMRect | null;
+}
+
 const Sidebar = ({
   isOpen,
   items,
   activeItem,
   setActiveItem,
   activeTab,
+  onDeleteChat,
 }: SidebarProps) => {
   const sidebarWidth = 280;
   const popoverOffset = 12;
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
+  const [chatMenu, setChatMenu] = useState<ChatMenuState>({
+    isOpen: false,
+    chatId: null,
+    position: { top: 0, left: 0 },
+    buttonRect: null,
+  });
+
+  const handleMoreClick = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    if (activeTab === "chat") {
+      const button = e.currentTarget;
+      const rect = button.getBoundingClientRect();
+      const sidebarRect = sidebarRef.current?.getBoundingClientRect();
+
+      if (sidebarRect) {
+        const shouldOpenMenu = chatMenu.chatId !== chatId || !chatMenu.isOpen;
+
+        setChatMenu({
+          isOpen: shouldOpenMenu,
+          chatId: shouldOpenMenu ? chatId : null,
+          position: {
+            top: rect.bottom + window.scrollY,
+            left: rect.right - 120, // Align right edge of menu with more button
+          },
+          buttonRect: rect,
+        });
+      }
+    }
+  };
+
+  const handleDeleteChat = () => {
+    if (chatMenu.chatId && onDeleteChat) {
+      onDeleteChat(chatMenu.chatId);
+      setChatMenu({
+        isOpen: false,
+        chatId: null,
+        position: { top: 0, left: 0 },
+        buttonRect: null,
+      });
+    }
+  };
+
+  const handleClickOutside = (e: MouseEvent) => {
+    if (
+      menuRef.current &&
+      !menuRef.current.contains(e.target as Node) &&
+      !(e.target as Element).closest('[data-more-button="true"]')
+    ) {
+      setChatMenu({
+        isOpen: false,
+        chatId: null,
+        position: { top: 0, left: 0 },
+        buttonRect: null,
+      });
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  // Adjust menu position based on viewport boundaries
+  useEffect(() => {
+    if (chatMenu.isOpen && menuRef.current && chatMenu.buttonRect) {
+      const menuRect = menuRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+
+      let newTop = chatMenu.position.top;
+      let newLeft = chatMenu.position.left;
+
+      // Check vertical overflow
+      if (menuRect.bottom > viewportHeight) {
+        // Position menu above the button if there's not enough space below
+        newTop = chatMenu.buttonRect.top - menuRect.height;
+      }
+
+      // Check horizontal overflow
+      if (menuRect.right > viewportWidth) {
+        newLeft = viewportWidth - menuRect.width - 8;
+      }
+
+      if (
+        newTop !== chatMenu.position.top ||
+        newLeft !== chatMenu.position.left
+      ) {
+        setChatMenu((prev) => ({
+          ...prev,
+          position: { top: newTop, left: newLeft },
+        }));
+      }
+    }
+  }, [chatMenu.isOpen]);
+
+  // Updated animation variants for smoother transition
   const variants = {
     open: {
       x: 0,
@@ -44,9 +152,10 @@ const Sidebar = ({
       opacity: 1,
       transition: {
         type: "spring",
-        damping: 20,
-        stiffness: 100,
-        duration: 0.2,
+        stiffness: 400,
+        damping: 40,
+        mass: 1,
+        duration: 0.15,
       },
     },
     closed: {
@@ -55,9 +164,10 @@ const Sidebar = ({
       opacity: 0,
       transition: {
         type: "spring",
-        damping: 20,
-        stiffness: 100,
-        duration: 0.2,
+        stiffness: 400,
+        damping: 40,
+        mass: 1,
+        duration: 0.15,
       },
     },
   };
@@ -113,25 +223,17 @@ const Sidebar = ({
 
     if (!sidebarRect) return;
 
-    // Get the button's vertical position relative to its container
     const buttonIndex = preferenceItems.findIndex((item) => item.id === itemId);
     const totalButtons = preferenceItems.length;
 
-    // Calculate base position
     let position = {
       top: buttonRect.top + scrollTop,
       left: sidebarRect.right + popoverOffset,
     };
 
-    // if (itemId !== "context") {
-    // Calculate how far from the bottom of the preferences section this button is
     const buttonsFromBottom = totalButtons - buttonIndex - 1;
-    // Move the popover up based on position from bottom
-    // The higher the button is in the list, the more we move the popover up
     position.top -= buttonsFromBottom * 60 - 200;
-    // }
 
-    // Close current popover if clicking a different item
     if (popover.isOpen && popover.activeItem !== itemId) {
       setPopover({
         isOpen: false,
@@ -139,7 +241,6 @@ const Sidebar = ({
         activeItem: null,
       });
 
-      // Use setTimeout to ensure smooth transition between popovers
       setTimeout(() => {
         openPopover(position, itemId, viewportHeight);
       }, 0);
@@ -154,9 +255,8 @@ const Sidebar = ({
     viewportHeight: number
   ) => {
     let adjustedTop = position.top;
-    const estimatedHeight = itemId == "context" ? 220 : 100; // Different height for context popover
+    const estimatedHeight = itemId == "context" ? 220 : 100;
 
-    // Ensure popover stays within viewport
     if (adjustedTop + estimatedHeight > viewportHeight) {
       adjustedTop = Math.max(
         viewportHeight - estimatedHeight - popoverOffset,
@@ -164,7 +264,6 @@ const Sidebar = ({
       );
     }
 
-    // Ensure popover doesn't go above viewport
     if (adjustedTop < 0) {
       adjustedTop = popoverOffset;
     }
@@ -268,7 +367,7 @@ const Sidebar = ({
   };
 
   return (
-    <Fragment>
+    <div className="relative">
       <motion.div
         ref={sidebarRef}
         initial="closed"
@@ -278,6 +377,7 @@ const Sidebar = ({
         style={{
           minWidth: isOpen ? sidebarWidth : 0,
           maxWidth: sidebarWidth,
+          willChange: "transform",
         }}
       >
         <div className="px-4 pt-2">
@@ -288,15 +388,31 @@ const Sidebar = ({
 
         <div className="flex-1 overflow-y-auto px-3 py-2">
           {items.map((item) => (
-            <button
+            <div
               key={item.id}
-              onClick={() => setActiveItem(item.id)}
-              className={`w-full text-left p-1.5 rounded-md mb-1 ${
+              className={`flex items-center justify-between w-full p-1.5 rounded-md mb-1 group ${
                 activeItem === item.id ? "bg-[#ECECEC]" : "hover:bg-[#ECECEC]"
               }`}
             >
-              <span className="block truncate">{item.title}</span>
-            </button>
+              <button
+                onClick={() => setActiveItem(item.id)}
+                className="flex-1 text-left truncate"
+              >
+                <span className="block truncate">{item.title}</span>
+              </button>
+              {activeTab === "chat" && (
+                <button
+                  data-more-button="true"
+                  onClick={(e) => {
+                    handleMoreClick(e, item.id);
+                    setActiveItem(item.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-opacity"
+                >
+                  <Image src={MoreIcon} alt="more" width={24} height={24} />
+                </button>
+              )}
+            </div>
           ))}
         </div>
 
@@ -320,14 +436,36 @@ const Sidebar = ({
         </div>
       </motion.div>
 
-      <Popover
-        isOpen={popover.isOpen}
-        onClose={closePopover}
-        position={popover.position}
-      >
-        {popover.activeItem && getPopoverContent(popover.activeItem)}
-      </Popover>
-    </Fragment>
+      {isOpen && chatMenu.isOpen && activeTab === "chat" && (
+        <div
+          ref={menuRef}
+          className="fixed bg-white rounded-xl shadow-xl border border-gray-200 z-50 transform opacity-100 scale-100 transition-all duration-200 ease-out"
+          style={{
+            top: chatMenu.position.top,
+            left: chatMenu.position.left,
+            width: "150px",
+          }}
+        >
+          <button
+            onClick={handleDeleteChat}
+            className="w-full px-4 py-2 text-sm rounded-xl flex items-center gap-2 text-red-600 hover:bg-gray-100 transition-colors duration-150"
+          >
+            <Image src={DeleteIcon} alt="delete chat" width={18} height={18} />
+            Delete Chat
+          </button>
+        </div>
+      )}
+
+      {isOpen && (
+        <Popover
+          isOpen={popover.isOpen}
+          onClose={closePopover}
+          position={popover.position}
+        >
+          {popover.activeItem && getPopoverContent(popover.activeItem)}
+        </Popover>
+      )}
+    </div>
   );
 };
 

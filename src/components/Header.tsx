@@ -12,9 +12,15 @@ interface HeaderProps {
   activeTab: "chat" | "document";
   setActiveTab: (tab: "chat" | "document") => void;
   toggleSidebar: () => void;
+  onNewChat: () => void;
 }
 
-const Header = ({ activeTab, setActiveTab, toggleSidebar }: HeaderProps) => {
+const Header = ({
+  activeTab,
+  setActiveTab,
+  toggleSidebar,
+  onNewChat,
+}: HeaderProps) => {
   return (
     <header className="h-16 border-b flex items-center justify-between px-4 bg-white">
       <button
@@ -38,9 +44,8 @@ const Header = ({ activeTab, setActiveTab, toggleSidebar }: HeaderProps) => {
               x: activeTab === "chat" ? 0 : 120,
             }}
             transition={{
-              type: "spring",
-              stiffness: 400,
-              damping: 30,
+              duration: 0.3,
+              ease: "easeInOut",
             }}
           />
 
@@ -87,8 +92,12 @@ const Header = ({ activeTab, setActiveTab, toggleSidebar }: HeaderProps) => {
           </button>
         </div>
 
-        <button className="ml-4 p-2 hover:bg-[#ECECEC] rounded-lg">
-          <Image src={EditIcon} alt="Edit" width={24} height={24} />
+        <button
+          className="ml-4 p-2 hover:bg-[#ECECEC] rounded-lg"
+          onClick={onNewChat}
+          title="Create new chat"
+        >
+          <Image src={EditIcon} alt="New Chat" width={24} height={24} />
         </button>
       </div>
     </header>

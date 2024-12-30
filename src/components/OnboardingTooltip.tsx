@@ -1,14 +1,8 @@
-import React, { useState } from "react";
-
-interface TooltipPosition {
-  bottom?: number | string;
-  left: number | string;
-}
+import React, { useState, useEffect } from "react";
 
 interface OnboardingStep {
   title?: string;
   content: string;
-  position: TooltipPosition;
 }
 
 interface OnboardingTooltipProps {
@@ -24,6 +18,66 @@ const OnboardingTooltip = ({
 }: OnboardingTooltipProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [tooltipPosition, setTooltipPosition] = useState({
+    bottom: 0,
+    left: 0,
+    top: 0,
+  });
+
+  useEffect(() => {
+    const calculateTooltipPosition = () => {
+      // Base measurements
+      const sidebarWidth = 280; // Fixed sidebar width
+      const baseHeight = 800; // Base height for calculations
+      const currentHeight = window.innerHeight;
+
+      // Calculate scale factor but don't let it go below 1
+      const scaleFactor = Math.max(currentHeight / baseHeight, 1);
+
+      // Fixed bottom positions for each step (based on your original positions)
+      const bottomPositions = {
+        chat: 55,
+        upload: 70,
+        feature: 50,
+      };
+
+      switch (currentStep) {
+        case 0: // Chats tooltip
+          setTooltipPosition({
+            top: bottomPositions.chat,
+            bottom: 0,
+            left: sidebarWidth * 1,
+          });
+          break;
+
+        case 1: // Upload files tooltip
+          setTooltipPosition({
+            top: 0,
+            bottom: bottomPositions.upload,
+            left: sidebarWidth * 1,
+          });
+          break;
+
+        case 2: // Feature request tooltip
+          setTooltipPosition({
+            top: 0,
+            bottom: bottomPositions.feature,
+            left: sidebarWidth * 1,
+          });
+          break;
+      }
+    };
+
+    // Calculate initial position
+    calculateTooltipPosition();
+
+    // Recalculate on window resize
+    window.addEventListener("resize", calculateTooltipPosition);
+
+    return () => {
+      window.removeEventListener("resize", calculateTooltipPosition);
+    };
+  }, [currentStep]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -51,8 +105,11 @@ const OnboardingTooltip = ({
       <div
         className="absolute bg-black text-white p-3 rounded-xl shadow-xl"
         style={{
-          bottom: steps[currentStep].position.bottom,
-          left: steps[currentStep].position.left,
+          bottom: tooltipPosition.bottom
+            ? `${tooltipPosition.bottom}px`
+            : "auto",
+          top: tooltipPosition.top ? `${tooltipPosition.top}px` : "auto",
+          left: `${tooltipPosition.left}px`,
           transform: "translate(-16px, 16px)",
           maxWidth: "300px",
           pointerEvents: "auto",
