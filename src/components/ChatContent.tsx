@@ -178,6 +178,7 @@ const ChatContent = ({
         setError(error);
       }
 
+      console.log('SETTING STATUS');
       setStatus('awaiting_message');
     }
   };
