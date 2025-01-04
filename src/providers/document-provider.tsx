@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import React, {createContext, useContext, useState} from "react";
+import React, { createContext, useContext, useState } from 'react';
 
 type DocumentSettings = {
   activeTemplate?: Map<string, string | any> | null;
@@ -8,8 +8,8 @@ type DocumentSettings = {
   providedTemplates?: any[] | null;
   activeUserDocument?: any[] | null;
   setActiveUserDocument: React.Dispatch<React.SetStateAction<any>>;
-}
-export const TemplateSettings = createContext<DocumentSettings | null>(null)
+};
+export const TemplateSettings = createContext<DocumentSettings | null>(null);
 
 interface DocumentProviderProps {
   template?: any | null;
@@ -20,34 +20,37 @@ interface DocumentProviderProps {
 }
 
 export default function DocumentProvider({
-                                          children,
-                                          template,
-                                          docgptProvidedTemplates,
-                                          userDocument,
+  children,
+  template,
+  docgptProvidedTemplates,
+  userDocument,
 }: DocumentProviderProps) {
-
-  const [activeTemplate, setActiveTemplate] = useState(template)
-  const [providedTemplates] = useState(docgptProvidedTemplates)
-  const [activeUserDocument, setActiveUserDocument] = useState(userDocument)
+  const [activeTemplate, setActiveTemplate] = useState(template);
+  const [providedTemplates] = useState(docgptProvidedTemplates);
+  const [activeUserDocument, setActiveUserDocument] = useState(userDocument);
 
   return (
-    <TemplateSettings.Provider value={{
-      activeTemplate,
-      setActiveTemplate,
-      providedTemplates,
-      activeUserDocument,
-      setActiveUserDocument,
-    }}>
+    <TemplateSettings.Provider
+      value={{
+        activeTemplate,
+        setActiveTemplate,
+        providedTemplates,
+        activeUserDocument,
+        setActiveUserDocument,
+      }}
+    >
       {children}
     </TemplateSettings.Provider>
-  )
+  );
 }
 
 export function useDocument() {
   const context = useContext(TemplateSettings);
   if (!context) {
-    throw new Error('useUserSettings must be used within an UserSettingsProvider');
+    throw new Error(
+      'useUserSettings must be used within an UserSettingsProvider'
+    );
   }
 
-  return context
+  return context;
 }

@@ -1,5 +1,7 @@
 import * as React from 'react';
-import {AIChatPlugin, useAIChatHooks, useEditorChat} from '@udecode/plate-ai/react';
+import { useDocument } from '@/providers/document-provider';
+import { useUserDataContext } from '@/providers/user-data-context-provider';
+import { AIChatPlugin, useEditorChat } from '@udecode/plate-ai/react';
 import {
   getAncestorNode,
   getBlocks,
@@ -7,17 +9,14 @@ import {
   isHotkey,
   isSelectionAtBlockEnd,
 } from '@udecode/plate-common';
-import {
-  toDOMNode,
-  useEditorPlugin,
-  useHotkeys,
-} from '@udecode/plate-common/react';
+import { toDOMNode, useEditorPlugin } from '@udecode/plate-common/react';
 import {
   BlockSelectionPlugin,
   useIsSelecting,
 } from '@udecode/plate-selection/react';
-import {useAssistant, useChat} from 'ai/react';
+import { useAssistant } from 'ai/react';
 import { Loader2Icon } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
 import { useOpenAI } from '../openai/openai-context';
@@ -28,33 +27,32 @@ import { Popover, PopoverAnchor, PopoverContent } from './popover';
 
 import type { TElement, TNodeEntry } from '@udecode/plate-common';
 import type { PlateEditor } from '@udecode/plate-common/react';
-import {useSession} from "next-auth/react";
-import {useUserDataContext} from "@/providers/user-data-context-provider";
-import {useDocument} from "@/providers/document-provider";
-import {serializeMd} from "@udecode/plate-markdown";
 
 // TODO: this will NOT work for ordered and unordered lists
 const serializeToMarkdown = (template: any) => {
-  const templ = template["template"] as Map<string, string | Map<string, string>[]>
-  let result = "<Template>\n"
+  const templ = template['template'] as Map<
+    string,
+    string | Map<string, string>[]
+  >;
+  let result = '<Template>\n';
 
   if (templ != undefined) {
     templ.forEach((item) => {
-      let headerSigns = ""
-      const itemType = item["type"] as string
-      if (itemType.includes("h") ) {
-        for (let i = Number(itemType[1]); i--;) {
-          headerSigns += "#"
+      let headerSigns = '';
+      const itemType = item['type'] as string;
+      if (itemType.includes('h')) {
+        for (let i = Number(itemType[1]); i--; ) {
+          headerSigns += '#';
         }
-        result += headerSigns + item["children"][0]["text"] + "\n"
+        result += headerSigns + item['children'][0]['text'] + '\n';
       } else {
-        result += item["children"][0]["text"] + "\n"
+        result += item['children'][0]['text'] + '\n';
       }
-    })
+    });
   }
 
-  return result += "</Template>";
-}
+  return (result += '</Template>');
+};
 export function AIMenu() {
   const { api, editor, useOption } = useEditorPlugin(AIChatPlugin);
   const open = useOption('open');
@@ -62,26 +60,32 @@ export function AIMenu() {
   const isSelecting = useIsSelecting();
   const aiEditorRef = React.useRef<PlateEditor | null>(null);
   const [value, setValue] = React.useState('');
-  const { data: session } = useSession()
-  const { assistantId, threadId } = useUserDataContext()
-  const { activeTemplate } = useDocument()
+  const { data: session } = useSession();
+  const { assistantId, threadId } = useUserDataContext();
+  const { activeTemplate } = useDocument();
 
   // @ts-ignore
   const chat = useAssistant({
-    api: "/api/ai/chat/editorassistant",
+    api: '/api/ai/chat/editorassistant',
     body: {
       apiKey: useOpenAI().apiKey,
       model: useOpenAI().model.value,
       assistantId,
-      template: isSelecting ? "" : (activeTemplate == undefined || false) ? "" : serializeToMarkdown(activeTemplate)
+      template: isSelecting
+        ? ''
+        : activeTemplate == undefined || false
+          ? ''
+          : serializeToMarkdown(activeTemplate),
     },
     threadId: threadId!,
     onError(error: Error): void {
-      toast.error(`Something went wrong while creating/using the assistant. Error: ${error.message}`);
+      toast.error(
+        `Something went wrong while creating/using the assistant. Error: ${error.message}`
+      );
     },
-  })
+  });
 
-  const { input, status, messages, setInput } = chat
+  const { input, status, messages, setInput } = chat;
 
   let isLoading = status == 'in_progress';
 
