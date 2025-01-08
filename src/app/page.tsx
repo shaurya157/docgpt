@@ -1,17 +1,3 @@
-// import UserSettingsProvider from '@/providers/user-settings-provider';
-//
-// import { UiSwitchWindow } from '@/components/site/ui-switch-window';
-//
-// export default async function IndexPage() {
-//   return (
-//     <section className="container grid items-center gap-6 px-4 pb-8 pt-6 sm:px-8 md:py-10">
-//       <UserSettingsProvider>
-//         <UiSwitchWindow></UiSwitchWindow>
-//       </UserSettingsProvider>
-//     </section>
-//   );
-// }
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -25,14 +11,14 @@ import { toast } from 'sonner';
 import ChatContent from '@/components/ChatContent';
 import Header from '@/components/Header';
 import OnboardingTooltip from '@/components/OnboardingTooltip';
+import PlateEditor from '@/components/plate-editor';
 import Sidebar from '@/components/Sidebar';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'chat' | 'document'>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { userOwnedDocuments } = useUserDataContext();
-  const { setActiveUserDocument } = useDocument();
-  const [activeItem, setActiveItem] = useState({});
+  const { activeUserDocument, setActiveUserDocument } = useDocument();
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
   const { data: session } = useSession();
   const { chatAssistantId } = useUserDataContext();
@@ -120,7 +106,8 @@ export default function Home() {
       chat: [...prev.chat!, item],
     }));
 
-    setActiveItem(item);
+    setActiveUserDocument(item);
+    setActiveChatMessages([]);
     setActiveTab('chat');
   };
 
@@ -129,15 +116,11 @@ export default function Home() {
       ...prev,
       chat: prev.chat!.filter((chat) => chat.id !== chatId),
     }));
-
-    if (activeItem === chatId) {
-      setActiveItem(items.chat![0]?.id || '');
-    }
   };
 
   const handleSetActiveItem = async (item) => {
     setStatus('in_progress');
-    setActiveItem(item);
+    setActiveUserDocument(item);
     setActiveChatMessages([]);
     try {
       const chatHistoryResponse = await fetch('/api/ai/thread/messages', {
@@ -224,13 +207,13 @@ export default function Home() {
         <Sidebar
           isOpen={isSidebarOpen}
           items={currentItems}
-          activeItem={activeItem}
+          activeItem={activeUserDocument}
           setActiveItem={handleSetActiveItem}
           activeTab={activeTab}
           onDeleteChat={handleDeleteChat}
         />
         <ChatContent
-          activeItem={activeItem}
+          activeItem={activeUserDocument}
           activeChatMessages={activeChatMessages}
           setActiveChatMessages={setActiveChatMessages}
           status={status}
@@ -238,9 +221,18 @@ export default function Home() {
         />
         <OnboardingTooltip
           steps={onboardingSteps}
-          onComplete={() => console.log('Onboarding completed')}
+          onComplete={() =>
+            window.sessionStorage.setItem('OnboardingCompleted', 'true')
+          }
           isSidebarOpen={isSidebarOpen}
         />
+
+        <div
+          className="z-10 overflow-y-scroll border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]"
+          style={{ minWidth: '50%' }}
+        >
+          <PlateEditor />
+        </div>
       </div>
     </div>
   );

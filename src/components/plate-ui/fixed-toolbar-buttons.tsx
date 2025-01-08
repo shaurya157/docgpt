@@ -14,8 +14,10 @@ import {
 import { ListStyleType } from '@udecode/plate-indent-list';
 import { ImagePlugin } from '@udecode/plate-media/react';
 import { SparklesIcon } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 import { Icons, iconVariants } from '@/components/icons';
+import { SaveButton } from '@/components/site/save-button';
 
 import { AIToolbarButton } from './ai-toolbar-button';
 import { AlignDropdownMenu } from './align-dropdown-menu';
@@ -37,12 +39,10 @@ import { TableDropdownMenu } from './table-dropdown-menu';
 import { ToggleToolbarButton } from './toggle-toolbar-button';
 import { ToolbarGroup } from './toolbar';
 import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
-import {SaveButton} from "@/components/site/save-button";
-import {useSession} from "next-auth/react";
 
 export function FixedToolbarButtons() {
   const readOnly = useEditorReadOnly();
-  const {data: session} = useSession();
+  const { data: session } = useSession();
 
   return (
     <div className="w-full">
@@ -57,7 +57,7 @@ export function FixedToolbarButtons() {
           <>
             <ToolbarGroup>
               <ToolbarGroup>
-                { session?.user ? <SaveButton /> : <div></div>}
+                {session?.user ? <SaveButton /> : <div></div>}
               </ToolbarGroup>
               <ToolbarGroup>
                 <AIToolbarButton

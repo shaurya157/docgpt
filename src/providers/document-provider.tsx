@@ -6,7 +6,7 @@ type DocumentSettings = {
   activeTemplate?: Map<string, string | any> | null;
   setActiveTemplate?: React.Dispatch<React.SetStateAction<Map<string, string>>>;
   providedTemplates?: any[] | null;
-  activeUserDocument?: any[] | null;
+  activeUserDocument?: any | null;
   setActiveUserDocument: React.Dispatch<React.SetStateAction<any>>;
 };
 export const TemplateSettings = createContext<DocumentSettings | null>(null);

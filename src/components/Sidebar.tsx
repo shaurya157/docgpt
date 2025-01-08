@@ -392,7 +392,7 @@ const Sidebar = ({
   };
 
   return (
-    <div className="relative">
+    <div className="absolute z-50">
       <motion.div
         ref={sidebarRef}
         initial="closed"

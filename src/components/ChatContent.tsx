@@ -188,7 +188,7 @@ const ChatContent = ({
       e.preventDefault();
       handleSendMessage().then(
         () => {
-          setStatus('in_progress');
+          setStatus('awaiting_message');
         },
         (error) => {
           console.error(error);
@@ -223,13 +223,14 @@ const ChatContent = ({
 
   return (
     <motion.div
-      className="flex h-full flex-1 flex-col p-4"
+      className="flex h-full flex-col items-start p-4"
       transition={{
         duration: 0.2,
         type: 'spring',
         damping: 20,
         stiffness: 100,
       }}
+      style={{ minWidth: '30%' }}
     >
       <div className=" flex-1 overflow-y-auto scroll-smooth">
         <div className="mx-auto max-w-4xl space-y-6">
@@ -305,7 +306,7 @@ const ChatContent = ({
         }
       `}</style>
 
-      <div className="mx-auto w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-2">
+      <div className="w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-2">
         {attachments.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-2">
             {attachments.map((attachment, index) => (
