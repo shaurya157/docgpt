@@ -17,9 +17,7 @@ const OnboardingTooltip = ({
   isSidebarOpen,
 }: OnboardingTooltipProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isVisible, setIsVisible] = useState(
-    window.sessionStorage.getItem('OnboardingCompleted') != 'true'
-  );
+  const [isVisible, setIsVisible] = useState(true);
   const [tooltipPosition, setTooltipPosition] = useState({
     bottom: 0,
     left: 0,

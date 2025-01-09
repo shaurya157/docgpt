@@ -1,11 +1,6 @@
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 
 import EditIcon from '../assets/icons/edit.svg';
-import ChatIcon from '../assets/icons/msg.svg';
-import Chat2Icon from '../assets/icons/msg2.svg';
-import Document2Icon from '../assets/icons/paper.svg';
-import DocumentIcon from '../assets/icons/paper2.svg';
 import SidebarIcon from '../assets/icons/sidebar.svg';
 
 interface HeaderProps {
@@ -31,66 +26,66 @@ const Header = ({
       </button>
 
       <div className="flex items-center">
-        <div className="relative flex h-10 overflow-hidden rounded-xl border border-black/50">
-          {/* Animated background */}
-          <motion.div
-            className={
-              activeTab === 'chat'
-                ? 'absolute h-full w-[120px] rounded-lg bg-black'
-                : 'absolute h-full w-[140px] rounded-lg bg-black'
-            }
-            initial={false}
-            animate={{
-              x: activeTab === 'chat' ? 0 : 120,
-            }}
-            transition={{
-              duration: 0.3,
-              ease: 'easeInOut',
-            }}
-          />
+        {/*<div className="relative flex h-10 overflow-hidden rounded-xl border border-black/50">*/}
+        {/*  /!* Animated background *!/*/}
+        {/*  <motion.div*/}
+        {/*    className={*/}
+        {/*      activeTab === 'chat'*/}
+        {/*        ? 'absolute h-full w-[120px] rounded-lg bg-black'*/}
+        {/*        : 'absolute h-full w-[140px] rounded-lg bg-black'*/}
+        {/*    }*/}
+        {/*    initial={false}*/}
+        {/*    animate={{*/}
+        {/*      x: activeTab === 'chat' ? 0 : 120,*/}
+        {/*    }}*/}
+        {/*    transition={{*/}
+        {/*      duration: 0.3,*/}
+        {/*      ease: 'easeInOut',*/}
+        {/*    }}*/}
+        {/*  />*/}
 
-          <button
-            onClick={() => setActiveTab('chat')}
-            className="relative flex min-w-[120px] items-center justify-center space-x-1"
-          >
-            <motion.div
-              className="flex items-center justify-center space-x-2"
-              animate={{
-                color: activeTab === 'chat' ? '#ffffff' : '#374151',
-              }}
-              transition={{ duration: 0.2 }}
-            >
-              <Image
-                src={activeTab === 'chat' ? Chat2Icon : ChatIcon}
-                alt="Chat"
-                width={20}
-                height={20}
-              />
-              <span>Chat</span>
-            </motion.div>
-          </button>
+        {/*  <button*/}
+        {/*    onClick={() => setActiveTab('chat')}*/}
+        {/*    className="relative flex min-w-[120px] items-center justify-center space-x-1"*/}
+        {/*  >*/}
+        {/*    <motion.div*/}
+        {/*      className="flex items-center justify-center space-x-2"*/}
+        {/*      animate={{*/}
+        {/*        color: activeTab === 'chat' ? '#ffffff' : '#374151',*/}
+        {/*      }}*/}
+        {/*      transition={{ duration: 0.2 }}*/}
+        {/*    >*/}
+        {/*      <Image*/}
+        {/*        src={activeTab === 'chat' ? Chat2Icon : ChatIcon}*/}
+        {/*        alt="Chat"*/}
+        {/*        width={20}*/}
+        {/*        height={20}*/}
+        {/*      />*/}
+        {/*      <span>Chat</span>*/}
+        {/*    </motion.div>*/}
+        {/*  </button>*/}
 
-          <button
-            onClick={() => setActiveTab('document')}
-            className="relative flex min-w-[120px] items-center justify-center space-x-1 px-2"
-          >
-            <motion.div
-              className="flex items-center justify-center space-x-2"
-              animate={{
-                color: activeTab === 'document' ? '#ffffff' : '#374151',
-              }}
-              transition={{ duration: 0.2 }}
-            >
-              <Image
-                src={activeTab === 'document' ? DocumentIcon : Document2Icon}
-                alt="Documents"
-                width={20}
-                height={20}
-              />
-              <span>Documents</span>
-            </motion.div>
-          </button>
-        </div>
+        {/*  <button*/}
+        {/*    onClick={() => setActiveTab('document')}*/}
+        {/*    className="relative flex min-w-[120px] items-center justify-center space-x-1 px-2"*/}
+        {/*  >*/}
+        {/*    <motion.div*/}
+        {/*      className="flex items-center justify-center space-x-2"*/}
+        {/*      animate={{*/}
+        {/*        color: activeTab === 'document' ? '#ffffff' : '#374151',*/}
+        {/*      }}*/}
+        {/*      transition={{ duration: 0.2 }}*/}
+        {/*    >*/}
+        {/*      <Image*/}
+        {/*        src={activeTab === 'document' ? DocumentIcon : Document2Icon}*/}
+        {/*        alt="Documents"*/}
+        {/*        width={20}*/}
+        {/*        height={20}*/}
+        {/*      />*/}
+        {/*      <span>Documents</span>*/}
+        {/*    </motion.div>*/}
+        {/*  </button>*/}
+        {/*</div>*/}
 
         <button
           className="ml-4 rounded-lg p-2 hover:bg-[#ECECEC]"

@@ -1,74 +1,82 @@
-"use client"
+'use client';
 
-import {Button} from "@/components/plate-ui/button";
-import {useMyEditorRef} from "@/lib/plate/plate-types";
-import {saveCurrentDocumentState, saveUserTemplate} from "@/firebase/firestore-dao";
-import {useSession} from "next-auth/react";
-import {toast} from "sonner";
-import {useParams} from "next/navigation";
+import * as React from 'react';
+import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import {
+  saveCurrentDocumentState,
+  saveUserTemplate,
+} from '@/firebase/firestore-dao';
+import { useDocument } from '@/providers/document-provider';
+import { useUserDataContext } from '@/providers/user-data-context-provider';
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
+
+import { useMyEditorRef } from '@/lib/plate/plate-types';
+import { Button } from '@/components/plate-ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  useOpenState
-} from "@/components/plate-ui/dropdown-menu";
-import * as React from "react";
-import {Input} from "@/components/plate-ui/input";
-import {useState} from "react";
-import {useUserDataContext} from "@/providers/user-data-context-provider";
-import {useDocument} from "@/providers/document-provider";
+  useOpenState,
+} from '@/components/plate-ui/dropdown-menu';
+import { Input } from '@/components/plate-ui/input';
 
 export function SaveButton() {
   const editor = useMyEditorRef();
-  const {data: session} = useSession();
+  const { data: session } = useSession();
   const params = useParams();
   const openState = useOpenState();
-  const { activeUserDocument, activeTemplate } = useDocument()
-  const [ templateName, setTemplateName ] = useState("");
-  const [ documentName, setDocumentName ] = useState("");
-  const { threadId } = useUserDataContext()
+  const { activeUserDocument, activeTemplate } = useDocument();
+  const [templateName, setTemplateName] = useState('');
+  const [documentName, setDocumentName] = useState('');
+  const { threadId } = useUserDataContext();
 
   const handleSaveDocument = async (event: React.FormEvent) => {
     event.preventDefault();
-    const docName = documentName ? documentName : activeUserDocument!["documentName"]
+    const docName = documentName
+      ? documentName
+      : activeUserDocument!['documentName'];
 
     const res = await saveCurrentDocumentState(
       session!.user!.email!,
       docName,
       threadId!,
-      activeUserDocument!["vectorStoreId"],
+      activeUserDocument!['vectorStoreId'],
       editor.children,
-      activeUserDocument!["id"]
-    )
+      activeUserDocument!['id']
+    );
 
     if (res.error) {
       toast.error(res.error.message);
     } else {
       toast.success(`Successfully saved ${docName} with thread ${threadId}`);
     }
-  }
+  };
 
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const templName = templateName ? templateName : activeTemplate!["templateName"]
+    const templName = templateName
+      ? templateName
+      : activeTemplate!['templateName'];
     const res = await saveUserTemplate(
       session!.user!.email!,
       templName,
       editor.children,
-      activeTemplate!["templateOwnerId"] == session!.user!.email!,
-      activeTemplate!["id"]
-    )
+      activeTemplate!['templateOwnerId'] == session!.user!.email!,
+      activeTemplate!['id']
+    );
     if (res.error) {
       toast.error(res.error.message);
     } else {
-      toast.success("Template saved successfully");
+      toast.success('Template saved successfully');
     }
-  }
+  };
 
   // TODO: Need to change this based on url, not just the slug
   if (params.slug) {
     return (
-      <DropdownMenu modal={false} {...openState} >
+      <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
           <Button type="submit">Save Template</Button>
         </DropdownMenuTrigger>
@@ -81,17 +89,20 @@ export function SaveButton() {
             <Input
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
-              placeholder={activeTemplate ? activeTemplate["templateName"] : templateName}
+              placeholder={
+                activeTemplate ? activeTemplate['templateName'] : templateName
+              }
               required={true}
-              className="pr-10"></Input>
+              className="pr-10"
+            ></Input>
             <Button type="submit">Save Template</Button>
           </form>
         </DropdownMenuContent>
       </DropdownMenu>
-    )
+    );
   } else {
     return (
-      <DropdownMenu modal={false} {...openState} >
+      <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
           <Button type="submit">Save</Button>
         </DropdownMenuTrigger>
@@ -104,13 +115,18 @@ export function SaveButton() {
             <Input
               value={documentName}
               onChange={(e) => setDocumentName(e.target.value)}
-              placeholder={activeUserDocument ? activeUserDocument["documentName"] : documentName}
+              placeholder={
+                activeUserDocument
+                  ? activeUserDocument['documentName']
+                  : documentName
+              }
               required={true}
-              className="pr-10"></Input>
+              className="pr-10"
+            ></Input>
             <Button type="submit">Save</Button>
           </form>
         </DropdownMenuContent>
       </DropdownMenu>
-    )
+    );
   }
 }

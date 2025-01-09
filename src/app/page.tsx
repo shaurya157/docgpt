@@ -118,38 +118,42 @@ export default function Home() {
     }));
   };
 
-  const handleSetActiveItem = async (item) => {
+  const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
     setStatus('in_progress');
     setActiveUserDocument(item);
-    setActiveChatMessages([]);
-    try {
-      const chatHistoryResponse = await fetch('/api/ai/thread/messages', {
-        method: 'POST',
-        body: JSON.stringify({
-          userId: session!.user!.email!,
-          threadId: item['threadId'],
-          chatAssistantId,
-        }),
-      });
-      const json = await chatHistoryResponse.json();
-      if (!chatHistoryResponse.ok) {
-        toast.error(json['error']);
-      } else {
-        const messages = json['messages'] as Message[];
-        messages.reverse().forEach((message) => {
-          setActiveChatMessages((messages: Message[]) => [
-            ...messages,
-            {
-              id: message.id,
-              role: message.role,
-              content: message.content[0]['text']['value'],
-            },
-          ]);
+    console.log(item);
+
+    if (!documentRefreshOnly) {
+      setActiveChatMessages([]);
+      try {
+        const chatHistoryResponse = await fetch('/api/ai/thread/messages', {
+          method: 'POST',
+          body: JSON.stringify({
+            userId: session!.user!.email!,
+            threadId: item['threadId'],
+            chatAssistantId,
+          }),
         });
+        const json = await chatHistoryResponse.json();
+        if (!chatHistoryResponse.ok) {
+          toast.error(json['error']);
+        } else {
+          const messages = json['messages'] as Message[];
+          messages.reverse().forEach((message) => {
+            setActiveChatMessages((messages: Message[]) => [
+              ...messages,
+              {
+                id: message.id,
+                role: message.role,
+                content: message.content[0]['text']['value'],
+              },
+            ]);
+          });
+        }
+      } catch (e) {
+        toast.error('Something unexpected happened...');
+        console.error(e);
       }
-    } catch (e) {
-      toast.error('Something unexpected happened...');
-      console.error(e);
     }
 
     setStatus('awaiting_message');
@@ -221,9 +225,7 @@ export default function Home() {
         />
         <OnboardingTooltip
           steps={onboardingSteps}
-          onComplete={() =>
-            window.sessionStorage.setItem('OnboardingCompleted', 'true')
-          }
+          onComplete={() => console.log('Onboarding completeed')}
           isSidebarOpen={isSidebarOpen}
         />
 
@@ -231,7 +233,7 @@ export default function Home() {
           className="z-10 overflow-y-scroll border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]"
           style={{ minWidth: '50%' }}
         >
-          <PlateEditor />
+          <PlateEditor setActiveItem={handleSetActiveItem} />
         </div>
       </div>
     </div>

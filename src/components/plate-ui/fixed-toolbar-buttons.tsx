@@ -1,4 +1,5 @@
 import React from 'react';
+import { MenuItem } from '@/types';
 import {
   BoldPlugin,
   CodePlugin,
@@ -13,13 +14,12 @@ import {
 } from '@udecode/plate-font/react';
 import { ListStyleType } from '@udecode/plate-indent-list';
 import { ImagePlugin } from '@udecode/plate-media/react';
-import { SparklesIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 import { Icons, iconVariants } from '@/components/icons';
 import { SaveButton } from '@/components/site/save-button';
+import { TemplatesDropdown } from '@/components/site/templates-dropdown';
 
-import { AIToolbarButton } from './ai-toolbar-button';
 import { AlignDropdownMenu } from './align-dropdown-menu';
 import { ColorDropdownMenu } from './color-dropdown-menu';
 import { CommentToolbarButton } from './comment-toolbar-button';
@@ -40,7 +40,11 @@ import { ToggleToolbarButton } from './toggle-toolbar-button';
 import { ToolbarGroup } from './toolbar';
 import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
 
-export function FixedToolbarButtons() {
+interface FixedToolbarProps {
+  setActiveItem?: (id: MenuItem) => void;
+}
+
+export function FixedToolbarButtons({ setActiveItem }: FixedToolbarProps) {
   const readOnly = useEditorReadOnly();
   const { data: session } = useSession();
 
@@ -60,13 +64,7 @@ export function FixedToolbarButtons() {
                 {session?.user ? <SaveButton /> : <div></div>}
               </ToolbarGroup>
               <ToolbarGroup>
-                <AIToolbarButton
-                  className="text-purple-500 hover:text-purple-600"
-                  tooltip="Edit, generate, and more"
-                >
-                  <SparklesIcon className="mr-1.5 !size-3.5" />
-                  Ask DocGPT
-                </AIToolbarButton>
+                <TemplatesDropdown setActiveItem={setActiveItem} />
               </ToolbarGroup>
 
               <InsertDropdownMenu />

@@ -16,7 +16,6 @@ interface DocumentProviderProps {
   docgptProvidedTemplates?: any | null;
   children: React.ReactNode;
   userDocument?: any | null;
-  docVectorStoreId?: string | null;
 }
 
 export default function DocumentProvider({
