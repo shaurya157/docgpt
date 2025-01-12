@@ -1,5 +1,7 @@
 import Image from 'next/image';
 
+import { TemplatesDropdown } from '@/components/site/templates-dropdown';
+
 import EditIcon from '../assets/icons/edit.svg';
 import SidebarIcon from '../assets/icons/sidebar.svg';
 
@@ -8,6 +10,7 @@ interface HeaderProps {
   setActiveTab: (tab: 'chat' | 'document') => void;
   toggleSidebar: () => void;
   onNewChat: () => void;
+  setActiveItem: (item, documentRefreshOnly) => void;
 }
 
 const Header = ({
@@ -15,6 +18,7 @@ const Header = ({
   setActiveTab,
   toggleSidebar,
   onNewChat,
+  setActiveItem,
 }: HeaderProps) => {
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-4">
@@ -26,6 +30,7 @@ const Header = ({
       </button>
 
       <div className="flex items-center">
+        <TemplatesDropdown setActiveItem={setActiveItem} />
         {/*<div className="relative flex h-10 overflow-hidden rounded-xl border border-black/50">*/}
         {/*  /!* Animated background *!/*/}
         {/*  <motion.div*/}

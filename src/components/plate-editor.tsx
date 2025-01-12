@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDocument } from '@/providers/document-provider';
-import { MenuItem } from '@/types';
 import { cn, withProps } from '@udecode/cn';
 import { AIPlugin } from '@udecode/plate-ai/react';
 import { AlignPlugin } from '@udecode/plate-alignment/react';
@@ -145,11 +144,7 @@ import { ToggleElement } from './plate-ui/toggle-element';
 import { aiPlugins } from './plugins/ai-plugins';
 import { copilotPlugins } from './plugins/copilot-plugins';
 
-interface EditorProps {
-  setActiveItem?: (id: MenuItem) => void;
-}
-
-export default function PlateEditor({ setActiveItem }: EditorProps) {
+export default function PlateEditor() {
   const containerRef = useRef(null);
   const { activeUserDocument } = useDocument();
   const editor = useMyEditor();
@@ -183,7 +178,7 @@ export default function PlateEditor({ setActiveItem }: EditorProps) {
           )}
         >
           <FixedToolbar>
-            <FixedToolbarButtons setActiveItem={setActiveItem} />
+            <FixedToolbarButtons />
           </FixedToolbar>
 
           <Editor autoFocus focusRing={false} variant="demo" size="md" />

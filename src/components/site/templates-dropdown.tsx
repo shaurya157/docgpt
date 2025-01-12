@@ -2,7 +2,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-context-provider';
-import { MenuItem } from '@/types';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
@@ -14,7 +13,7 @@ import {
 } from '@/components/plate-ui/dropdown-menu';
 
 interface TemplatesDropdownProps {
-  setActiveItem?: (id: MenuItem, documentOnlyRefresh: boolean) => void;
+  setActiveItem: (item, documentRefreshOnly) => void;
 }
 
 export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
@@ -29,11 +28,12 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
 
   const handleSelect = (template) => {
     return () => {
-      const currActiveDoc = activeUserDocument;
+      const currActiveDoc = { ...activeUserDocument };
       currActiveDoc['document'] = template['template'];
-      if (setActiveItem) {
-        setActiveItem(currActiveDoc, true);
-      }
+      setActiveItem(currActiveDoc, true);
+      // if (setActiveItem) {
+      //   setActiveItem(currActiveDoc, true);
+      // }
       // setActiveTemplate?.(template);
       toast.info(`Using ${template['templateName']} to generate docs.`);
     };

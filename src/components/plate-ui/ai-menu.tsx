@@ -61,7 +61,8 @@ export function AIMenu() {
   const aiEditorRef = React.useRef<PlateEditor | null>(null);
   const [value, setValue] = React.useState('');
   const { data: session } = useSession();
-  const { assistantId, threadId } = useUserDataContext();
+  const { assistantId } = useUserDataContext();
+  const { activeUserDocument } = useDocument();
   const { activeTemplate } = useDocument();
 
   // @ts-ignore
@@ -77,7 +78,7 @@ export function AIMenu() {
           ? ''
           : serializeToMarkdown(activeTemplate),
     },
-    threadId: threadId!,
+    threadId: activeUserDocument ? activeUserDocument['threadId'] : null,
     onError(error: Error): void {
       toast.error(
         `Something went wrong while creating/using the assistant. Error: ${error.message}`

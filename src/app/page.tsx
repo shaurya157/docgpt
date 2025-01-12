@@ -206,6 +206,7 @@ export default function Home() {
         setActiveTab={setActiveTab}
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onNewChat={handleNewChat}
+        setActiveItem={handleSetActiveItem}
       />
       <div className="relative flex flex-1 overflow-hidden">
         <Sidebar
@@ -233,7 +234,7 @@ export default function Home() {
           className="z-10 overflow-y-scroll border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]"
           style={{ minWidth: '50%' }}
         >
-          <PlateEditor setActiveItem={handleSetActiveItem} />
+          <PlateEditor />
         </div>
       </div>
     </div>

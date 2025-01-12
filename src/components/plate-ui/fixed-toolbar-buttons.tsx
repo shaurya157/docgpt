@@ -1,5 +1,4 @@
 import React from 'react';
-import { MenuItem } from '@/types';
 import {
   BoldPlugin,
   CodePlugin,
@@ -18,7 +17,6 @@ import { useSession } from 'next-auth/react';
 
 import { Icons, iconVariants } from '@/components/icons';
 import { SaveButton } from '@/components/site/save-button';
-import { TemplatesDropdown } from '@/components/site/templates-dropdown';
 
 import { AlignDropdownMenu } from './align-dropdown-menu';
 import { ColorDropdownMenu } from './color-dropdown-menu';
@@ -40,11 +38,7 @@ import { ToggleToolbarButton } from './toggle-toolbar-button';
 import { ToolbarGroup } from './toolbar';
 import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
 
-interface FixedToolbarProps {
-  setActiveItem?: (id: MenuItem) => void;
-}
-
-export function FixedToolbarButtons({ setActiveItem }: FixedToolbarProps) {
+export function FixedToolbarButtons() {
   const readOnly = useEditorReadOnly();
   const { data: session } = useSession();
 
@@ -62,9 +56,6 @@ export function FixedToolbarButtons({ setActiveItem }: FixedToolbarProps) {
             <ToolbarGroup>
               <ToolbarGroup>
                 {session?.user ? <SaveButton /> : <div></div>}
-              </ToolbarGroup>
-              <ToolbarGroup>
-                <TemplatesDropdown setActiveItem={setActiveItem} />
               </ToolbarGroup>
 
               <InsertDropdownMenu />

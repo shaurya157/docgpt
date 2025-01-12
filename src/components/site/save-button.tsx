@@ -8,7 +8,6 @@ import {
   saveUserTemplate,
 } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
-import { useUserDataContext } from '@/providers/user-data-context-provider';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
@@ -30,7 +29,6 @@ export function SaveButton() {
   const { activeUserDocument, activeTemplate } = useDocument();
   const [templateName, setTemplateName] = useState('');
   const [documentName, setDocumentName] = useState('');
-  const { threadId } = useUserDataContext();
 
   const handleSaveDocument = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -41,7 +39,7 @@ export function SaveButton() {
     const res = await saveCurrentDocumentState(
       session!.user!.email!,
       docName,
-      threadId!,
+      activeUserDocument!['threadId'],
       activeUserDocument!['vectorStoreId'],
       editor.children,
       activeUserDocument!['id']
@@ -50,7 +48,9 @@ export function SaveButton() {
     if (res.error) {
       toast.error(res.error.message);
     } else {
-      toast.success(`Successfully saved ${docName} with thread ${threadId}`);
+      toast.success(
+        `Successfully saved ${docName} with thread ${activeUserDocument['threadId']}`
+      );
     }
   };
 

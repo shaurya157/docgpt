@@ -1,5 +1,5 @@
-import OpenAI from "openai";
-import {NextRequest, NextResponse} from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
 
 const EDITOR_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS: string = `\
 You are a top 1% Project Manager acting as a document editor/collaborator.
@@ -58,18 +58,14 @@ Unless otherwise specified, the idea should at the minimum meet the following ba
 - Distinguish between INSTRUCTIONS and QUESTIONS. Instructions typically ask you to modify or add content or generate new content. Questions ask for information or clarification.
 - CRITICAL: Do NOT provide content for any instructions or commands; for all instructions provide a response prompting the user to use the editor to perform this action instead.
 
-`
+`;
 
 export async function POST(req: NextRequest) {
-  let {
-    apiKey: key,
-    model = 'gpt-4o',
-    userId
-  } = await req.json();
+  let { apiKey: key, model = 'gpt-4o', userId } = await req.json();
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
-    apiKey: apiKey || ""
+    apiKey: apiKey || '',
   });
 
   try {
@@ -77,48 +73,44 @@ export async function POST(req: NextRequest) {
     //https://platform.openai.com/docs/assistants/tools/file-search#managing-costs-with-expiration-policies
     const vectorStore = await openai.beta.vectorStores.create({
       name: `${userId} - Vector store`,
-      metadata: { userId }
-    })
+      metadata: { userId },
+    });
 
     const editorAssistant = await openai.beta.assistants.create({
       model,
       name: `${userId} - Editor Assistant`,
       instructions: EDITOR_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS,
-      tools: [
-        { "type": "file_search" },
-      ],
+      tools: [{ type: 'file_search' }],
       metadata: {
         userId: userId,
       },
       tool_resources: {
-        "file_search": {
-          "vector_store_ids": [vectorStore.id]
-        }
-      }
-    })
+        file_search: {
+          vector_store_ids: [vectorStore.id],
+        },
+      },
+    });
 
     const chatAssistant = await openai.beta.assistants.create({
       model,
       name: `${userId} - Chat Assistant`,
       instructions: CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS,
-      tools: [
-        { "type": "file_search" },
-      ],
+      tools: [{ type: 'file_search' }],
       metadata: {
         userId: userId,
       },
       tool_resources: {
-        "file_search": {
-          "vector_store_ids": [vectorStore.id]
-        }
-      }
-    })
+        file_search: {
+          vector_store_ids: [vectorStore.id],
+        },
+      },
+    });
 
     return NextResponse.json({
       assistantId: editorAssistant.id,
       vectorStoreId: vectorStore.id,
-      chatAssistantId: chatAssistant.id
-    })
+      chatAssistantId: chatAssistant.id,
+    });
   } catch (e) {
     return NextResponse.json(
       { error: 'Failed to create Open AI Assistant' },
