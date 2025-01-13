@@ -89,14 +89,6 @@ const ChatContent = ({
   const { data: session } = useSession();
   const { chatAssistantId } = useUserDataContext();
   const [error, setError] = useState<unknown | undefined>(undefined);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content:
-        'Hi, how can I help you today? You can press /help to learn about everything I can do for you.',
-    },
-  ]);
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<
     Array<{
@@ -115,7 +107,7 @@ const ChatContent = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [activeChatMessages]);
 
   const parseEditorAndGetDocumentAndSelection = (
     newMessage: string
@@ -247,7 +239,7 @@ const ChatContent = ({
     }
   };
 
-  const handleDocumentClick = (document: string) => {
+  const updateEditorWithNewDocument = (document: string) => {
     return () => {
       let result: any[] = [];
       let doubleNewLineSplitArr = document.split('\n\n');
@@ -295,7 +287,7 @@ const ChatContent = ({
       return (
         <div className="cursor-pointer whitespace-pre-wrap">
           <div>{prepending}</div>
-          <div onClick={handleDocumentClick(document)}>
+          <div onClick={updateEditorWithNewDocument(document)}>
             <FileText />
             {documentTitle}
           </div>
@@ -427,6 +419,7 @@ const ChatContent = ({
           </button>
           <input
             type="text"
+            disabled={status === 'in_progress'}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}

@@ -14,6 +14,13 @@ import OnboardingTooltip from '@/components/OnboardingTooltip';
 import PlateEditor, { useMyEditor } from '@/components/plate-editor';
 import Sidebar from '@/components/Sidebar';
 
+const startingMessage: Message = {
+  id: '1',
+  role: 'assistant',
+  content:
+    'Hi, how can I help you today? You can press /help to learn about everything I can do for you.',
+};
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'chat' | 'document'>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -33,25 +40,6 @@ export default function Home() {
   });
 
   const handleNewChat = async () => {
-    // const highestChatNum = items.chat.reduce((max, chat) => {
-    //   const chatNum = parseInt(chat.id.replace('chat', ''));
-    //   return chatNum > max ? chatNum : max;
-    // }, 0);
-    //
-    // const newChatId = `chat${highestChatNum + 1}`;
-    // const newChat = {
-    //   id: newChatId,
-    //   title: `Chat ${highestChatNum + 1}`,
-    //   content: `Chat ${highestChatNum + 1} content goes here`,
-    // };
-    //
-    // setItems((prev) => ({
-    //   ...prev,
-    //   chat: [...prev.chat, newChat],
-    // }));
-    //
-    // setActiveItem(newChatId);
-    // setActiveTab('chat');
     const createThreadResult = await fetch('/api/ai/thread/create', {
       method: 'POST',
       body: JSON.stringify({ userId: session!.user!.email }),
@@ -62,17 +50,7 @@ export default function Home() {
     );
     let dateTime = new Date();
     const item = {
-      document: [
-        {
-          type: 'h1',
-          id: '1',
-          children: [
-            {
-              text: 'Title',
-            },
-          ],
-        },
-      ],
+      document: [],
       threadId: responseJson['threadId'],
       vectorStoreId: responseJson['vectorStoreId'],
       documentName: `Untitled - ${dateTime.getFullYear()}-${dateTime.getMonth() + 1}-${dateTime.getDay()}T${dateTime.getHours()}::${dateTime.getMinutes()}::${dateTime.getSeconds()}`,
@@ -87,30 +65,13 @@ export default function Home() {
     );
 
     item['id'] = res.result.id;
-    // setThreadId(responseJson['threadId']);
-    // setActiveUserDocument({
-    //   document: [
-    //     {
-    //       type: 'h1',
-    //       id: '1',
-    //       children: [
-    //         {
-    //           text: 'Title',
-    //         },
-    //       ],
-    //     },
-    //   ],
-    //   threadId: responseJson['threadId'],
-    //   vectorStoreId: responseJson['vectorStoreId'],
-    // });
-
     setItems((prev) => ({
       ...prev,
       chat: [...prev.chat!, item],
     }));
 
     setActiveUserDocument(item);
-    setActiveChatMessages([]);
+    setActiveChatMessages([startingMessage]);
     setActiveTab('chat');
   };
 
@@ -123,7 +84,6 @@ export default function Home() {
 
   const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
     setStatus('in_progress');
-    console.log('ITEM:', item);
     setActiveUserDocument(item);
     if (!documentRefreshOnly) {
       setActiveChatMessages([]);
@@ -141,16 +101,20 @@ export default function Home() {
           toast.error(json['error']);
         } else {
           const messages = json['messages'] as Message[];
-          messages.reverse().forEach((message) => {
-            setActiveChatMessages((messages: Message[]) => [
-              ...messages,
-              {
-                id: message.id,
-                role: message.role,
-                content: message.content[0]['text']['value'],
-              },
-            ]);
-          });
+          if (messages.length == 0) {
+            setActiveChatMessages([startingMessage]);
+          } else {
+            messages.reverse().forEach((message) => {
+              setActiveChatMessages((messages: Message[]) => [
+                ...messages,
+                {
+                  id: message.id,
+                  role: message.role,
+                  content: message.content[0]['text']['value'],
+                },
+              ]);
+            });
+          }
         }
       } catch (e) {
         toast.error('Something unexpected happened...');
@@ -218,6 +182,7 @@ export default function Home() {
           setActiveItem={handleSetActiveItem}
           activeTab={activeTab}
           onDeleteChat={handleDeleteChat}
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         <ChatContent
           activeItem={activeUserDocument}

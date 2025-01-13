@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import DocumentProvider, { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-context-provider';
+import { ArrowLeftFromLine } from 'lucide-react';
 
 import PlateEditor, { useMyEditor } from '@/components/plate-editor';
 
@@ -52,7 +54,10 @@ export default function Page() {
 
   const editor = useMyEditor(displayedTemplate);
   return (
-    <section className="container grid items-center gap-6 px-4 pb-8 pt-6 sm:px-8 md:py-10">
+    <section className="container grid flex-row items-center gap-6 px-4 pb-8 pt-6 align-baseline sm:px-8 md:py-10">
+      <Link href="/">
+        <ArrowLeftFromLine className="cursor-pointer" />
+      </Link>
       <div className="max-w-[calc(100vw-32px)] rounded-lg border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]">
         <DocumentProvider template={displayedTemplate}>
           <PlateEditor editor={editor} />

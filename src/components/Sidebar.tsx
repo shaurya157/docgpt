@@ -20,9 +20,10 @@ interface SidebarProps {
   isOpen: boolean;
   items: MenuItem[] | undefined | null;
   activeItem: string | {};
-  setActiveItem: (id: MenuItem) => void;
+  setActiveItem: (id: MenuItem, documentRefreshOnly: boolean) => void;
   activeTab: 'chat' | 'document';
   onDeleteChat?: (chatId: string) => void;
+  toggleSidebar: () => void;
 }
 
 interface PopoverState {
@@ -45,6 +46,7 @@ const Sidebar = ({
   setActiveItem,
   activeTab,
   onDeleteChat,
+  toggleSidebar,
 }: SidebarProps) => {
   const sidebarWidth = 280;
   const popoverOffset = 12;
@@ -82,7 +84,7 @@ const Sidebar = ({
     }
   };
 
-  const handleDeleteChat = async () => {
+  const handleDeleteChat = async (e: React.MouseEvent) => {
     if (chatMenu.chatId && onDeleteChat) {
       onDeleteChat(chatMenu.chatId);
 
@@ -422,7 +424,13 @@ const Sidebar = ({
               }`}
             >
               <button
-                onClick={() => setActiveItem(item)}
+                onClick={() => {
+                  toggleSidebar();
+                  setActiveItem(
+                    item,
+                    item['documentName'] === activeItem['documentName']
+                  );
+                }}
                 className="flex-1 truncate text-left"
               >
                 <span className="block truncate">{item['documentName']}</span>
@@ -432,7 +440,6 @@ const Sidebar = ({
                   data-more-button="true"
                   onClick={(e) => {
                     handleMoreClick(e, item.id);
-                    setActiveItem(item);
                   }}
                   className="rounded-lg text-gray-400 opacity-0 transition-opacity hover:bg-gray-200 hover:text-gray-600 group-hover:opacity-100"
                 >

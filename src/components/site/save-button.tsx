@@ -29,6 +29,7 @@ export function SaveButton() {
   const { activeUserDocument, activeTemplate } = useDocument();
   const [templateName, setTemplateName] = useState('');
   const [documentName, setDocumentName] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const handleSaveDocument = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -48,9 +49,10 @@ export function SaveButton() {
     if (res.error) {
       toast.error(res.error.message);
     } else {
-      toast.success(
-        `Successfully saved ${docName} with thread ${activeUserDocument['threadId']}`
-      );
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 5000);
     }
   };
 
@@ -123,7 +125,15 @@ export function SaveButton() {
               required={true}
               className="pr-10"
             ></Input>
-            <Button type="submit">Save</Button>
+
+            <Button type="submit" className="w-full">
+              Save
+            </Button>
+            <div
+              className={showSuccessMessage ? 'w-full text-center' : 'hidden'}
+            >
+              Successfully saved!
+            </div>
           </form>
         </DropdownMenuContent>
       </DropdownMenu>

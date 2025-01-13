@@ -94,7 +94,10 @@ const Header = ({
 
         <button
           className="ml-4 rounded-lg p-2 hover:bg-[#ECECEC]"
-          onClick={onNewChat}
+          onClick={() => {
+            onNewChat();
+            toggleSidebar();
+          }}
           title="Create new chat"
         >
           <Image src={EditIcon} alt="New Chat" width={24} height={24} />
