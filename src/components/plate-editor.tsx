@@ -144,10 +144,13 @@ import { ToggleElement } from './plate-ui/toggle-element';
 import { aiPlugins } from './plugins/ai-plugins';
 import { copilotPlugins } from './plugins/copilot-plugins';
 
-export default function PlateEditor() {
+interface PlateEditorProps {
+  editor: any;
+}
+
+export default function PlateEditor({ editor }: PlateEditorProps) {
   const containerRef = useRef(null);
   const { activeUserDocument } = useDocument();
-  const editor = useMyEditor();
 
   const useForceUpdate = () => {
     const [, setState] = useState<number>(0);
@@ -198,10 +201,9 @@ export default function PlateEditor() {
   );
 }
 
-export const useMyEditor = () => {
-  const { activeTemplate } = useDocument();
-  const editorValues = activeTemplate
-    ? activeTemplate['template']
+export const useMyEditor = (displayedTemplate?) => {
+  const editorValues = displayedTemplate
+    ? displayedTemplate['template']
     : [
         // {
         //   id: '1',

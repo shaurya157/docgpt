@@ -2,9 +2,16 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { appendDocumentSpecificFileIds } from '@/firebase/firestore-dao';
 import { useUserDataContext } from '@/providers/user-data-context-provider';
+import { editorPromptTemplate } from '@/utils/editor-prompt-util';
+import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
+import { getEditorPrompt } from '@udecode/plate-ai/react';
+import { PlateEditor } from '@udecode/plate-common/react';
+import { deserializeMd } from '@udecode/plate-markdown';
 import { Message } from 'ai';
 import { motion } from 'framer-motion';
+import { FileText } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 
 import { readDataStream } from '@/lib/read-data-stream';
 import { Icons } from '@/components/icons';
@@ -30,6 +37,8 @@ interface ContentProps {
   setActiveChatMessages: Dispatch<SetStateAction<Message[]>>;
   status: 'in_progress' | 'awaiting_message';
   setStatus: Dispatch<SetStateAction<string>>;
+  editor: PlateEditor;
+  setActiveItem: (id: any, documentRefreshOnly: boolean) => void;
 }
 
 const DotAnimation = () => {
@@ -74,8 +83,9 @@ const ChatContent = ({
   setActiveChatMessages,
   status,
   setStatus,
+  editor,
+  setActiveItem,
 }: ContentProps) => {
-  console.log(status);
   const { data: session } = useSession();
   const { chatAssistantId } = useUserDataContext();
   const [error, setError] = useState<unknown | undefined>(undefined);
@@ -106,6 +116,17 @@ const ChatContent = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const parseEditorAndGetDocumentAndSelection = (
+    newMessage: string
+  ): string => {
+    const editorPrompt = getEditorPrompt(editor, {
+      prompt: newMessage,
+      promptTemplate: editorPromptTemplate,
+    });
+
+    return editorPrompt!!;
+  };
 
   const handleSendMessage = async () => {
     setStatus('in_progress');
@@ -140,9 +161,13 @@ const ChatContent = ({
       }
 
       const formData = new FormData();
-      formData.append('message', newMessage.content);
+      const serializedEditorValue = parseEditorAndGetDocumentAndSelection(
+        newMessage.content
+      );
+      formData.append('message', serializedEditorValue);
       formData.append('threadId', activeItem['threadId']);
       formData.append('assistantId', chatAssistantId!);
+
       const result = await fetch('/api/ai/chat/brainstormassistant', {
         method: 'POST',
         body: formData,
@@ -169,16 +194,17 @@ const ChatContent = ({
               break;
             }
             case 'error': {
-              setError(value);
-              break;
+              throw new Error(
+                `There was an error processing the message. Please submit a bug report with the following message: ${value}`
+              );
             }
           }
         }
       } catch (error) {
+        toast.error(error.message);
         setError(error);
       }
 
-      console.log('SETTING STATUS');
       setStatus('awaiting_message');
     }
   };
@@ -221,6 +247,66 @@ const ChatContent = ({
     }
   };
 
+  const handleDocumentClick = (document: string) => {
+    return () => {
+      let result: any[] = [];
+      let doubleNewLineSplitArr = document.split('\n\n');
+      doubleNewLineSplitArr.forEach((doubleLineSplitText) => {
+        let singleNewLineSplit = doubleLineSplitText.split('\n');
+
+        singleNewLineSplit.forEach((singleNewLineSplitText) => {
+          const listStyleType = classifyStart(singleNewLineSplitText);
+          if (listStyleType) {
+            const deserializedList = deserializeListMd(
+              singleNewLineSplitText,
+              editor,
+              listStyleType
+            );
+
+            result = result.concat(deserializedList);
+          } else {
+            const resNodes = deserializeMd(editor, singleNewLineSplitText);
+            result = result.concat(resNodes[0]);
+          }
+        });
+      });
+
+      const currActiveDoc = { ...activeItem };
+      currActiveDoc['document'] = result;
+      setActiveItem(currActiveDoc, true);
+    };
+  };
+
+  const parseUserAndAssistantMessageContent = (message: Message) => {
+    if (message.role != 'user' && message.content.includes('<Document>')) {
+      const startTag = '<Document>';
+      const endTag = '</Document>';
+      const startIndex = message.content.indexOf(startTag);
+      const endIndex = message.content.indexOf(endTag);
+
+      const prepending = message.content.slice(0, startIndex);
+      const document = message.content
+        .slice(startIndex + startTag.length, endIndex)
+        .trim();
+      const titleRegex = /^#\s+(.*)/m;
+      const documentTitle = document.match(titleRegex)![1].trim();
+      const appending = message.content.slice(endIndex + endTag.length);
+
+      return (
+        <div className="cursor-pointer whitespace-pre-wrap">
+          <div>{prepending}</div>
+          <div onClick={handleDocumentClick(document)}>
+            <FileText />
+            {documentTitle}
+          </div>
+          <div>{appending}</div>
+        </div>
+      );
+    }
+
+    return <div className="whitespace-pre-wrap">{message.content}</div>;
+  };
+
   return (
     <motion.div
       className="flex h-full flex-col items-start p-4"
@@ -246,11 +332,8 @@ const ChatContent = ({
                   message.role === 'user' ? 'bg-gray-200 text-black' : ''
                 }`}
               >
-                {message.role !== 'user' ? (
-                  <div className="whitespace-pre-wrap">{message.content}</div>
-                ) : (
-                  <div className="whitespace-pre-wrap">{message.content}</div>
-                )}
+                {parseUserAndAssistantMessageContent(message)}
+
                 {message['attachments'] && (
                   <div className="mt-2 overflow-x-auto">
                     <div className="flex gap-2 pb-2">

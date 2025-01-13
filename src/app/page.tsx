@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import ChatContent from '@/components/ChatContent';
 import Header from '@/components/Header';
 import OnboardingTooltip from '@/components/OnboardingTooltip';
-import PlateEditor from '@/components/plate-editor';
+import PlateEditor, { useMyEditor } from '@/components/plate-editor';
 import Sidebar from '@/components/Sidebar';
 
 export default function Home() {
@@ -23,6 +23,9 @@ export default function Home() {
   const { data: session } = useSession();
   const { chatAssistantId } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
+  // TODO: can prolly move this out to layout instead and provide it globally with a provider.
+  // TODO: fix here and the other page.tsx file
+  const editor = useMyEditor();
 
   const [items, setItems] = useState({
     chat: userOwnedDocuments,
@@ -120,9 +123,8 @@ export default function Home() {
 
   const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
     setStatus('in_progress');
+    console.log('ITEM:', item);
     setActiveUserDocument(item);
-    console.log(item);
-
     if (!documentRefreshOnly) {
       setActiveChatMessages([]);
       try {
@@ -221,8 +223,10 @@ export default function Home() {
           activeItem={activeUserDocument}
           activeChatMessages={activeChatMessages}
           setActiveChatMessages={setActiveChatMessages}
+          setActiveItem={handleSetActiveItem}
           status={status}
           setStatus={setStatus}
+          editor={editor}
         />
         <OnboardingTooltip
           steps={onboardingSteps}
@@ -234,7 +238,7 @@ export default function Home() {
           className="z-10 overflow-y-scroll border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]"
           style={{ minWidth: '50%' }}
         >
-          <PlateEditor />
+          <PlateEditor editor={editor} />
         </div>
       </div>
     </div>
