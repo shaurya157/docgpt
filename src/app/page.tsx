@@ -199,10 +199,7 @@ export default function Home() {
           isSidebarOpen={isSidebarOpen}
         />
 
-        <div
-          className="z-10 overflow-y-scroll border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]"
-          style={{ minWidth: '50%' }}
-        >
+        <div className="z-10 overflow-y-scroll border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]">
           <PlateEditor editor={editor} />
         </div>
       </div>

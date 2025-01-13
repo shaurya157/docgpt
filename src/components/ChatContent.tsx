@@ -88,7 +88,6 @@ const ChatContent = ({
 }: ContentProps) => {
   const { data: session } = useSession();
   const { chatAssistantId } = useUserDataContext();
-  const [error, setError] = useState<unknown | undefined>(undefined);
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<
     Array<{
@@ -194,7 +193,6 @@ const ChatContent = ({
         }
       } catch (error) {
         toast.error(error.message);
-        setError(error);
       }
 
       setStatus('awaiting_message');
@@ -313,7 +311,7 @@ const ChatContent = ({
         damping: 20,
         stiffness: 100,
       }}
-      style={{ minWidth: '30%' }}
+      style={{ width: '30%' }}
     >
       <div className=" flex-1 overflow-y-auto scroll-smooth">
         <div className="mx-auto max-w-4xl space-y-6">
@@ -386,7 +384,7 @@ const ChatContent = ({
         }
       `}</style>
 
-      <div className="w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-2">
+      <div className="w-full max-w-4xl rounded-2xl border border-gray-700 bg-white p-2">
         {attachments.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-2">
             {attachments.map((attachment, index) => (
@@ -429,7 +427,7 @@ const ChatContent = ({
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Help me brainstorm about..."
-            className="flex-1 p-1 text-gray-600 focus:outline-none"
+            className="flex-1  p-1 text-gray-600 focus:outline-none"
           />
           <button
             onClick={handleSendMessage}
