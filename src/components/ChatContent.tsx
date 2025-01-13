@@ -285,11 +285,16 @@ const ChatContent = ({
       const appending = message.content.slice(endIndex + endTag.length);
 
       return (
-        <div className="cursor-pointer whitespace-pre-wrap">
+        <div className="space-y-4">
           <div>{prepending}</div>
-          <div onClick={updateEditorWithNewDocument(document)}>
-            <FileText />
-            {documentTitle}
+          <div
+            onClick={updateEditorWithNewDocument(document)}
+            className="inline-block w-auto cursor-pointer rounded-lg bg-sky-600 bg-opacity-50 p-2"
+          >
+            <div className="flex">
+              <FileText />
+              <div className="mx-1 ">{documentTitle}</div>
+            </div>
           </div>
           <div>{appending}</div>
         </div>
