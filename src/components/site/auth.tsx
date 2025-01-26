@@ -10,8 +10,9 @@ export function SignIn({
     <form
       action={async () => {
         'use server';
-        await signIn(provider);
+        await signIn(provider, { redirectTo: '/home' });
       }}
+      className="mr-4"
     >
       <Button {...props}>Sign In</Button>
     </form>

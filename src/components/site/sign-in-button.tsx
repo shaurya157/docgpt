@@ -16,7 +16,7 @@ interface UserButtonProps {
   session?: Session | null;
 }
 
-export default async function UserButton({ session }: UserButtonProps) {
+export default async function SignInButton({ session }: UserButtonProps) {
   if (!session?.user) return <SignIn />;
 
   return (

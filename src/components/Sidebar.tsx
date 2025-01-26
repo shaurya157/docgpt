@@ -327,13 +327,13 @@ const Sidebar = ({
               DocGPT 60 second overview
             </a>
             <a
-              href="mailto:founders@docgpt.work"
+              href="mailto:leo@docgpt.work"
               className="block text-gray-600 underline decoration-1 underline-offset-4 hover:text-gray-900"
             >
               founders@docgpt.work
             </a>
             <a
-              href="mailto:bugs@docgpt.work"
+              href="mailto:leo@docgpt.work"
               className="block text-gray-600 underline decoration-1 underline-offset-4 hover:text-gray-900"
             >
               bugs@docgpt.work
@@ -426,10 +426,7 @@ const Sidebar = ({
               <button
                 onClick={() => {
                   toggleSidebar();
-                  setActiveItem(
-                    item,
-                    item['documentName'] === activeItem['documentName']
-                  );
+                  setActiveItem(item, item['id'] === activeItem['id']);
                 }}
                 className="flex-1 truncate text-left"
               >

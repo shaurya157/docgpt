@@ -26,7 +26,8 @@ import { Session } from 'next-auth';
 import { SessionProvider } from 'next-auth/react';
 
 import { OpenAIProvider } from '@/components/openai/openai-context';
-import UserButton from '@/components/site/user-button';
+import PreLoginFooter from '@/components/PreLoginFooter';
+import PreLoginHeader from '@/components/PreLoginHeader';
 
 import { auth } from '../../auth';
 
@@ -224,6 +225,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       initialOpenAiThreadId = res.threadId;
     }
   }
+
   return (
     <>
       <html lang="en" suppressHydrationWarning>
@@ -267,17 +269,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                     }
                     userDocument={userDocument}
                   >
-                    <div className="relative flex min-h-screen flex-col">
-                      {/*<SiteHeader session={session} />*/}
-                      {session?.user ? (
-                        <div className="flex-1">{children}</div>
-                      ) : (
-                        <div className="flex-1">
-                          <h1>Please sign in to use DocGPT</h1>
-                          <UserButton />
-                        </div>
-                      )}
-                    </div>
+                    {!session?.user ? <PreLoginHeader /> : <div></div>}
+                    <div className="flex-1">{children}</div>
+                    {!session?.user ? <PreLoginFooter /> : <div></div>}
                   </DocumentProvider>
                 </UserDataContextProvider>
               </SessionProvider>
