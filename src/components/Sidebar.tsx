@@ -426,7 +426,11 @@ const Sidebar = ({
               <button
                 onClick={() => {
                   toggleSidebar();
-                  setActiveItem(item, item['id'] === activeUserDocument['id']);
+                  setActiveItem(
+                    item,
+                    activeUserDocument != undefined &&
+                      item['id'] === activeUserDocument['id']
+                  );
                 }}
                 className="flex-1 truncate text-left"
               >

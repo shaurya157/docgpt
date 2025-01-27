@@ -37,6 +37,7 @@ export function SaveButton() {
       ? documentName
       : activeUserDocument!['documentName'];
 
+    console.log(editor.children);
     const res = await saveCurrentDocumentState(
       session!.user!.email!,
       docName,

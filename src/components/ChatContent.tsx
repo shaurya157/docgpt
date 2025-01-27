@@ -318,7 +318,9 @@ const ChatContent = ({
       );
     }
 
-    return <Markdown>{`${message.content}`}</Markdown>;
+    return (
+      <Markdown className="whitespace-pre-wrap">{message.content}</Markdown>
+    );
     // return <div className="whitespace-pre-wrap">{message.content}</div>;
   };
 
