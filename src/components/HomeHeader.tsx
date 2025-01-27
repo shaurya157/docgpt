@@ -14,6 +14,7 @@ interface HeaderProps {
   setActiveItem: (item, documentRefreshOnly) => void;
   setEditorOpen: (open: boolean) => void;
   editorOpen: boolean;
+  activeUserDocument: {};
 }
 
 const HomeHeader = ({
@@ -23,6 +24,7 @@ const HomeHeader = ({
   toggleSidebar,
   onNewChat,
   setActiveItem,
+  activeUserDocument,
 }: HeaderProps) => {
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-4">
@@ -38,7 +40,15 @@ const HomeHeader = ({
         {editorOpen ? (
           <FileMinus className="ml-5" onClick={() => setEditorOpen(false)} />
         ) : (
-          <FilePlus className="ml-5" onClick={() => setEditorOpen(true)} />
+          <FilePlus
+            className="ml-5"
+            onClick={() => {
+              if (!activeUserDocument) {
+                onNewChat();
+              }
+              setEditorOpen(true);
+            }}
+          />
         )}
         <MessageSquarePlusIcon
           onClick={() => {

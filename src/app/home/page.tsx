@@ -194,6 +194,7 @@ export default function Home() {
         setActiveItem={handleSetActiveItem}
         setEditorOpen={setEditorOpen}
         editorOpen={editorOpen}
+        activeUserDocument={activeUserDocument}
       />
       <div
         className={'relative flex flex-1 overflow-hidden ' + chatWindowCssClass}
