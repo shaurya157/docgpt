@@ -1,21 +1,25 @@
 import Image from 'next/image';
+import { FileMinus, FilePlus, MessageSquarePlusIcon } from 'lucide-react';
 
 import { TemplatesDropdown } from '@/components/site/templates-dropdown';
 
-import EditIcon from '../assets/icons/edit.svg';
 import SidebarIcon from '../assets/icons/sidebar.svg';
 
 interface HeaderProps {
   activeTab: 'chat' | 'document';
   setActiveTab: (tab: 'chat' | 'document') => void;
+  isSidebarOpen: boolean;
   toggleSidebar: () => void;
   onNewChat: () => void;
   setActiveItem: (item, documentRefreshOnly) => void;
+  setEditorOpen: (open: boolean) => void;
+  editorOpen: boolean;
 }
 
 const HomeHeader = ({
-  activeTab,
-  setActiveTab,
+  editorOpen,
+  setEditorOpen,
+  isSidebarOpen,
   toggleSidebar,
   onNewChat,
   setActiveItem,
@@ -29,18 +33,22 @@ const HomeHeader = ({
         <Image src={SidebarIcon} alt="Toggle Sidebar" width={24} height={24} />
       </button>
 
-      <div className="flex items-center">
+      <div className="flex items-center ">
         <TemplatesDropdown setActiveItem={setActiveItem} />
-        <button
-          className="ml-4 rounded-lg p-2 hover:bg-[#ECECEC]"
+        {editorOpen ? (
+          <FileMinus className="ml-5" onClick={() => setEditorOpen(false)} />
+        ) : (
+          <FilePlus className="ml-5" onClick={() => setEditorOpen(true)} />
+        )}
+        <MessageSquarePlusIcon
           onClick={() => {
             onNewChat();
-            toggleSidebar();
+            if (!isSidebarOpen) {
+              toggleSidebar();
+            }
           }}
-          title="Create new chat"
-        >
-          <Image src={EditIcon} alt="New Chat" width={24} height={24} />
-        </button>
+          className="ml-5"
+        />
       </div>
     </header>
   );

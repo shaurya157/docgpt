@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { redirect } from 'next/navigation';
 import { saveCurrentDocumentState } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-context-provider';
@@ -14,25 +15,25 @@ import OnboardingTooltip from '@/components/OnboardingTooltip';
 import PlateEditor, { useMyEditor } from '@/components/plate-editor';
 import Sidebar from '@/components/Sidebar';
 
-const startingMessage: Message = {
-  id: '1',
-  role: 'assistant',
-  content:
-    'Hi, how can I help you today? You can press /help to learn about everything I can do for you.',
-};
-
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'chat' | 'document'>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
   const { userOwnedDocuments } = useUserDataContext();
   const { activeUserDocument, setActiveUserDocument } = useDocument();
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
   const { data: session } = useSession();
   const { chatAssistantId } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   // TODO: can prolly move this out to layout instead and provide it globally with a provider.
   // TODO: fix here and the other page.tsx file
   const editor = useMyEditor();
+
+  // TODO: a bit hacky...
+  if (!session?.user) {
+    redirect('/');
+  }
 
   const [items, setItems] = useState({
     chat: userOwnedDocuments,
@@ -80,8 +81,9 @@ export default function Home() {
     }));
 
     setActiveUserDocument(item);
-    setActiveChatMessages([startingMessage]);
+    setActiveChatMessages([]);
     setActiveTab('chat');
+    return item;
   };
 
   const handleDeleteChat = (chatId: string) => {
@@ -92,8 +94,8 @@ export default function Home() {
   };
 
   const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
+    console.log('RUNNING@');
     setStatus('in_progress');
-    debugger;
     setActiveUserDocument(item);
     if (!documentRefreshOnly) {
       setActiveChatMessages([]);
@@ -112,7 +114,7 @@ export default function Home() {
         } else {
           const messages = json['messages'] as Message[];
           if (messages.length == 0) {
-            setActiveChatMessages([startingMessage]);
+            setActiveChatMessages([]);
           } else {
             messages.reverse().forEach((message) => {
               setActiveChatMessages((messages: Message[]) => [
@@ -153,6 +155,10 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      if (window.sessionStorage.getItem('OnboardingCompleted') === 'true') {
+        setOnboardingCompleted(true);
+      }
+
       const setInitialSidebarState = () => {
         const isLargeScreen = window.matchMedia('(min-width: 1024px)').matches;
         setIsSidebarOpen(isLargeScreen);
@@ -174,42 +180,61 @@ export default function Home() {
   }, []);
 
   const currentItems = activeTab === 'chat' ? items.chat : items.document;
+  const editorCssClass = editorOpen ? '' : 'hidden';
+  const chatWindowCssClass = editorOpen ? '' : 'justify-center items-center';
 
   return (
     <div className="flex h-screen flex-col">
       <HomeHeader
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        isSidebarOpen={isSidebarOpen}
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onNewChat={handleNewChat}
         setActiveItem={handleSetActiveItem}
+        setEditorOpen={setEditorOpen}
+        editorOpen={editorOpen}
       />
-      <div className="relative flex flex-1 overflow-hidden">
+      <div
+        className={'relative flex flex-1 overflow-hidden ' + chatWindowCssClass}
+      >
         <Sidebar
           isOpen={isSidebarOpen}
           items={currentItems}
-          activeItem={activeUserDocument}
+          activeUserDocument={activeUserDocument}
           setActiveItem={handleSetActiveItem}
           activeTab={activeTab}
           onDeleteChat={handleDeleteChat}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         <ChatContent
-          activeItem={activeUserDocument}
+          activeUserDocument={activeUserDocument}
           activeChatMessages={activeChatMessages}
           setActiveChatMessages={setActiveChatMessages}
           setActiveItem={handleSetActiveItem}
           status={status}
           setStatus={setStatus}
           editor={editor}
+          editorOpen={editorOpen}
+          setEditorOpen={setEditorOpen}
+          onNewChat={handleNewChat}
         />
-        <OnboardingTooltip
-          steps={onboardingSteps}
-          onComplete={() => console.log('Onboarding completeed')}
-          isSidebarOpen={isSidebarOpen}
-        />
+        {!onboardingCompleted && (
+          <OnboardingTooltip
+            steps={onboardingSteps}
+            onComplete={() =>
+              sessionStorage.setItem('OnboardingCompleted', 'true')
+            }
+            isSidebarOpen={isSidebarOpen}
+          />
+        )}
 
-        <div className="z-10 overflow-y-scroll border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]">
+        <div
+          className={
+            'z-10 overflow-y-scroll border bg-background shadow w-3/4 ' +
+            editorCssClass
+          }
+        >
           <PlateEditor editor={editor} />
         </div>
       </div>

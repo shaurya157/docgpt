@@ -29,7 +29,6 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
   const [documents, setDocuments] = useState<FileInfo[]>(files!);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  console.log(files);
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();

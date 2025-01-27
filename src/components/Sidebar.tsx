@@ -19,7 +19,7 @@ import Popover from './Sidebar/Popover';
 interface SidebarProps {
   isOpen: boolean;
   items: MenuItem[] | undefined | null;
-  activeItem: string | {};
+  activeUserDocument: string | {};
   setActiveItem: (id: MenuItem, documentRefreshOnly: boolean) => void;
   activeTab: 'chat' | 'document';
   onDeleteChat?: (chatId: string) => void;
@@ -42,7 +42,7 @@ interface ChatMenuState {
 const Sidebar = ({
   isOpen,
   items,
-  activeItem,
+  activeUserDocument,
   setActiveItem,
   activeTab,
   onDeleteChat,
@@ -394,7 +394,7 @@ const Sidebar = ({
   };
 
   return (
-    <div className="absolute z-50">
+    <div className="absolute inset-y-0 left-0">
       <motion.div
         ref={sidebarRef}
         initial="closed"
@@ -418,7 +418,7 @@ const Sidebar = ({
             <div
               key={item.id}
               className={`group mb-1 flex w-full items-center justify-between rounded-md p-1.5 ${
-                activeItem && activeItem!['id'] === item.id
+                activeUserDocument && activeUserDocument!['id'] === item.id
                   ? 'bg-[#ECECEC]'
                   : 'hover:bg-[#ECECEC]'
               }`}
@@ -426,7 +426,7 @@ const Sidebar = ({
               <button
                 onClick={() => {
                   toggleSidebar();
-                  setActiveItem(item, item['id'] === activeItem['id']);
+                  setActiveItem(item, item['id'] === activeUserDocument['id']);
                 }}
                 className="flex-1 truncate text-left"
               >

@@ -25,7 +25,6 @@ export async function appendFileDataToUser(
 
   // TODO: Fix this when I fix firebase realtime update, this should be one api call not many
   for (const data of filesData) {
-    console.log(data);
     const value = {
       files: arrayUnion({
         fileName: data['fileName'],
@@ -47,9 +46,6 @@ export async function appendDocumentSpecificFileIds(
 ) {
   let result: any[] = [];
   let error: Error[] = [];
-
-  console.log(files);
-  console.log('documentId', documentId);
   let documentsRef = collection(db, 'documents');
   let docRef = doc(documentsRef, documentId);
 
@@ -133,7 +129,6 @@ export async function saveCurrentDocumentState(
   document: any,
   documentId?: string
 ) {
-  console.log(documentVectorStoreId);
   let documentsRef = collection(db, 'documents');
   let result, error;
   try {
@@ -239,7 +234,6 @@ export async function deleteDocument(documentId: string) {
   let result, error;
 
   try {
-    console.log(`DELETING ID: ${documentId}`);
     result = await deleteDoc(docRef);
   } catch (e) {
     error = e;

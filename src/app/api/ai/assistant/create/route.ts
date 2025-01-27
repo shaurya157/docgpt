@@ -28,6 +28,7 @@ Rules:
 - CRITICAL: ALWAYS prioritize using context from files uploaded in the vector store.
 - CRITICAL: Whenever <Template> is provided, try and use it. Response should include the template headers as formatted along with content for these headers. Do not apply the template when a <Selection> is provided.
 - CRITICAL: Whenever a <SectionInstruction> is provided, follow the rules only for the section defined above the instruction. DO NOT apply the same rules to any other sections in the response.
+- CRITICAL: NEVER provide citation marks.
 - Do NOT add citation links when citing a file in the vector store.
 `;
 

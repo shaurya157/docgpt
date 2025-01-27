@@ -11,10 +11,12 @@ import { Message } from 'ai';
 import { motion } from 'framer-motion';
 import { FileText } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import Markdown from 'react-markdown';
 import { toast } from 'sonner';
 
 import { readDataStream } from '@/lib/read-data-stream';
 import { Icons } from '@/components/icons';
+import { Button } from '@/components/plate-ui/button';
 
 import UploadIcon from '../assets/icons/arrowUp.svg';
 import AttachmentIcon from '../assets/icons/attachment.svg';
@@ -32,13 +34,16 @@ import CloseIcon from '../assets/icons/x.svg';
 // }
 
 interface ContentProps {
-  activeItem: any;
+  activeUserDocument: any;
   activeChatMessages: Message[];
   setActiveChatMessages: Dispatch<SetStateAction<Message[]>>;
   status: 'in_progress' | 'awaiting_message';
   setStatus: Dispatch<SetStateAction<string>>;
   editor: PlateEditor;
   setActiveItem: (id: any, documentRefreshOnly: boolean) => void;
+  editorOpen: boolean;
+  setEditorOpen: (bool: boolean) => void;
+  onNewChat: () => {};
 }
 
 const DotAnimation = () => {
@@ -78,13 +83,16 @@ const DotAnimation = () => {
 };
 
 const ChatContent = ({
-  activeItem,
+  activeUserDocument,
   activeChatMessages,
   setActiveChatMessages,
   status,
   setStatus,
   editor,
   setActiveItem,
+  editorOpen,
+  setEditorOpen,
+  onNewChat,
 }: ContentProps) => {
   const { data: session } = useSession();
   const { chatAssistantId } = useUserDataContext();
@@ -121,6 +129,11 @@ const ChatContent = ({
 
   const handleSendMessage = async () => {
     setStatus('in_progress');
+    // let item = activeUserDocument
+    //
+    // if (!activeUserDocument) {
+    //   onNewChat();
+    // }
 
     if (inputValue.trim() || attachments.length > 0) {
       const newMessage: Message = {
@@ -134,7 +147,10 @@ const ChatContent = ({
 
       if (attachments.length > 0) {
         const filesFormData = new FormData();
-        filesFormData.append('vectorStoreId', activeItem!['vectorStoreId']);
+        filesFormData.append(
+          'vectorStoreId',
+          activeUserDocument!['vectorStoreId']
+        );
         filesFormData.append('userId', session!.user!.email!);
         attachments.forEach((attachment) => {
           filesFormData.append('files', attachment.file);
@@ -147,7 +163,10 @@ const ChatContent = ({
           await filesResult.json()
         )['openAiFileIds'];
 
-        await appendDocumentSpecificFileIds(activeItem!['id'], filesResultJson);
+        await appendDocumentSpecificFileIds(
+          activeUserDocument!['id'],
+          filesResultJson
+        );
         setAttachments([]);
       }
 
@@ -156,7 +175,7 @@ const ChatContent = ({
         newMessage.content
       );
       formData.append('message', serializedEditorValue);
-      formData.append('threadId', activeItem['threadId']);
+      formData.append('threadId', activeUserDocument['threadId']);
       formData.append('assistantId', chatAssistantId!);
 
       const result = await fetch('/api/ai/chat/brainstormassistant', {
@@ -261,7 +280,7 @@ const ChatContent = ({
         });
       });
 
-      const currActiveDoc = { ...activeItem };
+      const currActiveDoc = { ...activeUserDocument };
       currActiveDoc['document'] = result;
       setActiveItem(currActiveDoc, true);
     };
@@ -299,22 +318,109 @@ const ChatContent = ({
       );
     }
 
-    return <div className="whitespace-pre-wrap">{message.content}</div>;
+    return <Markdown>{`${message.content}`}</Markdown>;
+    // return <div className="whitespace-pre-wrap">{message.content}</div>;
   };
 
+  const chatInputPositioningCssClass =
+    activeChatMessages.length !== 0 || editorOpen ? 'h-full' : '';
+
+  const handleQuickLinkClick = (input: string, mode: string) => {
+    return () => {
+      if (!activeUserDocument) {
+        onNewChat();
+      }
+      if (mode === 'document') {
+        setEditorOpen(true);
+      }
+
+      setInputValue(input);
+    };
+  };
+
+  console.log(activeUserDocument);
   return (
     <motion.div
-      className="flex h-full flex-col items-start p-4"
+      className={
+        'flex flex-col items-start p-4 ' + chatInputPositioningCssClass
+      }
       transition={{
         duration: 0.2,
         type: 'spring',
         damping: 20,
         stiffness: 100,
       }}
-      style={{ width: '30%' }}
+      style={{ width: editorOpen ? '30%' : '50%' }}
     >
-      <div className=" flex-1 overflow-y-auto scroll-smooth">
-        <div className="mx-auto max-w-4xl space-y-6">
+      {activeChatMessages.length !== 0 ? (
+        <div></div>
+      ) : (
+        <section className="flex h-1/3 w-full flex-col">
+          <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl">
+            What can I help with?
+          </h1>
+          <span className="mb-8">
+            Here are some things I can help you with:
+          </span>
+          <div className="mb-8 flex flex-col">
+            <span className="font-bold">Document mode</span>
+            <div>
+              <Button
+                className="mr-2"
+                onClick={handleQuickLinkClick('Write a PRD about ', 'document')}
+              >
+                Write a PRD about...{' '}
+              </Button>
+              <Button
+                className="mr-2"
+                onClick={handleQuickLinkClick(
+                  'Write a launch email about ',
+                  'document'
+                )}
+              >
+                Write a launch email about...
+              </Button>
+              <Button
+                className="mr-2"
+                onClick={handleQuickLinkClick('', 'document')}
+              >
+                New document
+              </Button>
+            </div>
+          </div>
+          <div className="mb-8 flex flex-col flex-wrap">
+            <span className="font-bold">Chat mode</span>
+            <div>
+              <Button
+                className="mr-2"
+                onClick={handleQuickLinkClick(
+                  'Help me brainstorm about ',
+                  'chat'
+                )}
+              >
+                Help me brainstorm about...
+              </Button>
+              <Button
+                className="mr-2"
+                onClick={handleQuickLinkClick(
+                  'Give me feedback about ',
+                  'chat'
+                )}
+              >
+                Get feedback on...
+              </Button>
+              <Button
+                className="mr-2"
+                onClick={handleQuickLinkClick('Help me refine ', 'chat')}
+              >
+                Help me refine...
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+      <div className="w-full flex-1 overflow-y-auto scroll-smooth">
+        <div className="mx-auto w-full space-y-6">
           {activeChatMessages.map((message) => (
             <div
               key={message.id}
@@ -360,8 +466,8 @@ const ChatContent = ({
 
           {status === 'in_progress' && (
             <span className="flex gap-x-2 text-white">
-              <Icons.spinner className="size-5 animate-spin text-cyan-600" />
-              <p className="text-cyan-600">Thinking</p>
+              <Icons.spinner className="size-5 animate-spin text-black" />
+              <p className="text-black">Thinking</p>
               <DotAnimation />
             </span>
           )}
@@ -384,7 +490,7 @@ const ChatContent = ({
         }
       `}</style>
 
-      <div className="w-full max-w-4xl rounded-2xl border border-gray-700 bg-white p-2">
+      <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
         {attachments.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-2">
             {attachments.map((attachment, index) => (
@@ -405,7 +511,7 @@ const ChatContent = ({
             ))}
           </div>
         )}
-        <div className="flex items-center gap-1">
+        <div className="flex w-full items-center gap-1">
           <input
             type="file"
             ref={fileInputRef}
@@ -427,7 +533,7 @@ const ChatContent = ({
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Help me brainstorm about..."
-            className="flex-1  p-1 text-gray-600 focus:outline-none"
+            className="w-full flex-1  p-1 text-gray-600 focus:outline-none"
           />
           <button
             onClick={handleSendMessage}

@@ -70,17 +70,12 @@ async function createAssistantIfNotExist(session: Session) {
   // The same is done on layout.tsx, once refactor make the same change there
   // Maybe we can use useEffect() here?
   try {
-    const {
-      savedAssistantId,
-      savedVectorStoreId,
-      savedOpenAiChatAssistantId,
-      savedActiveDocumentName,
-    } = await getUserInfo(session.user?.email!);
+    const { savedAssistantId, savedVectorStoreId, savedOpenAiChatAssistantId } =
+      await getUserInfo(session.user?.email!);
     if (savedAssistantId && savedVectorStoreId && savedOpenAiChatAssistantId) {
       openAiAssistantId = savedAssistantId;
       openAiVectorStoreId = savedVectorStoreId;
       openAiChatAssistantId = savedOpenAiChatAssistantId;
-      activeDocumentName = savedActiveDocumentName;
     } else {
       let userId = session.user?.email!;
       // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
@@ -113,26 +108,6 @@ async function createAssistantIfNotExist(session: Session) {
     openAiAssistantId,
     openAiVectorStoreId,
     openAiChatAssistantId,
-    activeDocumentName,
-  };
-}
-
-async function createThread(session: Session) {
-  let userId = session.user?.email!;
-  // TODO: idk why we need to use a environment variable to do a fetch specifically here but we do...
-  // Find a better way
-  const createThreadResult = await fetch(
-    process.env.NEXTAUTH_URL + '/api/ai/thread/create',
-    {
-      method: 'POST',
-      body: JSON.stringify({ userId }),
-    }
-  );
-  const responseJson = await createThreadResult.json();
-  console.log(responseJson);
-  return {
-    threadId: responseJson['threadId'],
-    documentVectorStoreId: responseJson['vectorStoreId'],
   };
 }
 
@@ -189,41 +164,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   let openAiAssistantId,
     openAiVectorStoreId,
     openAiChatAssistantId,
-    initialOpenAiThreadId,
-    userDocuments,
-    userDocument;
+    userDocuments;
   if (session?.user) {
     const res = await createAssistantIfNotExist(session);
     openAiAssistantId = res.openAiAssistantId;
     openAiVectorStoreId = res.openAiVectorStoreId;
     openAiChatAssistantId = res.openAiChatAssistantId;
-    let activeDocumentName = res.activeDocumentName;
-
     userDocuments = await getUserDocs(session);
-
-    // TODO: there MUST be a better way to do this...
-    if (userDocuments.length > 0) {
-      if (activeDocumentName) {
-        let doc = userDocuments.find(
-          (doc) => doc['documentName'] === activeDocumentName
-        );
-        if (doc) {
-          initialOpenAiThreadId = doc['threadId'];
-          userDocument = doc;
-        } else {
-          initialOpenAiThreadId =
-            userDocuments[userDocuments.length - 1]['threadId'];
-          userDocument = userDocuments[userDocuments.length - 1];
-        }
-      } else {
-        initialOpenAiThreadId =
-          userDocuments[userDocuments.length - 1]['threadId'];
-        userDocument = userDocuments[userDocuments.length - 1];
-      }
-    } else {
-      let res = await createThread(session);
-      initialOpenAiThreadId = res.threadId;
-    }
   }
 
   return (
@@ -244,13 +191,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
               <SessionProvider session={session}>
                 <UserDataContextProvider
                   openAiAssistantId={session?.user ? openAiAssistantId : null}
-                  openAiVectorStoreId={
-                    session?.user ? openAiVectorStoreId : null
-                  }
-                  openAiChatAssistantId={
-                    session?.user ? openAiChatAssistantId : null
-                  }
-                  openAiThreadId={initialOpenAiThreadId}
+                  openAiVectorStoreId={openAiVectorStoreId}
+                  openAiChatAssistantId={openAiChatAssistantId}
                   filesData={
                     session?.user
                       ? await getExistingUserUploadedFiles(session)
@@ -267,7 +209,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                     docgptProvidedTemplates={
                       session?.user ? await getTemplates('docgpt') : null
                     }
-                    userDocument={userDocument}
                   >
                     {!session?.user ? <PreLoginHeader /> : <div></div>}
                     <div className="flex-1">{children}</div>
