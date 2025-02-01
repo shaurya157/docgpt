@@ -340,7 +340,6 @@ const ChatContent = ({
     };
   };
 
-  console.log(activeUserDocument);
   return (
     <motion.div
       className={
