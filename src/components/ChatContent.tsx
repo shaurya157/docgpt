@@ -129,11 +129,10 @@ const ChatContent = ({
 
   const handleSendMessage = async () => {
     setStatus('in_progress');
-    // let item = activeUserDocument
-    //
-    // if (!activeUserDocument) {
-    //   onNewChat();
-    // }
+    let item = activeUserDocument
+    if (!item) {
+      item = await onNewChat();
+    }
 
     if (inputValue.trim() || attachments.length > 0) {
       const newMessage: Message = {
@@ -149,7 +148,7 @@ const ChatContent = ({
         const filesFormData = new FormData();
         filesFormData.append(
           'vectorStoreId',
-          activeUserDocument!['vectorStoreId']
+          item!['vectorStoreId']
         );
         filesFormData.append('userId', session!.user!.email!);
         attachments.forEach((attachment) => {
@@ -164,7 +163,7 @@ const ChatContent = ({
         )['openAiFileIds'];
 
         await appendDocumentSpecificFileIds(
-          activeUserDocument!['id'],
+          item!['id'],
           filesResultJson
         );
         setAttachments([]);
@@ -175,7 +174,7 @@ const ChatContent = ({
         newMessage.content
       );
       formData.append('message', serializedEditorValue);
-      formData.append('threadId', activeUserDocument['threadId']);
+      formData.append('threadId', item['threadId']);
       formData.append('assistantId', chatAssistantId!);
 
       const result = await fetch('/api/ai/chat/brainstormassistant', {
