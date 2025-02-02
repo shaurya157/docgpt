@@ -38,10 +38,10 @@ const HomeHeader = ({
       <div className="flex items-center ">
         <TemplatesDropdown setActiveItem={setActiveItem} />
         {editorOpen ? (
-          <FileMinus className="ml-5" onClick={() => setEditorOpen(false)} />
+          <FileMinus className="ml-5 cursor-pointer" onClick={() => setEditorOpen(false)} />
         ) : (
           <FilePlus
-            className="ml-5"
+            className="ml-5  cursor-pointer"
             onClick={() => {
               if (!activeUserDocument) {
                 onNewChat();
@@ -57,7 +57,7 @@ const HomeHeader = ({
               toggleSidebar();
             }
           }}
-          className="ml-5"
+          className="ml-5 cursor-pointer"
         />
       </div>
     </header>

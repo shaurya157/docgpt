@@ -228,6 +228,20 @@ export async function getOwnedTemplates(templateOwnerId: string) {
   );
 }
 
+export async function deleteTemplate(templateId: string) {
+  let documentsRef = collection(db, 'templates');
+  let docRef = doc(documentsRef, templateId);
+  let result, error;
+
+  try {
+    result = await deleteDoc(docRef);
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
+}
+
 export async function deleteDocument(documentId: string) {
   let documentsRef = collection(db, 'documents');
   let docRef = doc(documentsRef, documentId);
