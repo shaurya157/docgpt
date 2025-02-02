@@ -285,6 +285,12 @@ const ChatContent = ({
     };
   };
 
+  function extractTitleFromDocument(document: string): string {
+    const titleRegex = /^(#{1,6})\s+(.*)/m;
+    const match = document.match(titleRegex);
+    return match ? match[2].trim() : "New Document";
+  }
+
   const parseUserAndAssistantMessageContent = (message: Message) => {
     if (message.role != 'user' && message.content.includes('<Document>')) {
       const startTag = '<Document>';
@@ -296,8 +302,7 @@ const ChatContent = ({
       const document = message.content
         .slice(startIndex + startTag.length, endIndex)
         .trim();
-      const titleRegex = /^#\s+(.*)/m;
-      const documentTitle = document.match(titleRegex)![1].trim();
+      const documentTitle = extractTitleFromDocument(document)
       const appending = message.content.slice(endIndex + endTag.length);
 
       return (

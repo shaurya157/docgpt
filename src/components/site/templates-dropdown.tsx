@@ -45,12 +45,10 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
     return async () => {
       await deleteTemplate(templateId);
       const filteredTemplates = userTemplates?.filter(templ => templ["id"] !== templateId)
-      console.log("filteredTemplates", filteredTemplates)
       setUserTemplates(filteredTemplates);
     }
   }
 
-  console.log(userTemplates)
   return (
     <DropdownMenu modal={false} {...openState}>
       <DropdownMenuTrigger asChild>
