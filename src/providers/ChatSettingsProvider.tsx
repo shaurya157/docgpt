@@ -51,7 +51,6 @@ export default function ChatSettingsProvider({
       ?.concat(userTemplates)
       .find((templ) => templ['id'] === id);
 
-    // debugger;
     if (template) {
       setSelectedTemplate(template);
     } else {

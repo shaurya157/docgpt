@@ -12,16 +12,14 @@ export async function POST(req: NextRequest) {
   const threadId = formData.get('threadId') as string;
   // TODO: get file from formdata too and process it
   const assistantId = formData.get('assistantId');
+  const additionalInstructions = formData.get('additionalInstructions');
+
   const apiKey = process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
     apiKey: apiKey || '',
   });
 
   try {
-    // if (files) {
-    //   console.log("Files: ", files)
-    // }
-
     const messageData = {
       role: 'user' as 'user',
       content: message as string,
@@ -37,8 +35,8 @@ export async function POST(req: NextRequest) {
       async ({ sendMessage }) => {
         // Run the assistant on the thread
         const run = await openai.beta.threads.runs.create(threadId, {
-          // @ts-ignore
-          assistant_id: assistantId,
+          assistant_id: assistantId as string,
+          additional_instructions: additionalInstructions as string,
         });
 
         async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {

@@ -76,7 +76,7 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
                 <Button onClick={handleSelect(templ)} className="mr-1">
                   Apply
                 </Button>
-                <Button>
+                <Button className="mr-2">
                   <Link
                     href={`/templates/${templ['templateName']}`}
                     target="_blank"

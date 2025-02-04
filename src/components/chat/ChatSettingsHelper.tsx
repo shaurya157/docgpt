@@ -53,7 +53,6 @@ export const ChatSettingsHelper = () => {
     handleSelectedTemplate(e.target.value);
   };
 
-  console.log(selectedTemplate);
   return (
     <section className="flex h-1/3 w-full flex-col">
       <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl">

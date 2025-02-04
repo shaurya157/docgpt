@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { appendDocumentSpecificFileIds } from '@/firebase/firestore-dao';
+import { useChatSettings } from '@/providers/ChatSettingsProvider';
 import { useUserDataContext } from '@/providers/UserDataProvider';
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
 import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
@@ -95,6 +96,7 @@ const ChatContent = ({
   onNewChat,
 }: ContentProps) => {
   const { data: session } = useSession();
+  const { selectedAssistant } = useChatSettings();
   const { chatAssistantId } = useUserDataContext();
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<
@@ -170,6 +172,19 @@ const ChatContent = ({
       formData.append('message', serializedEditorValue);
       formData.append('threadId', item['threadId']);
       formData.append('assistantId', chatAssistantId!);
+      formData.append(
+        'additionalInstructions',
+        `\
+        # ROLE
+        ${selectedAssistant['role']}
+
+        # GOALS
+        ${selectedAssistant['goals']}
+
+        # ADDITIONAL RULES
+        ${selectedAssistant['rules']}
+      `
+      );
 
       const result = await fetch('/api/ai/chat/brainstormassistant', {
         method: 'POST',
