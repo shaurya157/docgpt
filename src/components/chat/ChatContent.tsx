@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { appendDocumentSpecificFileIds } from '@/firebase/firestore-dao';
-import { useUserDataContext } from '@/providers/user-data-context-provider';
+import { useUserDataContext } from '@/providers/UserDataProvider';
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
 import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
 import { getEditorPrompt } from '@udecode/plate-ai/react';
@@ -15,12 +15,12 @@ import Markdown from 'react-markdown';
 import { toast } from 'sonner';
 
 import { readDataStream } from '@/lib/read-data-stream';
+import { ChatSettingsHelper } from '@/components/chat/ChatSettingsHelper';
 import { Icons } from '@/components/icons';
-import { Button } from '@/components/plate-ui/button';
 
-import UploadIcon from '../assets/icons/arrowUp.svg';
-import AttachmentIcon from '../assets/icons/attachment.svg';
-import CloseIcon from '../assets/icons/x.svg';
+import UploadIcon from '../../assets/icons/arrowUp.svg';
+import AttachmentIcon from '../../assets/icons/attachment.svg';
+import CloseIcon from '../../assets/icons/x.svg';
 
 // interface Message {
 //   id: string;
@@ -129,7 +129,7 @@ const ChatContent = ({
 
   const handleSendMessage = async () => {
     setStatus('in_progress');
-    let item = activeUserDocument
+    let item = activeUserDocument;
     if (!item) {
       item = await onNewChat();
     }
@@ -146,10 +146,7 @@ const ChatContent = ({
 
       if (attachments.length > 0) {
         const filesFormData = new FormData();
-        filesFormData.append(
-          'vectorStoreId',
-          item!['vectorStoreId']
-        );
+        filesFormData.append('vectorStoreId', item!['vectorStoreId']);
         filesFormData.append('userId', session!.user!.email!);
         attachments.forEach((attachment) => {
           filesFormData.append('files', attachment.file);
@@ -162,10 +159,7 @@ const ChatContent = ({
           await filesResult.json()
         )['openAiFileIds'];
 
-        await appendDocumentSpecificFileIds(
-          item!['id'],
-          filesResultJson
-        );
+        await appendDocumentSpecificFileIds(item!['id'], filesResultJson);
         setAttachments([]);
       }
 
@@ -288,7 +282,7 @@ const ChatContent = ({
   function extractTitleFromDocument(document: string): string {
     const titleRegex = /^(#{1,6})\s+(.*)/m;
     const match = document.match(titleRegex);
-    return match ? match[2].trim() : "New Document";
+    return match ? match[2].trim() : 'New Document';
   }
 
   const parseUserAndAssistantMessageContent = (message: Message) => {
@@ -302,7 +296,7 @@ const ChatContent = ({
       const document = message.content
         .slice(startIndex + startTag.length, endIndex)
         .trim();
-      const documentTitle = extractTitleFromDocument(document)
+      const documentTitle = extractTitleFromDocument(document);
       const appending = message.content.slice(endIndex + endTag.length);
 
       return (
@@ -331,19 +325,6 @@ const ChatContent = ({
   const chatInputPositioningCssClass =
     activeChatMessages.length !== 0 || editorOpen ? 'h-full' : '';
 
-  const handleQuickLinkClick = (input: string, mode: string) => {
-    return () => {
-      if (!activeUserDocument) {
-        onNewChat();
-      }
-      if (mode === 'document') {
-        setEditorOpen(true);
-      }
-
-      setInputValue(input);
-    };
-  };
-
   return (
     <motion.div
       className={
@@ -357,73 +338,7 @@ const ChatContent = ({
       }}
       style={{ width: editorOpen ? '30%' : '50%' }}
     >
-      {activeChatMessages.length !== 0 ? (
-        <div></div>
-      ) : (
-        <section className="flex h-1/3 w-full flex-col">
-          <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl">
-            What can I help with?
-          </h1>
-          <span className="mb-8">
-            Here are some things I can help you with:
-          </span>
-          <div className="mb-8 flex flex-col">
-            <span className="font-bold">Document mode</span>
-            <div>
-              <Button
-                className="mr-2"
-                onClick={handleQuickLinkClick('Write a PRD about ', 'document')}
-              >
-                Write a PRD about...{' '}
-              </Button>
-              <Button
-                className="mr-2"
-                onClick={handleQuickLinkClick(
-                  'Write a launch email about ',
-                  'document'
-                )}
-              >
-                Write a launch email about...
-              </Button>
-              <Button
-                className="mr-2"
-                onClick={handleQuickLinkClick('', 'document')}
-              >
-                New document
-              </Button>
-            </div>
-          </div>
-          <div className="mb-8 flex flex-col flex-wrap">
-            <span className="font-bold">Chat mode</span>
-            <div>
-              <Button
-                className="mr-2"
-                onClick={handleQuickLinkClick(
-                  'Help me brainstorm about ',
-                  'chat'
-                )}
-              >
-                Help me brainstorm about...
-              </Button>
-              <Button
-                className="mr-2"
-                onClick={handleQuickLinkClick(
-                  'Give me feedback about ',
-                  'chat'
-                )}
-              >
-                Get feedback on...
-              </Button>
-              <Button
-                className="mr-2"
-                onClick={handleQuickLinkClick('Help me refine ', 'chat')}
-              >
-                Help me refine...
-              </Button>
-            </div>
-          </div>
-        </section>
-      )}
+      {activeChatMessages.length !== 0 ? <div></div> : <ChatSettingsHelper />}
       <div className="w-full flex-1 overflow-y-auto scroll-smooth">
         <div className="mx-auto w-full space-y-6">
           {activeChatMessages.map((message) => (

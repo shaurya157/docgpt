@@ -46,9 +46,7 @@ export default function DocumentProvider({
 export function useDocument() {
   const context = useContext(TemplateSettings);
   if (!context) {
-    throw new Error(
-      'useUserSettings must be used within an UserSettingsProvider'
-    );
+    throw new Error('useDocument must be used within an DocumentProvider');
   }
 
   return context;

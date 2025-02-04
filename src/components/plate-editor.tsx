@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useDocument } from '@/providers/document-provider';
+import { useDocument } from '@/providers/DocumentProvider';
 import { cn, withProps } from '@udecode/cn';
 import { AIPlugin } from '@udecode/plate-ai/react';
 import { AlignPlugin } from '@udecode/plate-alignment/react';
@@ -205,23 +205,15 @@ export const useMyEditor = (displayedTemplate?) => {
   const editorValues = displayedTemplate
     ? displayedTemplate['template']
     : [
-        // {
-        //   id: '1',
-        //   type: 'p',
-        //   children: [{text: 'Write a list of facts about dogs. I want 3 facts only. Each fact should have a nested list explanaining more. Each nested explanation should have another nested list adding more context'}],
-        // },
-        // {
-        //   id: '2',
-        //   type: ParagraphPlugin.key,
-        //   children: [
-        //     {text: 'A rich-text editor with AI capabilities. Try the '},
-        //     {text: 'AI commands', bold: true},
-        //     {text: ' or use '},
-        //     {text: '/', kbd: true},
-        //     {text: ' to open the AI menu.'},
-        //
-        //   ],
-        // }
+        {
+          id: '1',
+          type: 'h1',
+          children: [
+            {
+              text: '',
+            },
+          ],
+        },
       ];
   return usePlateEditor({
     plugins: [

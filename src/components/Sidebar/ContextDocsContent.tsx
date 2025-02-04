@@ -4,10 +4,7 @@ import {
   appendFileDataToUser,
   deleteUserUploadedFile,
 } from '@/firebase/firestore-dao';
-import {
-  FileInfo,
-  useUserDataContext,
-} from '@/providers/user-data-context-provider';
+import { FileInfo, useUserDataContext } from '@/providers/UserDataProvider';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 

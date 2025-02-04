@@ -12,16 +12,19 @@ import '@/styles/globals.css';
 
 import { Metadata, Viewport } from 'next';
 import {
+  getAssistants,
   getOwnedTemplates,
   getUserInfo,
   getUserOwnedDocuments,
   getUserUploadedFilesData,
   saveUserActiveAssistant,
 } from '@/firebase/firestore-dao';
-import DocumentProvider from '@/providers/document-provider';
+import AssistantsProvider from '@/providers/AssistantsProvider';
+import ChatSettingsProvider from '@/providers/ChatSettingsProvider';
+import DocumentProvider from '@/providers/DocumentProvider';
 import UserDataContextProvider, {
   FileInfo,
-} from '@/providers/user-data-context-provider';
+} from '@/providers/UserDataProvider';
 import { Session } from 'next-auth';
 import { SessionProvider } from 'next-auth/react';
 
@@ -59,7 +62,6 @@ async function createAssistantIfNotExist(session: Session) {
   let openAiAssistantId;
   let openAiVectorStoreId;
   let openAiChatAssistantId;
-  let activeDocumentName;
   // TODO: this is very inelegant. We are making the call in the site header/page and then passing all the children the user uploaded files.
   // I've done this due to a lack of knowledge about how to make server side callbacks when a user signs in. This is also potentially running multiple times...
   // Ideally, when the user signs in, we should:
@@ -159,6 +161,25 @@ async function getUserDocs(session) {
   return result;
 }
 
+async function getAssistantDefinitions(assistantOwnerId) {
+  let result: any[] = [];
+  const assistantDefinitionsSnapshot = await getAssistants(assistantOwnerId);
+  assistantDefinitionsSnapshot.docs.forEach((doc) => {
+    const res = {
+      ownerId: doc.get('ownerId'),
+      goals: doc.get('goals'),
+      rules: doc.get('rules'),
+      name: doc.get('name'),
+      role: doc.get('role'),
+      id: doc.id,
+    };
+
+    result.push(res);
+  });
+
+  return result;
+}
+
 export default async function RootLayout({ children }: RootLayoutProps) {
   const session = await auth();
   let openAiAssistantId,
@@ -210,9 +231,17 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                       session?.user ? await getTemplates('docgpt') : null
                     }
                   >
-                    {!session?.user ? <PreLoginHeader /> : <div></div>}
-                    <div className="flex-1">{children}</div>
-                    {!session?.user ? <PreLoginFooter /> : <div></div>}
+                    <AssistantsProvider
+                      providedAssistantDefinitions={await getAssistantDefinitions(
+                        'docgpt'
+                      )}
+                    >
+                      <ChatSettingsProvider>
+                        {!session?.user ? <PreLoginHeader /> : <div></div>}
+                        <div className="flex-1">{children}</div>
+                        {!session?.user ? <PreLoginFooter /> : <div></div>}
+                      </ChatSettingsProvider>
+                    </AssistantsProvider>
                   </DocumentProvider>
                 </UserDataContextProvider>
               </SessionProvider>

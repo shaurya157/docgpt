@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { redirect } from 'next/navigation';
 import { saveCurrentDocumentState } from '@/firebase/firestore-dao';
-import { useDocument } from '@/providers/document-provider';
-import { useUserDataContext } from '@/providers/user-data-context-provider';
+import { useDocument } from '@/providers/DocumentProvider';
+import { useUserDataContext } from '@/providers/UserDataProvider';
 import { AssistantStatus, Message } from 'ai';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
-import ChatContent from '@/components/ChatContent';
+import ChatContent from '@/components/chat/ChatContent';
 import HomeHeader from '@/components/HomeHeader';
 import OnboardingTooltip from '@/components/OnboardingTooltip';
 import PlateEditor, { useMyEditor } from '@/components/plate-editor';
@@ -47,20 +47,10 @@ export default function Home() {
     });
     const responseJson = await createThreadResult.json();
     toast.success(
-      `Thread created successfully, using fresh state with thread ID: ${responseJson['threadId']}`
+      `Thread created successfully, using fresh session with thread ID: ${responseJson['threadId']}`
     );
     const item = {
-      document: [
-        {
-          id: '1',
-          type: 'h1',
-          children: [
-            {
-              text: '',
-            },
-          ],
-        },
-      ],
+      document: editor.children,
       threadId: responseJson['threadId'],
       vectorStoreId: responseJson['vectorStoreId'],
       documentName: `Untitled`,
@@ -94,7 +84,6 @@ export default function Home() {
   };
 
   const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
-    console.log('RUNNING@');
     setStatus('in_progress');
     setActiveUserDocument(item);
     if (!documentRefreshOnly) {

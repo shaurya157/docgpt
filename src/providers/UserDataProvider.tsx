@@ -12,7 +12,9 @@ type UserDataContext = {
   vectorStoreId?: string | null;
   setVectorStoreId: React.Dispatch<React.SetStateAction<string>>;
   userTemplates?: Map<string, string | any>[] | null;
-  setUserTemplates: React.Dispatch<React.SetStateAction<Map<string, any>[] | null | undefined >>
+  setUserTemplates: React.Dispatch<
+    React.SetStateAction<Map<string, any>[] | null | undefined>
+  >;
   userOwnedDocuments?: any[] | null;
 };
 export const UserDataContext = createContext<UserDataContext | null>(null);

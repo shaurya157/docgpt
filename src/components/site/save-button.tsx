@@ -7,7 +7,7 @@ import {
   saveCurrentDocumentState,
   saveUserTemplate,
 } from '@/firebase/firestore-dao';
-import { useDocument } from '@/providers/document-provider';
+import { useDocument } from '@/providers/DocumentProvider';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 

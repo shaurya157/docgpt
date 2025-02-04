@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useDocument } from '@/providers/document-provider';
-import { useUserDataContext } from '@/providers/user-data-context-provider';
+import { useDocument } from '@/providers/DocumentProvider';
+import { useUserDataContext } from '@/providers/UserDataProvider';
 import { AIChatPlugin, useEditorChat } from '@udecode/plate-ai/react';
 import {
   getAncestorNode,

@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import DocumentProvider, { useDocument } from '@/providers/document-provider';
-import { useUserDataContext } from '@/providers/user-data-context-provider';
+import DocumentProvider, { useDocument } from '@/providers/DocumentProvider';
+import { useUserDataContext } from '@/providers/UserDataProvider';
 import { ArrowLeftFromLine } from 'lucide-react';
 
 import PlateEditor, { useMyEditor } from '@/components/plate-editor';
@@ -28,27 +28,25 @@ export default function Page() {
   const params = useParams();
   const { userTemplates } = useUserDataContext();
   const { providedTemplates } = useDocument();
-  // const slug = (await params).slug;
-  // const session = await auth();
-  // const providedTemplates = await getTemplates('docgpt');
-  // const userTemplates = session?.user?.email
-  //   ? await getTemplates(session!.user!.email!)
-  //   : null;
 
   let displayedTemplate: any | null;
   if (userTemplates != null) {
     displayedTemplate = userTemplates.find(
-      (templ) => templ['templateName'] === params['slug']
+      (templ) =>
+        templ['templateName'] ===
+        (params['slug'] as string).replaceAll('%20', ' ')
     );
   }
   if (!displayedTemplate) {
     displayedTemplate = providedTemplates!.find(
-      (templ) => templ['templateName'] === params['slug']
+      (templ) =>
+        templ['templateName'] ===
+        (params['slug'] as string).replaceAll('%20', ' ')
     );
   }
   if (!displayedTemplate) {
     displayedTemplate = providedTemplates!.find(
-      (templ) => templ['templateName'] === 'default'
+      (templ) => templ['templateName'] === 'Default PRD Template'
     );
   }
 

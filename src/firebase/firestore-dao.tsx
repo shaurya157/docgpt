@@ -104,17 +104,6 @@ export async function getUserInfo(userid: string) {
   };
 }
 
-export async function getUserActiveThreadId(userid: string) {
-  let usersRef = collection(db, 'users');
-  let docRef = doc(usersRef, userid);
-  let result;
-  let error;
-
-  result = await getDoc(docRef).then((data) => data.get('threadId'));
-
-  return { result, error };
-}
-
 export async function getUserOwnedDocuments(userId: string) {
   return await getDocs(
     query(collection(db, 'documents'), where('documentOwnerId', '==', userId))
@@ -201,24 +190,6 @@ export async function saveUserActiveAssistant(
   return { result };
 }
 
-export async function saveUserActiveThread(userId: string, threadId: string) {
-  let usersRef = collection(db, 'users');
-  let docRef = doc(usersRef, userId);
-  let result;
-
-  result = await setDoc(
-    docRef,
-    {
-      threadId: threadId,
-    },
-    {
-      merge: true,
-    }
-  );
-
-  return { result };
-}
-
 export async function getOwnedTemplates(templateOwnerId: string) {
   return await getDocs(
     query(
@@ -281,21 +252,11 @@ export async function deleteUserUploadedFile(
   return { result, error };
 }
 
-export async function setActiveUserDoc(userId: string, documentName: string) {
-  let usersRef = collection(db, 'users');
-  let docRef = doc(usersRef, userId);
-  let result;
-  let error;
-
-  try {
-    result = await setDoc(
-      docRef,
-      { activeDocumentName: documentName },
-      { merge: true }
-    );
-  } catch (e) {
-    error = e;
-  }
-
-  return { result, error };
+export async function getAssistants(assistantOwnerId: string) {
+  return await getDocs(
+    query(
+      collection(db, 'assistants'),
+      where('ownerId', '==', assistantOwnerId)
+    )
+  );
 }

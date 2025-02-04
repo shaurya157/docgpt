@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
+import { TemplatesDropdown } from '@/components/site/templates-dropdown';
+
 import DeleteIcon from '../assets/icons/delete.svg';
 import FolderIcon from '../assets/icons/folder.svg';
 import HelpIcon from '../assets/icons/help.svg';
@@ -455,10 +457,8 @@ const Sidebar = ({
           <h2 className="flex items-center px-1 py-0.5  font-semibold">
             Preferences
           </h2>
-          <h2 className="flex items-center px-1 py-0.5">
-            {session?.user?.email}
-          </h2>
           <div className="space-y-1">
+            <TemplatesDropdown setActiveItem={setActiveItem} />
             {preferenceItems.map((item) => (
               <button
                 key={item.id}

@@ -1,8 +1,6 @@
 import Image from 'next/image';
 import { FileMinus, FilePlus, MessageSquarePlusIcon } from 'lucide-react';
 
-import { TemplatesDropdown } from '@/components/site/templates-dropdown';
-
 import SidebarIcon from '../assets/icons/sidebar.svg';
 
 interface HeaderProps {
@@ -23,8 +21,6 @@ const HomeHeader = ({
   isSidebarOpen,
   toggleSidebar,
   onNewChat,
-  setActiveItem,
-  activeUserDocument,
 }: HeaderProps) => {
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-4">
@@ -36,16 +32,15 @@ const HomeHeader = ({
       </button>
 
       <div className="flex items-center ">
-        <TemplatesDropdown setActiveItem={setActiveItem} />
         {editorOpen ? (
-          <FileMinus className="ml-5 cursor-pointer" onClick={() => setEditorOpen(false)} />
+          <FileMinus
+            className="ml-5 cursor-pointer"
+            onClick={() => setEditorOpen(false)}
+          />
         ) : (
           <FilePlus
             className="ml-5  cursor-pointer"
             onClick={() => {
-              if (!activeUserDocument) {
-                onNewChat();
-              }
               setEditorOpen(true);
             }}
           />

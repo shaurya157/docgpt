@@ -1,7 +1,9 @@
 import * as React from 'react';
 import Link from 'next/link';
-import { useDocument } from '@/providers/document-provider';
-import { useUserDataContext } from '@/providers/user-data-context-provider';
+import { deleteTemplate } from '@/firebase/firestore-dao';
+import { useDocument } from '@/providers/DocumentProvider';
+import { useUserDataContext } from '@/providers/UserDataProvider';
+import { FileIcon, TrashIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
@@ -11,8 +13,6 @@ import {
   DropdownMenuTrigger,
   useOpenState,
 } from '@/components/plate-ui/dropdown-menu';
-import {deleteTemplate} from "@/firebase/firestore-dao";
-import {TrashIcon} from "lucide-react";
 
 interface TemplatesDropdownProps {
   setActiveItem: (item, documentRefreshOnly) => void;
@@ -44,15 +44,20 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
   const handleDelete = (templateId: string) => {
     return async () => {
       await deleteTemplate(templateId);
-      const filteredTemplates = userTemplates?.filter(templ => templ["id"] !== templateId)
+      const filteredTemplates = userTemplates?.filter(
+        (templ) => templ['id'] !== templateId
+      );
       setUserTemplates(filteredTemplates);
-    }
-  }
+    };
+  };
 
   return (
     <DropdownMenu modal={false} {...openState}>
       <DropdownMenuTrigger asChild>
-        <Button>Templates</Button>
+        <button className="flex w-full items-center gap-3 rounded-lg p-1.5 text-gray-700 hover:bg-[#ECECEC]">
+          <FileIcon size={20} />
+          Templates
+        </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
@@ -79,7 +84,10 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
                     Preview
                   </Link>
                 </Button>
-                <TrashIcon onClick={handleDelete(templ["id"])} className="cursor-pointer"/>
+                <TrashIcon
+                  onClick={handleDelete(templ['id'])}
+                  className="cursor-pointer"
+                />
               </div>
             );
           })}
