@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { FileMinus, FilePlus, MessageSquarePlusIcon } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 
 import SidebarIcon from '../assets/icons/sidebar.svg';
 
@@ -22,6 +22,14 @@ const HomeHeader = ({
   toggleSidebar,
   onNewChat,
 }: HeaderProps) => {
+  const toggleEditor = () => {
+    if (editorOpen) {
+      setEditorOpen(false);
+    } else {
+      setEditorOpen(true);
+    }
+  };
+
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-4">
       <button
@@ -32,27 +40,40 @@ const HomeHeader = ({
       </button>
 
       <div className="flex items-center ">
-        {editorOpen ? (
-          <FileMinus
-            className="ml-5 cursor-pointer"
-            onClick={() => setEditorOpen(false)}
+        <label className="me-5 inline-flex cursor-pointer items-center">
+          <span className="mr-3 ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+            Document mode
+          </span>
+          <input
+            type="checkbox"
+            value=""
+            className="peer sr-only"
+            checked={editorOpen}
+            onClick={toggleEditor}
           />
-        ) : (
-          <FilePlus
-            className="ml-5  cursor-pointer"
-            onClick={() => {
-              setEditorOpen(true);
-            }}
-          />
-        )}
-        <MessageSquarePlusIcon
+          <div className="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-0.5 after:size-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-black peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-black dark:border-gray-600 dark:bg-gray-700 dark:peer-checked:bg-black dark:peer-focus:ring-red-800 rtl:peer-checked:after:-translate-x-full"></div>
+        </label>
+        {/*{editorOpen ? (*/}
+        {/*  <FileMinus*/}
+        {/*    className="ml-5 cursor-pointer"*/}
+        {/*    onClick={() => setEditorOpen(false)}*/}
+        {/*  />*/}
+        {/*) : (*/}
+        {/*  <FilePlus*/}
+        {/*    className="ml-5  cursor-pointer"*/}
+        {/*    onClick={() => {*/}
+        {/*      setEditorOpen(true);*/}
+        {/*    }}*/}
+        {/*  />*/}
+        {/*)}*/}
+        <SquarePen
           onClick={() => {
             onNewChat();
             if (!isSidebarOpen) {
               toggleSidebar();
             }
           }}
-          className="ml-5 cursor-pointer"
+          className="mr-3 cursor-pointer"
         />
       </div>
     </header>
