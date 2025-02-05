@@ -16,8 +16,10 @@ import Markdown from 'react-markdown';
 import { toast } from 'sonner';
 
 import { readDataStream } from '@/lib/read-data-stream';
-import { ChatSettingsHelper } from '@/components/chat/ChatSettingsHelper';
+import { ChatSettings } from '@/components/chat/ChatSettings';
+import { chatSettingsHotLinks } from '@/components/chat/HotLinks';
 import { Icons } from '@/components/icons';
+import { Button } from '@/components/plate-ui/button';
 
 import UploadIcon from '../../assets/icons/arrowUp.svg';
 import AttachmentIcon from '../../assets/icons/attachment.svg';
@@ -96,7 +98,8 @@ const ChatContent = ({
   onNewChat,
 }: ContentProps) => {
   const { data: session } = useSession();
-  const { selectedAssistant } = useChatSettings();
+  const { selectedAssistant, handleSelectedAssistant, handleSelectedTemplate } =
+    useChatSettings();
   const { chatAssistantId } = useUserDataContext();
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<
@@ -340,6 +343,13 @@ const ChatContent = ({
   const chatInputPositioningCssClass =
     activeChatMessages.length !== 0 || editorOpen ? 'h-full' : '';
 
+  const handleQuickLinkClick = (hotLink: {}) => {
+    return () => {
+      handleSelectedAssistant(hotLink['assistantName']);
+      handleSelectedTemplate(hotLink['templateId']);
+    };
+  };
+
   return (
     <motion.div
       className={
@@ -353,7 +363,28 @@ const ChatContent = ({
       }}
       style={{ width: editorOpen ? '30%' : '50%' }}
     >
-      {activeChatMessages.length !== 0 ? <div></div> : <ChatSettingsHelper />}
+      {activeChatMessages.length === 0 && (
+        <div>
+          <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-4xl">
+            What can I help with?
+          </h1>
+          <div className="mb-8 flex flex-col">
+            <div>
+              {chatSettingsHotLinks.map((hotlink) => {
+                return (
+                  <Button
+                    key={hotlink['displayName']}
+                    className="m-2"
+                    onClick={handleQuickLinkClick(hotlink)}
+                  >
+                    {hotlink['displayName']}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="w-full flex-1 overflow-y-auto scroll-smooth">
         <div className="mx-auto w-full space-y-6">
           {activeChatMessages.map((message) => (
@@ -455,6 +486,7 @@ const ChatContent = ({
             accept="image/*,.pdf"
             multiple
           />
+          <ChatSettings />
           <button
             onClick={() => fileInputRef.current?.click()}
             className="rounded-lg p-2 hover:bg-gray-200"
