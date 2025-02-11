@@ -55,9 +55,6 @@ const HomeHeader = ({
         <SquarePen
           onClick={() => {
             onNewChat();
-            if (!isSidebarOpen) {
-              toggleSidebar();
-            }
           }}
           className="mr-3 cursor-pointer"
         />

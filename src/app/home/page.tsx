@@ -145,7 +145,7 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if (window.sessionStorage.getItem('OnboardingCompleted') === 'true') {
+      if (localStorage.getItem('OnboardingCompleted') === 'true') {
         setOnboardingCompleted(true);
       }
 
@@ -215,7 +215,7 @@ export default function Home() {
             <OnboardingTooltip
               steps={onboardingSteps}
               onComplete={() =>
-                sessionStorage.setItem('OnboardingCompleted', 'true')
+                localStorage.setItem('OnboardingCompleted', 'true')
               }
               isSidebarOpen={isSidebarOpen}
             />

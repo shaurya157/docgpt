@@ -136,7 +136,9 @@ const ChatContent = ({
   const handleSendMessage = async () => {
     setStatus('in_progress');
     let item = activeUserDocument;
-    if (!item) {
+
+    // handles cases where the template is set in the new document but a new thread isn't spawned just yet
+    if (!item || !item['id']) {
       item = await onNewChat();
     }
 
@@ -248,7 +250,7 @@ const ChatContent = ({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage().then(
@@ -344,9 +346,7 @@ const ChatContent = ({
       );
     }
 
-    return (
-      <Markdown className="whitespace-pre-wrap">{message.content}</Markdown>
-    );
+    return <Markdown>{message.content}</Markdown>;
     // return <div className="whitespace-pre-wrap">{message.content}</div>;
   };
 
@@ -395,7 +395,7 @@ const ChatContent = ({
           </div>
         </div>
       )}
-      <div className="w-full flex-1 overflow-y-auto scroll-smooth">
+      <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">
         <div className="mx-auto w-full space-y-6">
           {activeChatMessages.map((message) => (
             <div
@@ -507,14 +507,13 @@ const ChatContent = ({
           >
             <Image src={AttachmentIcon} alt="Attach" width={20} height={20} />
           </button>
-          <input
-            type="text"
+          <textarea
             disabled={status === 'in_progress'}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Help me brainstorm about..."
-            className="w-full flex-1  p-1 text-gray-600 focus:outline-none"
+            className="height-30 max-h-52 w-full flex-1  overflow-auto p-1 text-gray-600 focus:outline-none"
           />
           <button
             onClick={handleSendMessage}

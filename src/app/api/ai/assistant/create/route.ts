@@ -62,7 +62,7 @@ const CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS: string = `\
   - CRITICAL: Distinguish between INSTRUCTIONS, QUESTIONS and CONTEXT. Instructions typically ask you to modify or add content (INSTRUCTIONS may also be other kind of arbitrary messages). Questions ask for information or clarification. Context adds more information to populate the document.
   - CRITICAL: Distinguish between INSTRUCTIONS which are asking you to create/edit a document (even with one provided) and other kind of instructions.
   - CRITICAL: Only provide new documents in your response when the user INSTRUCTION explicitly asks to create a new document or make changes to the existing document. Do NOT provide an entirely new document otherwise, especially in cases when the user is only adding additional context or writing an arbitrary INSTRUCTION.
-  - CRITICAL: Do NOT add the <Document> and </Document> tags if a new document is not created.
+  - CRITICAL: ONLY add the <Document> tag in your responses if you are creating a new document or modifying an existing one. NEVER add these tags when referring to the document in any other context.
   - CRITICAL: If the user is using a template to generate a doc prompt the user to add context to populate the various sections of the template before attempting to create the document. If there is no template provided, prompt the user to provide context for the minimum bar set in the goals before attempting to create the document.
   - CRITICAL: In cases of editing a <Selection> OR editing a content from a previous response, provide the whole document in your response, only editing the sections which the user has asked you to edit, or the <Selection> while preserving the rest of the content.
   - CRITICAL: Reply using Markdown formatting only.
