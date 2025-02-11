@@ -71,11 +71,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    console.log(result);
     return NextResponse.json({
       openAiFileIds: result,
     });
   } catch (uploadError) {
-    return NextResponse.json({ message: `ERROR! Error: ${uploadError}.` });
+    return NextResponse.json({
+      message: `ERROR! Error: ${uploadError}.`,
+      status: 400,
+    });
   }
 }

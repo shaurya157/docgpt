@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       content: message as string,
     };
 
+    console.log(`User sent message: ${messageData.content}`);
     const createdMessage = await openai.beta.threads.messages.create(
       threadId,
       messageData

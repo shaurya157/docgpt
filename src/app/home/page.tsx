@@ -181,7 +181,6 @@ export default function Home() {
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onNewChat={handleNewChat}
         setActiveItem={handleSetActiveItem}
-        setEditorOpen={setEditorOpen}
         editorOpen={editorOpen}
         activeUserDocument={activeUserDocument}
       />

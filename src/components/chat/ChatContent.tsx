@@ -112,6 +112,7 @@ const ChatContent = ({
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [uploadInProgress, setUploadInProgress] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -150,22 +151,40 @@ const ChatContent = ({
       setActiveChatMessages((prev) => [...prev, newMessage]);
 
       if (attachments.length > 0) {
+        setUploadInProgress(true);
+        let fileIds: any[] = [];
+
         const filesFormData = new FormData();
         filesFormData.append('vectorStoreId', item!['vectorStoreId']);
         filesFormData.append('userId', session!.user!.email!);
-        attachments.forEach((attachment) => {
-          filesFormData.append('files', attachment.file);
-        });
-        const filesResult = await fetch('/api/ai/files', {
-          method: 'POST',
-          body: filesFormData,
-        });
-        const filesResultJson: Map<string, string>[] = (
-          await filesResult.json()
-        )['openAiFileIds'];
+        for (const attachment of attachments) {
+          try {
+            filesFormData.set('files', attachment.file);
+            const filesResult = await fetch('/api/ai/files', {
+              method: 'POST',
+              body: filesFormData,
+            });
+            const resultJson = await filesResult.json();
+            if (resultJson.status === 400) {
+              throw new Error(resultJson.message);
+            }
+            const filesResultJson: Map<string, string>[] =
+              resultJson['openAiFileIds'];
 
-        await appendDocumentSpecificFileIds(item!['id'], filesResultJson);
+            fileIds.push(...filesResultJson);
+          } catch (e) {
+            toast.error(
+              `Error uploading file ${attachment.fileName}. Please send the following message to the developers: ${e}`
+            );
+            console.error(
+              `There was an error uploading the file: ${attachment.fileName}. Error: ${e}.`
+            );
+          }
+        }
+
+        await appendDocumentSpecificFileIds(item!['id'], fileIds);
         setAttachments([]);
+        setUploadInProgress(false);
       }
 
       const formData = new FormData();
@@ -247,21 +266,12 @@ const ChatContent = ({
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-        'application/pdf',
-      ];
-
-      const newAttachments = Array.from(files)
-        .filter((file) => allowedTypes.includes(file.type))
-        .map((file) => ({
-          url: URL.createObjectURL(file),
-          fileName: file.name,
-          fileType: file.type,
-          file,
-        }));
+      const newAttachments = Array.from(files).map((file) => ({
+        url: URL.createObjectURL(file),
+        fileName: file.name,
+        fileType: file.type,
+        file,
+      }));
 
       setAttachments((prev) => [...prev, ...newAttachments]);
     }
@@ -433,7 +443,9 @@ const ChatContent = ({
           {status === 'in_progress' && (
             <span className="flex gap-x-2 text-white">
               <Icons.spinner className="size-5 animate-spin text-black" />
-              <p className="text-black">Thinking</p>
+              <p className="text-black">
+                {uploadInProgress ? 'Uploading files...' : 'Thinking...'}
+              </p>
               <DotAnimation />
             </span>
           )}
@@ -483,7 +495,6 @@ const ChatContent = ({
             ref={fileInputRef}
             onChange={handleFileUpload}
             className="hidden"
-            accept="image/*,.pdf"
             multiple
           />
           <ChatSettings />

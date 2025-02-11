@@ -24,6 +24,7 @@ export default function ChatSettingsProvider({
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
   const { userTemplates } = useUserDataContext();
+  const { setActiveUserDocument } = useDocument();
 
   const [selectedAssistant, setSelectedAssistant] = useState(
     docgptProvidedAssistantDefinitions.find(

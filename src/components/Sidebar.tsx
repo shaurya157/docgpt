@@ -399,7 +399,7 @@ const Sidebar = ({
     <div className="absolute inset-y-0 left-0">
       <motion.div
         ref={sidebarRef}
-        initial="closed"
+        initial="open"
         animate={isOpen ? 'open' : 'closed'}
         variants={variants}
         className="absolute z-10 flex h-[calc(100vh-64px)] flex-col overflow-hidden border-r bg-white md:relative"
