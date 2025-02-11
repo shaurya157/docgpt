@@ -4,6 +4,7 @@ import { createContext, useContext, useState } from 'react';
 import { useAssistantDefinitions } from '@/providers/AssistantsProvider';
 import { useDocument } from '@/providers/DocumentProvider';
 import { useUserDataContext } from '@/providers/UserDataProvider';
+import { MenuItem } from '@/types';
 
 type ChatSettings = {
   selectedAssistant: {};
@@ -16,15 +17,17 @@ export const ChatSettingsContext = createContext<ChatSettings | null>(null);
 
 interface ChatSettingsProviderProps {
   children: React.ReactNode;
+  setActiveItem: (id: MenuItem, documentRefreshOnly: boolean) => void;
 }
 
 export default function ChatSettingsProvider({
   children,
+  setActiveItem,
 }: ChatSettingsProviderProps) {
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
   const { userTemplates } = useUserDataContext();
-  const { setActiveUserDocument } = useDocument();
+  const { activeUserDocument, setActiveUserDocument } = useDocument();
 
   const [selectedAssistant, setSelectedAssistant] = useState(
     docgptProvidedAssistantDefinitions.find(
@@ -34,6 +37,17 @@ export default function ChatSettingsProvider({
   const [selectedTemplate, setSelectedTemplate] = useState({
     templateName: 'No Template',
     id: '',
+    template: [
+      {
+        id: '1',
+        type: 'h1',
+        children: [
+          {
+            text: '',
+          },
+        ],
+      },
+    ],
   });
 
   // We are querying based on name here. This works fine as we do not support custom assistants yet.
@@ -52,14 +66,28 @@ export default function ChatSettingsProvider({
       ?.concat(userTemplates)
       .find((templ) => templ['id'] === id);
 
-    if (template) {
-      setSelectedTemplate(template);
-    } else {
-      setSelectedTemplate({
+    if (!template) {
+      template = {
         templateName: 'No Template',
         id: '',
-      });
+        template: [
+          {
+            id: '1',
+            type: 'h1',
+            children: [
+              {
+                text: '',
+              },
+            ],
+          },
+        ],
+      };
     }
+
+    setSelectedTemplate(template);
+    const currActiveDoc = { ...activeUserDocument };
+    currActiveDoc['document'] = template['template'];
+    setActiveItem(currActiveDoc, true);
   };
 
   return (

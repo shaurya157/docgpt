@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { redirect } from 'next/navigation';
 import { saveCurrentDocumentState } from '@/firebase/firestore-dao';
+import ChatSettingsProvider from '@/providers/ChatSettingsProvider';
 import { useDocument } from '@/providers/DocumentProvider';
 import { useUserDataContext } from '@/providers/UserDataProvider';
 import { AssistantStatus, Message } from 'ai';
@@ -173,60 +174,63 @@ export default function Home() {
   const chatWindowCssClass = editorOpen ? '' : 'justify-center items-center';
 
   return (
-    <div className="flex h-screen flex-col">
-      <HomeHeader
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isSidebarOpen={isSidebarOpen}
-        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        onNewChat={handleNewChat}
-        setActiveItem={handleSetActiveItem}
-        editorOpen={editorOpen}
-        activeUserDocument={activeUserDocument}
-      />
-      <div
-        className={'relative flex flex-1 overflow-hidden ' + chatWindowCssClass}
-      >
-        <Sidebar
-          isOpen={isSidebarOpen}
-          items={currentItems}
-          activeUserDocument={activeUserDocument}
-          setActiveItem={handleSetActiveItem}
-          activeTab={activeTab}
-          onDeleteChat={handleDeleteChat}
+    <ChatSettingsProvider setActiveItem={handleSetActiveItem}>
+      <div className="flex h-screen flex-col">
+        <HomeHeader
+          isSidebarOpen={isSidebarOpen}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
-        <ChatContent
-          activeUserDocument={activeUserDocument}
-          activeChatMessages={activeChatMessages}
-          setActiveChatMessages={setActiveChatMessages}
-          setActiveItem={handleSetActiveItem}
-          status={status}
-          setStatus={setStatus}
-          editor={editor}
-          editorOpen={editorOpen}
-          setEditorOpen={setEditorOpen}
           onNewChat={handleNewChat}
+          setActiveItem={handleSetActiveItem}
+          editorOpen={editorOpen}
+          activeUserDocument={activeUserDocument}
+          setEditorOpen={setEditorOpen}
         />
-        {!onboardingCompleted && (
-          <OnboardingTooltip
-            steps={onboardingSteps}
-            onComplete={() =>
-              sessionStorage.setItem('OnboardingCompleted', 'true')
-            }
-            isSidebarOpen={isSidebarOpen}
-          />
-        )}
-
         <div
           className={
-            'z-10 overflow-y-scroll border bg-background shadow w-3/4 ' +
-            editorCssClass
+            'relative flex flex-1 overflow-hidden ' + chatWindowCssClass
           }
         >
-          <PlateEditor editor={editor} />
+          <Sidebar
+            isOpen={isSidebarOpen}
+            items={currentItems}
+            activeUserDocument={activeUserDocument}
+            setActiveItem={handleSetActiveItem}
+            activeTab={activeTab}
+            onDeleteChat={handleDeleteChat}
+            toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          />
+          <ChatContent
+            activeUserDocument={activeUserDocument}
+            activeChatMessages={activeChatMessages}
+            setActiveChatMessages={setActiveChatMessages}
+            setActiveItem={handleSetActiveItem}
+            status={status}
+            setStatus={setStatus}
+            editor={editor}
+            editorOpen={editorOpen}
+            setEditorOpen={setEditorOpen}
+            onNewChat={handleNewChat}
+          />
+          {!onboardingCompleted && (
+            <OnboardingTooltip
+              steps={onboardingSteps}
+              onComplete={() =>
+                sessionStorage.setItem('OnboardingCompleted', 'true')
+              }
+              isSidebarOpen={isSidebarOpen}
+            />
+          )}
+
+          <div
+            className={
+              'z-10 overflow-y-scroll border bg-background shadow w-3/4 ' +
+              editorCssClass
+            }
+          >
+            <PlateEditor editor={editor} />
+          </div>
         </div>
       </div>
-    </div>
+    </ChatSettingsProvider>
   );
 }

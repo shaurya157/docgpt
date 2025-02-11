@@ -12,7 +12,14 @@ import {
   useOpenState,
 } from '@/components/plate-ui/dropdown-menu';
 
-export const ChatSettings = () => {
+interface ChatSettingProps {
+  setActiveItem: (item, documentRefreshOnly?: boolean) => void;
+  activeUserDocument: {} | undefined;
+}
+export const ChatSettings = ({
+  setActiveItem,
+  activeUserDocument,
+}: ChatSettingProps) => {
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
   const { userTemplates } = useUserDataContext();

@@ -497,7 +497,10 @@ const ChatContent = ({
             className="hidden"
             multiple
           />
-          <ChatSettings />
+          <ChatSettings
+            setActiveItem={setActiveItem}
+            activeUserDocument={activeUserDocument}
+          />
           <button
             onClick={() => fileInputRef.current?.click()}
             className="rounded-lg p-2 hover:bg-gray-200"
