@@ -23,7 +23,7 @@ export const ChatSettings = ({
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
   const { userTemplates } = useUserDataContext();
-  const openState = useOpenState(true);
+  const openState = useOpenState(false);
   const {
     selectedAssistant,
     selectedTemplate,

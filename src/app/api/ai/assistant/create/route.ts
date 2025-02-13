@@ -89,7 +89,7 @@ const CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS: string = `\
 `;
 
 export async function POST(req: NextRequest) {
-  let { apiKey: key, model = 'gpt-4o', userId } = await req.json();
+  let { apiKey: key, model = 'gpt-4o-mini', userId } = await req.json();
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({

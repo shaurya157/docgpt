@@ -108,6 +108,7 @@ const ChatContent = ({
       fileName: string;
       fileType: string;
       file: File;
+      status: string;
     }>
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,6 +155,9 @@ const ChatContent = ({
 
       if (attachments.length > 0) {
         setUploadInProgress(true);
+        attachments.forEach((attachment) =>
+          changeFileUploadStatus(attachment, 'uploading')
+        );
         let fileIds: any[] = [];
 
         const filesFormData = new FormData();
@@ -265,6 +269,13 @@ const ChatContent = ({
     }
   };
 
+  const changeFileUploadStatus = (attachment, status) => {
+    let tempAttachments = attachments;
+    tempAttachments.find((att) => att.url === attachment.url)!['status'] =
+      status;
+    setAttachments(tempAttachments);
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
@@ -273,6 +284,7 @@ const ChatContent = ({
         fileName: file.name,
         fileType: file.type,
         file,
+        status: 'waiting',
       }));
 
       setAttachments((prev) => [...prev, ...newAttachments]);
@@ -476,6 +488,11 @@ const ChatContent = ({
                 key={index}
                 className="flex items-center gap-1.5 rounded-lg bg-gray-200 px-3 py-1"
               >
+                {attachment.status === 'uploading' ? (
+                  <Icons.spinner className="size-5 animate-spin text-black" />
+                ) : (
+                  ''
+                )}
                 <span className="text-gray-700">{attachment.fileName}</span>
                 <button
                   onClick={() =>
