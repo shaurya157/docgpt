@@ -17,7 +17,7 @@ export const ChatSettingsContext = createContext<ChatSettings | null>(null);
 
 interface ChatSettingsProviderProps {
   children: React.ReactNode;
-  setActiveItem: (id: MenuItem, documentRefreshOnly: boolean) => void;
+  setActiveItem?: (id: MenuItem, documentRefreshOnly: boolean) => void;
 }
 
 export default function ChatSettingsProvider({
@@ -87,7 +87,7 @@ export default function ChatSettingsProvider({
     setSelectedTemplate(template);
     const currActiveDoc = { ...activeUserDocument };
     currActiveDoc['document'] = template['template'];
-    setActiveItem(currActiveDoc, true);
+    setActiveItem!(currActiveDoc, true);
   };
 
   return (

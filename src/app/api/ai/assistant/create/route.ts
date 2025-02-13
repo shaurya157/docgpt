@@ -70,7 +70,6 @@ const CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS: string = `\
   - CRITICAL: ONLY for INSTRUCTIONS, specifically ONLY when the user asks to create a new document or make an edit to the existing document: prepend your response with "<Document>" and append it with "</Document>"; add a confirmation message after "</Document>" indicating that you have made the relevant changes in the document. For all other type of instructions, provide a thoughtful response.
   - CRITICAL: ONLY for CONTEXT, amend your next response to include the additional context while preserving
   - CRITICAL: Do NOT reply with html formatting. If generating a new document DO NOT encase the entire document in triple backticks.
-  - CRITICAL: Provide only the content to replace <Selection> if a <Selection> is provided. Do not add additional blocks or change the block structure unless specifically requested.
   - CRITICAL: ALWAYS prioritize using context from files uploaded in the vector store.
   - CRITICAL: Whenever <Template> is provided, adhere strictly to it. Response should include the template headers as formatted along with content for these headers. Do not apply the template when a <Selection> is provided.
   - CRITICAL: Whenever a <SectionInstruction> is provided, follow the rules only for the section defined above the instruction. DO NOT apply the same rules to any other sections in the response.
