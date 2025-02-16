@@ -1,23 +1,17 @@
 import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
 
 import 'next-auth/jwt';
 
-import Google from 'next-auth/providers/google';
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  debug: !!process.env.AUTH_DEBUG,
-  theme: { logo: 'https://authjs.dev/img/logo-sm.png' },
-  // adapter: UnstorageAdapter(storage),
-  providers: [Google],
+export const { auth, handlers, signIn, signOut } = NextAuth({
   basePath: '/api/auth',
-  session: { strategy: 'jwt' },
   callbacks: {
     // authorized({ request, auth }) {
     //   const { pathname } = request.nextUrl
     //   if (pathname === "/middleware-example") return !!auth
     //   return true
     // },
-    jwt({ token, trigger, session, account }) {
+    jwt({ account, session, token, trigger }) {
       if (trigger === 'update') token.name = session.user.name;
       if (account?.provider === 'keycloak') {
         return { ...token, accessToken: account.access_token };
@@ -30,7 +24,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  debug: !!process.env.AUTH_DEBUG,
   experimental: { enableWebAuthn: true },
+  // adapter: UnstorageAdapter(storage),
+  providers: [Google],
+  session: { strategy: 'jwt' },
+  theme: { logo: 'https://authjs.dev/img/logo-sm.png' },
 });
 
 declare module 'next-auth' {

@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { AssistantResponse } from 'ai';
+import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 export const runtime = 'edge';
@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const messageData = {
-      role: 'user' as 'user',
       content: message as string,
+      role: 'user' as const,
     };
 
     console.log(`User sent message: ${messageData.content}`);
@@ -32,12 +32,12 @@ export async function POST(req: NextRequest) {
     );
 
     return AssistantResponse(
-      { threadId, messageId: createdMessage.id },
+      { messageId: createdMessage.id, threadId },
       async ({ sendMessage }) => {
         // Run the assistant on the thread
         const run = await openai.beta.threads.runs.create(threadId, {
-          assistant_id: assistantId as string,
           additional_instructions: additionalInstructions as string,
+          assistant_id: assistantId as string,
         });
 
         async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {
@@ -82,10 +82,10 @@ export async function POST(req: NextRequest) {
           console.log(message);
           sendMessage({
             id: message.id,
-            role: 'assistant',
             content: message.content.filter(
               (content) => content.type === 'text'
             ) as Array<any>,
+            role: 'assistant',
           });
         }
       }

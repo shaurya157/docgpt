@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 
 export async function DELETE(req: NextRequest) {
   const reqJson = await req.json();
-  let { openAiFileId } = reqJson;
+  const { openAiFileId } = reqJson;
 
   const apiKey = process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let result: any[] = [];
+    const result: any[] = [];
     // Prepare file for upload
     for (const file of files) {
       // OpenAI API file upload

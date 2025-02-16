@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+
 import {
   BoldPlugin,
   CodePlugin,
@@ -6,23 +9,48 @@ import {
   StrikethroughPlugin,
   UnderlinePlugin,
 } from '@udecode/plate-basic-marks/react';
-import { useEditorReadOnly } from '@udecode/plate-common/react';
 import {
   FontBackgroundColorPlugin,
   FontColorPlugin,
 } from '@udecode/plate-font/react';
-import { ListStyleType } from '@udecode/plate-indent-list';
-import { ImagePlugin } from '@udecode/plate-media/react';
-import { useSession } from 'next-auth/react';
+import { HighlightPlugin } from '@udecode/plate-highlight/react';
+import {
+  AudioPlugin,
+  FilePlugin,
+  ImagePlugin,
+  VideoPlugin,
+} from '@udecode/plate-media/react';
+import { useEditorReadOnly } from '@udecode/plate/react';
+import {
+  ArrowUpToLineIcon,
+  BaselineIcon,
+  BoldIcon,
+  Code2Icon,
+  HighlighterIcon,
+  ItalicIcon,
+  PaintBucketIcon,
+  StrikethroughIcon,
+  UnderlineIcon,
+  WandSparklesIcon,
+} from 'lucide-react';
+import {useSession} from "next-auth/react";
 
-import { Icons, iconVariants } from '@/components/icons';
-import { SaveButton } from '@/components/site/save-button';
+import { MoreDropdownMenu } from '@/components/plate-ui/more-dropdown-menu';
+import {SaveButton} from "@/components/site/save-button";
 
+import { AIToolbarButton } from './ai-toolbar-button';
 import { AlignDropdownMenu } from './align-dropdown-menu';
 import { ColorDropdownMenu } from './color-dropdown-menu';
 import { CommentToolbarButton } from './comment-toolbar-button';
 import { EmojiDropdownMenu } from './emoji-dropdown-menu';
-import { IndentListToolbarButton } from './indent-list-toolbar-button';
+import { ExportToolbarButton } from './export-toolbar-button';
+import { FontSizeToolbarButton } from './font-size-toolbar-button';
+import { RedoToolbarButton, UndoToolbarButton } from './history-toolbar-button';
+import { ImportToolbarButton } from './import-toolbar-button';
+import {
+  BulletedIndentListToolbarButton,
+  NumberedIndentListToolbarButton,
+} from './indent-list-toolbar-button';
 import { IndentTodoToolbarButton } from './indent-todo-toolbar-button';
 import { IndentToolbarButton } from './indent-toolbar-button';
 import { InsertDropdownMenu } from './insert-dropdown-menu';
@@ -31,7 +59,6 @@ import { LinkToolbarButton } from './link-toolbar-button';
 import { MarkToolbarButton } from './mark-toolbar-button';
 import { MediaToolbarButton } from './media-toolbar-button';
 import { ModeDropdownMenu } from './mode-dropdown-menu';
-import { MoreDropdownMenu } from './more-dropdown-menu';
 import { OutdentToolbarButton } from './outdent-toolbar-button';
 import { TableDropdownMenu } from './table-dropdown-menu';
 import { ToggleToolbarButton } from './toggle-toolbar-button';
@@ -43,107 +70,128 @@ export function FixedToolbarButtons() {
   const { data: session } = useSession();
 
   return (
-    <div className="w-full">
-      <div
-        className="flex"
-        style={{
-          // Conceal the first separator on each line using overflow
-          transform: 'translateX(calc(-1px))',
-        }}
-      >
-        {!readOnly && (
-          <>
-            <ToolbarGroup>
-              <ToolbarGroup>
-                {session?.user ? <SaveButton /> : <div></div>}
-              </ToolbarGroup>
+    <div className="flex w-full">
+      {!readOnly && (
+        <>
+          <ToolbarGroup>
+            {session?.user ? <SaveButton /> : <div></div>}
+          </ToolbarGroup>
+          <ToolbarGroup>
+            <UndoToolbarButton />
+            <RedoToolbarButton />
+          </ToolbarGroup>
 
-              <InsertDropdownMenu />
+          <ToolbarGroup>
+            <AIToolbarButton tooltip="AI commands">
+              <WandSparklesIcon />
+            </AIToolbarButton>
+          </ToolbarGroup>
 
-              <TurnIntoDropdownMenu />
-            </ToolbarGroup>
+          <ToolbarGroup>
+            <ExportToolbarButton>
+              <ArrowUpToLineIcon />
+            </ExportToolbarButton>
 
-            <ToolbarGroup>
-              <MarkToolbarButton nodeType={BoldPlugin.key} tooltip="Bold (⌘+B)">
-                <Icons.bold />
-              </MarkToolbarButton>
+            <ImportToolbarButton />
+          </ToolbarGroup>
 
-              <MarkToolbarButton
-                nodeType={ItalicPlugin.key}
-                tooltip="Italic (⌘+I)"
-              >
-                <Icons.italic />
-              </MarkToolbarButton>
+          <ToolbarGroup>
+            <InsertDropdownMenu />
+            <TurnIntoDropdownMenu />
+            <FontSizeToolbarButton />
+          </ToolbarGroup>
 
-              <MarkToolbarButton
-                nodeType={UnderlinePlugin.key}
-                tooltip="Underline (⌘+U)"
-              >
-                <Icons.underline />
-              </MarkToolbarButton>
+          <ToolbarGroup>
+            <MarkToolbarButton nodeType={BoldPlugin.key} tooltip="Bold (⌘+B)">
+              <BoldIcon />
+            </MarkToolbarButton>
 
-              <MarkToolbarButton
-                nodeType={StrikethroughPlugin.key}
-                tooltip="Strikethrough (⌘+⇧+M)"
-              >
-                <Icons.strikethrough />
-              </MarkToolbarButton>
+            <MarkToolbarButton
+              nodeType={ItalicPlugin.key}
+              tooltip="Italic (⌘+I)"
+            >
+              <ItalicIcon />
+            </MarkToolbarButton>
 
-              <MarkToolbarButton nodeType={CodePlugin.key} tooltip="Code (⌘+E)">
-                <Icons.code />
-              </MarkToolbarButton>
+            <MarkToolbarButton
+              nodeType={UnderlinePlugin.key}
+              tooltip="Underline (⌘+U)"
+            >
+              <UnderlineIcon />
+            </MarkToolbarButton>
 
-              <ColorDropdownMenu
-                nodeType={FontColorPlugin.key}
-                tooltip="Text Color"
-              >
-                <Icons.color className={iconVariants({ variant: 'toolbar' })} />
-              </ColorDropdownMenu>
+            <MarkToolbarButton
+              nodeType={StrikethroughPlugin.key}
+              tooltip="Strikethrough (⌘+⇧+M)"
+            >
+              <StrikethroughIcon />
+            </MarkToolbarButton>
 
-              <ColorDropdownMenu
-                nodeType={FontBackgroundColorPlugin.key}
-                tooltip="Highlight Color"
-              >
-                <Icons.bg className={iconVariants({ variant: 'toolbar' })} />
-              </ColorDropdownMenu>
-            </ToolbarGroup>
+            <MarkToolbarButton nodeType={CodePlugin.key} tooltip="Code (⌘+E)">
+              <Code2Icon />
+            </MarkToolbarButton>
 
-            <ToolbarGroup>
-              <AlignDropdownMenu />
+            <ColorDropdownMenu
+              nodeType={FontColorPlugin.key}
+              tooltip="Text color"
+            >
+              <BaselineIcon />
+            </ColorDropdownMenu>
 
-              <LineHeightDropdownMenu />
+            <ColorDropdownMenu
+              nodeType={FontBackgroundColorPlugin.key}
+              tooltip="Background color"
+            >
+              <PaintBucketIcon />
+            </ColorDropdownMenu>
+          </ToolbarGroup>
 
-              <IndentListToolbarButton nodeType={ListStyleType.Disc} />
-              <IndentListToolbarButton nodeType={ListStyleType.Decimal} />
-              <IndentTodoToolbarButton />
+          <ToolbarGroup>
+            <AlignDropdownMenu />
 
-              <OutdentToolbarButton />
-              <IndentToolbarButton />
-            </ToolbarGroup>
+            <NumberedIndentListToolbarButton />
+            <BulletedIndentListToolbarButton />
+            <IndentTodoToolbarButton />
+            <ToggleToolbarButton />
+          </ToolbarGroup>
 
-            <ToolbarGroup>
-              <LinkToolbarButton />
+          <ToolbarGroup>
+            <LinkToolbarButton />
+            <TableDropdownMenu />
+            <EmojiDropdownMenu />
+          </ToolbarGroup>
 
-              <ToggleToolbarButton />
+          <ToolbarGroup>
+            <MediaToolbarButton nodeType={ImagePlugin.key} />
+            <MediaToolbarButton nodeType={VideoPlugin.key} />
+            <MediaToolbarButton nodeType={AudioPlugin.key} />
+            <MediaToolbarButton nodeType={FilePlugin.key} />
+          </ToolbarGroup>
 
-              <MediaToolbarButton nodeType={ImagePlugin.key} />
+          <ToolbarGroup>
+            <LineHeightDropdownMenu />
+            <OutdentToolbarButton />
+            <IndentToolbarButton />
+          </ToolbarGroup>
 
-              <TableDropdownMenu />
+          <ToolbarGroup>
+            <MoreDropdownMenu />
+          </ToolbarGroup>
+        </>
+      )}
 
-              <EmojiDropdownMenu />
+      <div className="grow" />
 
-              <MoreDropdownMenu />
-            </ToolbarGroup>
-          </>
-        )}
+      <ToolbarGroup>
+        <MarkToolbarButton nodeType={HighlightPlugin.key} tooltip="Highlight">
+          <HighlighterIcon />
+        </MarkToolbarButton>
+        <CommentToolbarButton />
+      </ToolbarGroup>
 
-        <div className="grow" />
-
-        <ToolbarGroup>
-          <CommentToolbarButton />
-          <ModeDropdownMenu />
-        </ToolbarGroup>
-      </div>
+      <ToolbarGroup>
+        <ModeDropdownMenu />
+      </ToolbarGroup>
     </div>
   );
 }

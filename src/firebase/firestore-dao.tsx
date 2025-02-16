@@ -1,4 +1,3 @@
-import firebase_app from '@/firebase/config';
 import {
   addDoc,
   arrayRemove,
@@ -14,14 +13,16 @@ import {
   where,
 } from 'firebase/firestore';
 
+import firebase_app from '@/firebase/config';
+
 const db = getFirestore(firebase_app);
 
 export async function appendFileDataToUser(
   userId: string,
   filesData: Map<string, string>[]
 ) {
-  let usersRef = collection(db, 'users');
-  let docRef = doc(usersRef, userId);
+  const usersRef = collection(db, 'users');
+  const docRef = doc(usersRef, userId);
 
   // TODO: Fix this when I fix firebase realtime update, this should be one api call not many
   for (const data of filesData) {
@@ -44,10 +45,10 @@ export async function appendDocumentSpecificFileIds(
   documentId: string,
   files: Map<string, string>[]
 ) {
-  let result: any[] = [];
-  let error: Error[] = [];
-  let documentsRef = collection(db, 'documents');
-  let docRef = doc(documentsRef, documentId);
+  const result: any[] = [];
+  const error: Error[] = [];
+  const documentsRef = collection(db, 'documents');
+  const docRef = doc(documentsRef, documentId);
 
   for (const file of files) {
     const value = {
@@ -64,13 +65,13 @@ export async function appendDocumentSpecificFileIds(
     }
   }
 
-  return { result, error };
+  return { error, result };
 }
 
 // TODO: refactor below 4 methods into a single method which accepts different params
 export async function getUserUploadedFilesData(userid: string) {
-  let usersRef = collection(db, 'users');
-  let docRef = doc(usersRef, userid);
+  const usersRef = collection(db, 'users');
+  const docRef = doc(usersRef, userid);
   let result;
   let error;
 
@@ -80,27 +81,23 @@ export async function getUserUploadedFilesData(userid: string) {
     error = e;
   }
 
-  return { result, error };
+  return { error, result };
 }
 
 export async function getUserInfo(userid: string) {
-  let usersRef = collection(db, 'users');
-  let docRef = doc(usersRef, userid);
-  let savedAssistantId;
-  let savedVectorStoreId;
-  let savedOpenAiChatAssistantId;
-  let savedActiveDocumentName;
+  const usersRef = collection(db, 'users');
+  const docRef = doc(usersRef, userid);
 
   const result = await getDoc(docRef);
-  savedAssistantId = result.get('assistantId');
-  savedVectorStoreId = result.get('vectorStoreId');
-  savedOpenAiChatAssistantId = result.get('openAiChatAssistantId');
-  savedActiveDocumentName = result.get('activeDocumentName');
+  const savedAssistantId = result.get('assistantId');
+  const savedVectorStoreId = result.get('vectorStoreId');
+  const savedOpenAiChatAssistantId = result.get('openAiChatAssistantId');
+  const savedActiveDocumentName = result.get('activeDocumentName');
   return {
-    savedAssistantId,
-    savedVectorStoreId,
-    savedOpenAiChatAssistantId,
     savedActiveDocumentName,
+    savedAssistantId,
+    savedOpenAiChatAssistantId,
+    savedVectorStoreId,
   };
 }
 
@@ -118,14 +115,14 @@ export async function saveCurrentDocumentState(
   document: any,
   documentId?: string
 ) {
-  let documentsRef = collection(db, 'documents');
-  let result, error;
+  const documentsRef = collection(db, 'documents');
+  let error, result;
   try {
     const value = {
-      documentOwnerId: userId,
       document: document,
-      threadId: threadId,
       documentName: documentName,
+      documentOwnerId: userId,
+      threadId: threadId,
       vectorStoreId: documentVectorStoreId,
     };
 
@@ -136,7 +133,7 @@ export async function saveCurrentDocumentState(
     error = e;
   }
 
-  return { result, error };
+  return { error, result };
 }
 
 export async function saveUserTemplate(
@@ -146,14 +143,14 @@ export async function saveUserTemplate(
   isTemplateOwner: boolean,
   templateId?: string
 ) {
-  let templatesRef = collection(db, 'templates');
-  let result, error;
+  const templatesRef = collection(db, 'templates');
+  let error, result;
 
   try {
     const value = {
-      templateOwnerId: userId,
       template: template,
       templateName: templateName,
+      templateOwnerId: userId,
     };
 
     result =
@@ -164,7 +161,7 @@ export async function saveUserTemplate(
     error = e;
   }
 
-  return { result, error };
+  return { error, result };
 }
 
 export async function saveUserActiveAssistant(
@@ -173,16 +170,15 @@ export async function saveUserActiveAssistant(
   vectoreStoreId: string,
   openAiChatAssistantId: string
 ) {
-  let usersRef = collection(db, 'users');
-  let docRef = doc(usersRef, userId);
-  let result;
+  const usersRef = collection(db, 'users');
+  const docRef = doc(usersRef, userId);
 
-  result = await setDoc(
+  const result = await setDoc(
     docRef,
     {
       assistantId: assistantId,
-      vectorStoreId: vectoreStoreId,
       openAiChatAssistantId: openAiChatAssistantId,
+      vectorStoreId: vectoreStoreId,
     },
     { merge: true }
   );
@@ -200,9 +196,9 @@ export async function getOwnedTemplates(templateOwnerId: string) {
 }
 
 export async function deleteTemplate(templateId: string) {
-  let documentsRef = collection(db, 'templates');
-  let docRef = doc(documentsRef, templateId);
-  let result, error;
+  const documentsRef = collection(db, 'templates');
+  const docRef = doc(documentsRef, templateId);
+  let error, result;
 
   try {
     result = await deleteDoc(docRef);
@@ -210,13 +206,13 @@ export async function deleteTemplate(templateId: string) {
     error = e;
   }
 
-  return { result, error };
+  return { error, result };
 }
 
 export async function deleteDocument(documentId: string) {
-  let documentsRef = collection(db, 'documents');
-  let docRef = doc(documentsRef, documentId);
-  let result, error;
+  const documentsRef = collection(db, 'documents');
+  const docRef = doc(documentsRef, documentId);
+  let error, result;
 
   try {
     result = await deleteDoc(docRef);
@@ -224,7 +220,7 @@ export async function deleteDocument(documentId: string) {
     error = e;
   }
 
-  return { result, error };
+  return { error, result };
 }
 
 export async function deleteUserUploadedFile(
@@ -232,9 +228,9 @@ export async function deleteUserUploadedFile(
   fileName: string,
   openAiFileId: string
 ) {
-  let usersRef = collection(db, 'users');
-  let docRef = doc(usersRef, userId);
-  let result, error;
+  const usersRef = collection(db, 'users');
+  const docRef = doc(usersRef, userId);
+  let error, result;
 
   const value = {
     files: arrayRemove({
@@ -249,7 +245,7 @@ export async function deleteUserUploadedFile(
     error = e;
   }
 
-  return { result, error };
+  return { error, result };
 }
 
 export async function getAssistants(assistantOwnerId: string) {

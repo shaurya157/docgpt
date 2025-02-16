@@ -1,3 +1,7 @@
+import type React from 'react';
+
+import type { EmojiCategoryList } from '@udecode/plate-emoji';
+
 import {
   AppleIcon,
   ClockIcon,
@@ -12,14 +16,11 @@ import {
   XIcon,
 } from 'lucide-react';
 
-import type React from 'react';
-import type { EmojiCategoryList } from '@udecode/plate-emoji';
-
 export const emojiCategoryIcons: Record<
   EmojiCategoryList,
   {
-    outline: React.ReactElement;
-    solid: React.ReactElement; // Needed to add another solid variant - outline will be used for now
+    outline: React.ReactElement<any>;
+    solid: React.ReactElement<any>; // Needed to add another solid variant - outline will be used for now
   }
 > = {
   activity: {

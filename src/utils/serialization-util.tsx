@@ -1,6 +1,6 @@
-import { TDescendant } from '@udecode/plate-common';
-import { PlateEditor } from '@udecode/plate-common/react';
+import { Descendant } from '@udecode/plate';
 import { deserializeInlineMd } from '@udecode/plate-markdown';
+import { PlateEditor } from "@udecode/plate/react";
 
 export const deserializeText = (text) => {};
 
@@ -15,16 +15,16 @@ export default function deserializeListMd(
 
   return [
     {
-      type: 'p',
       id: Math.floor(Math.random() * 1000).toString(),
-      listStyleType,
-      indent: indent,
       children: deserialized,
+      indent: indent,
+      listStyleType,
+      type: 'p',
     },
-  ] as TDescendant[];
+  ] as Descendant[];
 }
 
-export function classifyStart(input: string): 'disc' | 'decimal' | null {
+export function classifyStart(input: string): 'decimal' | 'disc' | null {
   // Regex to match '- ' or a digit followed by '.'
   const regex = /^\s*(-\s|\d+\.)/;
 

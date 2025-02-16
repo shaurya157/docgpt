@@ -1,14 +1,15 @@
-import { cn, createPrimitiveComponent } from '@udecode/cn';
+'use client';
+
+import { cn } from '@udecode/cn';
 import {
   PreviewImage,
   useImagePreview,
-  useImagePreviewState,
+  useImagePreviewValue,
   useScaleInput,
-  useScaleInputState,
 } from '@udecode/plate-media/react';
+import { useEditorRef } from '@udecode/plate/react';
 import { cva } from 'class-variance-authority';
-
-import { Icons } from '@/components/icons';
+import { ArrowLeft, ArrowRight, Download, Minus, Plus, X } from 'lucide-react';
 
 const toolButtonVariants = cva('rounded bg-[rgba(0,0,0,0.5)] px-1', {
   defaultVariants: {
@@ -22,16 +23,13 @@ const toolButtonVariants = cva('rounded bg-[rgba(0,0,0,0.5)] px-1', {
   },
 });
 
-const ScaleInput = createPrimitiveComponent('input')({
-  propsHook: useScaleInput,
-  stateHook: useScaleInputState,
-});
-
 const SCROLL_SPEED = 4;
 
 export const ImagePreview = () => {
-  const state = useImagePreviewState({ scrollSpeed: SCROLL_SPEED });
-
+  const editor = useEditorRef();
+  const isOpen = useImagePreviewValue('isOpen', editor.id);
+  const scale = useImagePreviewValue('scale');
+  const isEditingScale = useImagePreviewValue('isEditingScale');
   const {
     closeProps,
     currentUrlIndex,
@@ -45,21 +43,19 @@ export const ImagePreview = () => {
     zoomInDisabled,
     zoomInProps,
     zoomOutDisabled,
-  } = useImagePreview(state);
-
-  const { isOpen, scale } = state;
+  } = useImagePreview({ scrollSpeed: SCROLL_SPEED });
 
   return (
     <div
       className={cn(
-        'fixed left-0 top-0 z-50 h-screen w-screen',
+        'fixed top-0 left-0 z-50 h-screen w-screen',
         !isOpen && 'hidden'
       )}
       {...maskLayerProps}
     >
       <div className="absolute inset-0 size-full bg-black opacity-30"></div>
       <div className="absolute inset-0 size-full bg-black opacity-30"></div>
-      <div className="absolute inset-0 flex items-center justify-center ">
+      <div className="absolute inset-0 flex items-center justify-center">
         <div className="relative flex max-h-screen w-full items-center">
           <PreviewImage
             className={cn(
@@ -70,7 +66,7 @@ export const ImagePreview = () => {
             className="absolute bottom-0 left-1/2 z-40 flex w-fit -translate-x-1/2 justify-center gap-4 p-2 text-center text-white"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex gap-1 ">
+            <div className="flex gap-1">
               <button
                 {...prevProps}
                 className={cn(
@@ -80,7 +76,7 @@ export const ImagePreview = () => {
                 )}
                 type="button"
               >
-                <Icons.arrowLeft className="size-5" />
+                <ArrowLeft />
               </button>
               {(currentUrlIndex ?? 0) + 1}
               <button
@@ -92,10 +88,10 @@ export const ImagePreview = () => {
                 )}
                 type="button"
               >
-                <Icons.arrowRight className="size-5" />
+                <ArrowRight />
               </button>
             </div>
-            <div className="flex ">
+            <div className="flex">
               <button
                 className={cn(
                   toolButtonVariants({
@@ -105,10 +101,10 @@ export const ImagePreview = () => {
                 {...zommOutProps}
                 type="button"
               >
-                <Icons.minus className="size-4" />
+                <Minus className="size-4" />
               </button>
               <div className="mx-px">
-                {state.isEditingScale ? (
+                {isEditingScale ? (
                   <>
                     <ScaleInput className="w-10 rounded px-1 text-slate-500 outline" />{' '}
                     <span>%</span>
@@ -126,19 +122,19 @@ export const ImagePreview = () => {
                 {...zoomInProps}
                 type="button"
               >
-                <Icons.add className="size-4" />
+                <Plus className="size-4" />
               </button>
             </div>
             {/* TODO: downLoad the image */}
             <button className={cn(toolButtonVariants())} type="button">
-              <Icons.download className="size-4" />
+              <Download className="size-4" />
             </button>
             <button
               {...closeProps}
               className={cn(toolButtonVariants())}
               type="button"
             >
-              <Icons.close className="size-4" />
+              <X className="size-4" />
             </button>
           </div>
         </div>
@@ -146,3 +142,9 @@ export const ImagePreview = () => {
     </div>
   );
 };
+
+export function ScaleInput(props: React.ComponentProps<'input'>) {
+  const { props: scaleInputProps, ref } = useScaleInput();
+
+  return <input {...scaleInputProps} {...props} ref={ref} />;
+}

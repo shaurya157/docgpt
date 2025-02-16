@@ -1,16 +1,15 @@
-import { NextResponse } from 'next/server';
-import { createOpenAI } from '@ai-sdk/openai';
-import {convertToCoreMessages, streamText} from 'ai';
-
 import type { NextRequest } from 'next/server';
 
+import { createOpenAI } from '@ai-sdk/openai';
+import { convertToCoreMessages, streamText } from 'ai';
+import { NextResponse } from 'next/server';
+
 export async function POST(req: NextRequest) {
-  console.log("HIT COMMAND ROUTE")
   const {
-    messages,
-    system,
     apiKey: key,
+    messages,
     model = 'gpt-4o-mini',
+    system,
   } = await req.json();
 
   const apiKey = key || process.env.OPENAI_API_KEY;
@@ -23,18 +22,18 @@ export async function POST(req: NextRequest) {
   }
 
   const openai = createOpenAI({ apiKey });
-
   try {
+
     const result = await streamText({
-      maxTokens: 2048, //2048,
+      maxTokens: 2048,
       messages: convertToCoreMessages(messages),
-      model: openai(model),
+      // @ts-ignore
+      model: openai("o1-preview"),
       system: system,
     });
 
     return result.toDataStreamResponse();
   } catch {
-    // console.log("ERROR WHILE PROCESSING!")
     return NextResponse.json(
       { error: 'Failed to process AI request' },
       { status: 500 }

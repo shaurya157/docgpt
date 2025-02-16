@@ -1,0 +1,112 @@
+'use client';
+
+import { createContext, useContext, useState } from 'react';
+
+import { useAssistantDefinitions } from '@/providers/assistants-provider';
+import { useDocument } from '@/providers/document-provider';
+import { useUserDataContext } from '@/providers/user-data-provider';
+import { MenuItem } from '@/types';
+
+type ChatSettings = {
+  selectedAssistant: {};
+  selectedTemplate: {};
+  handleSelectedAssistant: (name: string) => void;
+  handleSelectedTemplate: (id: string) => void;
+};
+
+export const ChatSettingsContext = createContext<ChatSettings | null>(null);
+
+interface ChatSettingsProviderProps {
+  children: React.ReactNode;
+  setActiveItem?: (id: MenuItem, documentRefreshOnly: boolean) => void;
+}
+
+export default function ChatSettingsProvider({
+  children,
+  setActiveItem,
+}: ChatSettingsProviderProps) {
+  const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
+  const { providedTemplates } = useDocument();
+  const { userTemplates } = useUserDataContext();
+  const { activeUserDocument, setActiveUserDocument } = useDocument();
+
+  const [selectedAssistant, setSelectedAssistant] = useState(
+    docgptProvidedAssistantDefinitions.find(
+      (assistant) => assistant['name'] === 'Default'
+    )!
+  );
+  const [selectedTemplate, setSelectedTemplate] = useState({
+    id: '0',
+    template: [
+      {
+        children: [{ text: '' }],
+        type: 'h1',
+      }
+    ],
+    templateName: 'No Template',
+  });
+
+  // We are querying based on name here. This works fine as we do not support custom assistants yet.
+  // Case: when users define 2 assistants with the same name, only assistant 1 will show up due to the find below
+  // TODO: CHANGE to query based on ID, similar to handleSelectedTemplate method
+  const handleSelectedAssistant = (name: string) => {
+    const assistant = docgptProvidedAssistantDefinitions.find(
+      (assistant) => assistant['name'] === name
+    );
+
+    setSelectedAssistant(assistant!);
+  };
+
+  const handleSelectedTemplate = (id: string) => {
+    let template = providedTemplates
+      ?.concat(userTemplates)
+      .find((templ) => templ['id'] === id);
+
+    if (!template) {
+      template = {
+        id: '',
+        template: [
+          {
+            id: '1',
+            children: [
+              {
+                text: '',
+              },
+            ],
+            type: 'h1',
+          },
+        ],
+        templateName: 'No Template',
+      };
+    }
+
+    setSelectedTemplate(template);
+    const currActiveDoc = { ...activeUserDocument };
+    currActiveDoc['document'] = template['template'];
+    setActiveItem!(currActiveDoc, true);
+  };
+
+  return (
+    <ChatSettingsContext.Provider
+      value={{
+        selectedAssistant,
+        selectedTemplate,
+        handleSelectedAssistant,
+        handleSelectedTemplate,
+      }}
+    >
+      {children}
+    </ChatSettingsContext.Provider>
+  );
+}
+
+export function useChatSettings() {
+  const context = useContext(ChatSettingsContext);
+  if (!context) {
+    throw new Error(
+      'useChatSettings must be used within a ChatSettingsProvider'
+    );
+  }
+
+  return context;
+}

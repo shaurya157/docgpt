@@ -1,20 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { redirect } from 'next/navigation';
-import { saveCurrentDocumentState } from '@/firebase/firestore-dao';
-import ChatSettingsProvider from '@/providers/ChatSettingsProvider';
-import { useDocument } from '@/providers/DocumentProvider';
-import { useUserDataContext } from '@/providers/UserDataProvider';
+
 import { AssistantStatus, Message } from 'ai';
 import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
 
-import ChatContent from '@/components/chat/ChatContent';
-import HomeHeader from '@/components/HomeHeader';
-import OnboardingTooltip from '@/components/OnboardingTooltip';
-import PlateEditor, { useMyEditor } from '@/components/plate-editor';
-import Sidebar from '@/components/Sidebar';
+import ChatContent from "@/components/chat/chat-content";
+import {PlateEditor} from "@/components/editor/plate-editor";
+import {useCreateEditor} from "@/components/editor/use-create-editor";
+import Sidebar from "@/components/sidebar/sidebar";
+import HomeHeader from "@/components/site/home-header";
+import OnboardingTooltip from "@/components/site/onboarding-tooltip";
+import { saveCurrentDocumentState } from '@/firebase/firestore-dao';
+import ChatSettingsProvider, {useChatSettings} from "@/providers/chat-settings-provider";
+import {useDocument} from "@/providers/document-provider";
+import { useUserDataContext } from '@/providers/user-data-provider';
+
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'chat' | 'document'>('chat');
@@ -27,9 +30,10 @@ export default function Home() {
   const { chatAssistantId } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const { selectedTemplate } = useChatSettings();
   // TODO: can prolly move this out to layout instead and provide it globally with a provider.
   // TODO: fix here and the other page.tsx file
-  const editor = useMyEditor();
+  const editor = useCreateEditor();
 
   // TODO: a bit hacky...
   if (!session?.user) {
@@ -42,19 +46,21 @@ export default function Home() {
   });
 
   const handleNewChat = async () => {
+    setEditorOpen(false)
+    setActiveChatMessages([]);
     const createThreadResult = await fetch('/api/ai/thread/create', {
-      method: 'POST',
       body: JSON.stringify({ userId: session!.user!.email }),
+      method: 'POST',
     });
     const responseJson = await createThreadResult.json();
     toast.success(
       `Thread created successfully, using fresh session with thread ID: ${responseJson['threadId']}`
     );
     const item = {
-      document: editor.children,
+      document: selectedTemplate["template"],
+      documentName: `Untitled`,
       threadId: responseJson['threadId'],
       vectorStoreId: responseJson['vectorStoreId'],
-      documentName: `Untitled`,
     };
 
     const res = await saveCurrentDocumentState(
@@ -72,7 +78,6 @@ export default function Home() {
     }));
 
     setActiveUserDocument(item);
-    setActiveChatMessages([]);
     setActiveTab('chat');
     return item;
   };
@@ -87,16 +92,18 @@ export default function Home() {
   const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
     setStatus('in_progress');
     setActiveUserDocument(item);
+    console.log(item)
+    editor.tf.setValue(item["document"])
     if (!documentRefreshOnly) {
       setActiveChatMessages([]);
       try {
         const chatHistoryResponse = await fetch('/api/ai/thread/messages', {
-          method: 'POST',
           body: JSON.stringify({
-            userId: session!.user!.email!,
-            threadId: item['threadId'],
             chatAssistantId,
+            threadId: item['threadId'],
+            userId: session!.user!.email!,
           }),
+          method: 'POST',
         });
         const json = await chatHistoryResponse.json();
         if (!chatHistoryResponse.ok) {
@@ -111,8 +118,8 @@ export default function Home() {
                 ...messages,
                 {
                   id: message.id,
-                  role: message.role,
                   content: message.content[0]['text']['value'],
+                  role: message.role,
                 },
               ]);
             });
@@ -132,14 +139,14 @@ export default function Home() {
       content: 'Your chats with DocGPT will show here',
     },
     {
-      title: 'Get more relevant responses',
       content:
         'Upload files here that you would use to onboard a new team member. DocGPT will search these files for context when answering questions for you.',
+      title: 'Get more relevant responses',
     },
     {
-      title: 'Tell us what you want DocGPT to do',
       content:
         'Submit a feature request or report a bug. We will reply within 12 hours.',
+      title: 'Tell us what you want DocGPT to do',
     },
   ];
 
@@ -177,13 +184,13 @@ export default function Home() {
     <ChatSettingsProvider setActiveItem={handleSetActiveItem}>
       <div className="flex h-screen flex-col">
         <HomeHeader
-          isSidebarOpen={isSidebarOpen}
-          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           onNewChat={handleNewChat}
-          setActiveItem={handleSetActiveItem}
-          editorOpen={editorOpen}
           activeUserDocument={activeUserDocument}
+          editorOpen={editorOpen}
+          isSidebarOpen={isSidebarOpen}
+          setActiveItem={handleSetActiveItem}
           setEditorOpen={setEditorOpen}
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         <div
           className={
@@ -191,33 +198,33 @@ export default function Home() {
           }
         >
           <Sidebar
+            onDeleteChat={handleDeleteChat}
+            activeTab={activeTab}
+            activeUserDocument={activeUserDocument}
             isOpen={isSidebarOpen}
             items={currentItems}
-            activeUserDocument={activeUserDocument}
             setActiveItem={handleSetActiveItem}
-            activeTab={activeTab}
-            onDeleteChat={handleDeleteChat}
             toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           />
           <ChatContent
-            activeUserDocument={activeUserDocument}
+            onNewChat={handleNewChat}
             activeChatMessages={activeChatMessages}
-            setActiveChatMessages={setActiveChatMessages}
-            setActiveItem={handleSetActiveItem}
-            status={status}
-            setStatus={setStatus}
+            activeUserDocument={activeUserDocument}
             editor={editor}
             editorOpen={editorOpen}
+            setActiveChatMessages={setActiveChatMessages}
+            setActiveItem={handleSetActiveItem}
             setEditorOpen={setEditorOpen}
-            onNewChat={handleNewChat}
+            setStatus={setStatus}
+            status={status}
           />
           {!onboardingCompleted && (
             <OnboardingTooltip
-              steps={onboardingSteps}
               onComplete={() =>
                 localStorage.setItem('OnboardingCompleted', 'true')
               }
               isSidebarOpen={isSidebarOpen}
+              steps={onboardingSteps}
             />
           )}
 
@@ -227,7 +234,7 @@ export default function Home() {
               editorCssClass
             }
           >
-            <PlateEditor editor={editor} />
+            <PlateEditor plateEditor={editor} />
           </div>
         </div>
       </div>

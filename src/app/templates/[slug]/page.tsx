@@ -1,12 +1,13 @@
 'use client';
 
+import { ArrowLeftFromLine } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import DocumentProvider, { useDocument } from '@/providers/DocumentProvider';
-import { useUserDataContext } from '@/providers/UserDataProvider';
-import { ArrowLeftFromLine } from 'lucide-react';
 
-import PlateEditor, { useMyEditor } from '@/components/plate-editor';
+import {PlateEditor} from "@/components/editor/plate-editor";
+import {useCreateEditor} from "@/components/editor/use-create-editor";
+import DocumentProvider, {useDocument} from "@/providers/document-provider";
+import { useUserDataContext } from '@/providers/user-data-provider';
 
 // async function getTemplates(templateOwnerId: string) {
 //   let result: any[] = [];
@@ -50,7 +51,7 @@ export default function Page() {
     );
   }
 
-  const editor = useMyEditor(displayedTemplate);
+  const editor = useCreateEditor(displayedTemplate);
   return (
     <section className="container grid flex-row items-center gap-6 px-4 pb-8 pt-6 align-baseline sm:px-8 md:py-10">
       <Link href="/">
@@ -58,7 +59,7 @@ export default function Page() {
       </Link>
       <div className="max-w-[calc(100vw-32px)] rounded-lg border bg-background shadow sm:max-w-[min(calc(100vw-64px),1336px)]">
         <DocumentProvider template={displayedTemplate}>
-          <PlateEditor editor={editor} />
+          <PlateEditor plateEditor={editor} />
         </DocumentProvider>
       </div>
     </section>

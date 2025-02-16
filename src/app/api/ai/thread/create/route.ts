@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
-  let { apiKey: key, userId } = await req.json();
+  const { apiKey: key, userId } = await req.json();
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
   // TODO: We HAVE to have thread/vector store expiry or we'll run out of space at some point
   try {
     const vectorStore = await openai.beta.vectorStores.create({
-      name: `${userId} - Vector store`,
       metadata: { userId },
+      name: `${userId} - Vector store`,
     });
 
     const thread = await openai.beta.threads.create({

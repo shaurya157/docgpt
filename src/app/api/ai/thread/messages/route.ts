@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
-  let { apiKey: key, userId, threadId, chatAssistantId } = await req.json();
+  const { apiKey: key, chatAssistantId, threadId, userId } = await req.json();
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -23,10 +23,10 @@ export async function POST(req: NextRequest) {
     let after;
     while (true) {
       const response = await openai.beta.threads.messages.list(threadId, {
-        limit: 100,
         after: after,
+        limit: 100,
       });
-      let messages = response.data;
+      const messages = response.data;
 
       messages.forEach((datum) => {
         if (datum.role === 'user') {

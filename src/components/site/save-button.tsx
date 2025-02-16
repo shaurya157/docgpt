@@ -2,16 +2,12 @@
 
 import * as React from 'react';
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import {
-  saveCurrentDocumentState,
-  saveUserTemplate,
-} from '@/firebase/firestore-dao';
-import { useDocument } from '@/providers/DocumentProvider';
+
+import {useEditorRef} from "@udecode/plate/react";
 import { useSession } from 'next-auth/react';
+import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { useMyEditorRef } from '@/lib/plate/plate-types';
 import { Button } from '@/components/plate-ui/button';
 import {
   DropdownMenu,
@@ -20,13 +16,18 @@ import {
   useOpenState,
 } from '@/components/plate-ui/dropdown-menu';
 import { Input } from '@/components/plate-ui/input';
+import {
+  saveCurrentDocumentState,
+  saveUserTemplate,
+} from '@/firebase/firestore-dao';
+import { useDocument } from '@/providers/document-provider';
 
 export function SaveButton() {
-  const editor = useMyEditorRef();
+  const editor = useEditorRef();
   const { data: session } = useSession();
   const params = useParams();
   const openState = useOpenState();
-  const { activeUserDocument, activeTemplate } = useDocument();
+  const { activeTemplate, activeUserDocument } = useDocument();
   const [templateName, setTemplateName] = useState('');
   const [documentName, setDocumentName] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -90,13 +91,13 @@ export function SaveButton() {
         >
           <form className="space-y-4" onSubmit={handleSaveTemplate}>
             <Input
+              className="pr-10"
+              required={true}
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               placeholder={
                 activeTemplate ? activeTemplate['templateName'] : templateName
               }
-              required={true}
-              className="pr-10"
             ></Input>
             <Button type="submit">Save Template</Button>
           </form>
@@ -116,6 +117,8 @@ export function SaveButton() {
         >
           <form className="space-y-4" onSubmit={handleSaveDocument}>
             <Input
+              className="pr-10"
+              required={true}
               value={documentName}
               onChange={(e) => setDocumentName(e.target.value)}
               placeholder={
@@ -123,11 +126,9 @@ export function SaveButton() {
                   ? activeUserDocument['documentName']
                   : documentName
               }
-              required={true}
-              className="pr-10"
             ></Input>
 
-            <Button type="submit" className="w-full">
+            <Button className="w-full" type="submit">
               Save
             </Button>
             <div

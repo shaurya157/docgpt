@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
+
 import { cn } from '@udecode/cn';
-import { withRef } from '@udecode/plate-common/react';
+import { withRef } from '@udecode/plate/react';
 
 import { PlateElement } from './plate-element';
 
@@ -9,7 +12,7 @@ export const ParagraphElement = withRef<typeof PlateElement>(
     return (
       <PlateElement
         ref={ref}
-        className={cn('m-0 px-0 py-1', className)}
+        className={cn(className, 'm-0 px-0 py-1')}
         {...props}
       >
         {children}

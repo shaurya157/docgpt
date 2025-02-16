@@ -68,6 +68,7 @@ const CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS: string = `\
   - CRITICAL: Reply using Markdown formatting only.
   - CRITICAL: When a template is provided and the INSTRUCTION asks to create a new document, ask thoughtful questions based on sections in the template before trying to create the document. Do NOT immediately try to create the document without trying to get enough context to provide content for each section, unless otherwise specified.
   - CRITICAL: ONLY for INSTRUCTIONS, specifically ONLY when the user asks to create a new document or make an edit to the existing document: prepend your response with "<Document>" and append it with "</Document>"; add a confirmation message after "</Document>" indicating that you have made the relevant changes in the document. For all other type of instructions, provide a thoughtful response.
+  - CRITICAL: Only append the <Document> tag when explicitly requested by the user, specifically in cases where the user asks for a new document or modifications to an existing document. In all other instances, refrain from using the <Document> tag to maintain clarity and accuracy in responses. 
   - CRITICAL: ONLY for CONTEXT, amend your next response to include the additional context while preserving
   - CRITICAL: Do NOT reply with html formatting. If generating a new document DO NOT encase the entire document in triple backticks.
   - CRITICAL: ALWAYS prioritize using context from files uploaded in the vector store.
@@ -89,7 +90,7 @@ const CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS: string = `\
 `;
 
 export async function POST(req: NextRequest) {
-  let { apiKey: key, model = 'gpt-4o-mini', userId } = await req.json();
+  const { apiKey: key, model = 'gpt-4o-mini', userId } = await req.json();
 
   const apiKey = key || process.env.OPENAI_API_KEY;
   const openai = new OpenAI({
@@ -98,46 +99,46 @@ export async function POST(req: NextRequest) {
 
   try {
     // TODO: Need to add an expiration here. The API docs say default vector stores expire after 7 days but the dashboard says never
-    //https://platform.openai.com/docs/assistants/tools/file-search#managing-costs-with-expiration-policies
+    // https://platform.openai.com/docs/assistants/tools/file-search#managing-costs-with-expiration-policies
     const vectorStore = await openai.beta.vectorStores.create({
-      name: `${userId} - Vector store`,
       metadata: { userId },
+      name: `${userId} - Vector store`,
     });
 
     const editorAssistant = await openai.beta.assistants.create({
-      model,
-      name: `${userId} - Editor Assistant`,
       instructions: EDITOR_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS,
-      tools: [{ type: 'file_search' }],
       metadata: {
         userId: userId,
       },
+      model,
+      name: `${userId} - Editor Assistant`,
       tool_resources: {
         file_search: {
           vector_store_ids: [vectorStore.id],
         },
       },
+      tools: [{ type: 'file_search' }],
     });
 
     const chatAssistant = await openai.beta.assistants.create({
-      model,
-      name: `${userId} - Chat Assistant`,
       instructions: CHAT_ASSISTANT_SYSTEM_COMMON_INSTRUCTIONS,
-      tools: [{ type: 'file_search' }],
       metadata: {
         userId: userId,
       },
+      model,
+      name: `${userId} - Chat Assistant`,
       tool_resources: {
         file_search: {
           vector_store_ids: [vectorStore.id],
         },
       },
+      tools: [{ type: 'file_search' }],
     });
 
     return NextResponse.json({
       assistantId: editorAssistant.id,
-      vectorStoreId: vectorStore.id,
       chatAssistantId: chatAssistant.id,
+      vectorStoreId: vectorStore.id,
     });
   } catch (e) {
     return NextResponse.json(

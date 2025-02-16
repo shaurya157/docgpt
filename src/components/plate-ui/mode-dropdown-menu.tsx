@@ -1,12 +1,11 @@
-import React from 'react';
-import {
-  focusEditor,
-  useEditorReadOnly,
-  useEditorRef,
-  usePlateStore,
-} from '@udecode/plate-common/react';
+'use client';
 
-import { Icons } from '@/components/icons';
+import React from 'react';
+
+import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu';
+
+import { useEditorRef, usePlateState } from '@udecode/plate/react';
+import { Eye, Pen } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -18,12 +17,9 @@ import {
 } from './dropdown-menu';
 import { ToolbarButton } from './toolbar';
 
-import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu';
-
 export function ModeDropdownMenu(props: DropdownMenuProps) {
   const editor = useEditorRef();
-  const setReadOnly = usePlateStore().set.readOnly();
-  const readOnly = useEditorReadOnly();
+  const [readOnly, setReadOnly] = usePlateState('readOnly');
   const openState = useOpenState();
 
   let value = 'editing';
@@ -33,13 +29,13 @@ export function ModeDropdownMenu(props: DropdownMenuProps) {
   const item: any = {
     editing: (
       <>
-        <Icons.editing className="mr-2 size-5" />
+        <Pen />
         <span className="hidden lg:inline">Editing</span>
       </>
     ),
     viewing: (
       <>
-        <Icons.viewing className="mr-2 size-5" />
+        <Eye />
         <span className="hidden lg:inline">Viewing</span>
       </>
     ),
@@ -59,7 +55,6 @@ export function ModeDropdownMenu(props: DropdownMenuProps) {
 
       <DropdownMenuContent className="min-w-[180px]" align="start">
         <DropdownMenuRadioGroup
-          className="flex flex-col gap-0.5"
           value={value}
           onValueChange={(newValue) => {
             if (newValue !== 'viewing') {
@@ -71,7 +66,7 @@ export function ModeDropdownMenu(props: DropdownMenuProps) {
               return;
             }
             if (newValue === 'editing') {
-              focusEditor(editor);
+              editor.tf.focus();
 
               return;
             }

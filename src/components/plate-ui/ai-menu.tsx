@@ -1,126 +1,47 @@
+'use client';
+
 import * as React from 'react';
-import { useDocument } from '@/providers/DocumentProvider';
-import { useUserDataContext } from '@/providers/UserDataProvider';
-import { AIChatPlugin, useEditorChat } from '@udecode/plate-ai/react';
+
+import { type NodeEntry, isHotkey } from '@udecode/plate';
 import {
-  getAncestorNode,
-  getBlocks,
-  isElementEmpty,
-  isHotkey,
-  isSelectionAtBlockEnd,
-} from '@udecode/plate-common';
-import { toDOMNode, useEditorPlugin } from '@udecode/plate-common/react';
+  AIChatPlugin,
+  useEditorChat,
+  useLastAssistantMessage,
+} from '@udecode/plate-ai/react';
 import {
   BlockSelectionPlugin,
   useIsSelecting,
 } from '@udecode/plate-selection/react';
-import { useAssistant } from 'ai/react';
+import {
+  useEditorPlugin,
+  useHotkeys,
+  usePluginOption,
+} from '@udecode/plate/react';
 import { Loader2Icon } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { toast } from 'sonner';
 
-import { useOpenAI } from '../openai/openai-context';
+import { useChat } from '@/components/editor/use-chat';
+
 import { AIChatEditor } from './ai-chat-editor';
 import { AIMenuItems } from './ai-menu-items';
 import { Command, CommandList, InputCommand } from './command';
 import { Popover, PopoverAnchor, PopoverContent } from './popover';
 
-import type { TElement, TNodeEntry } from '@udecode/plate-common';
-import type { PlateEditor } from '@udecode/plate-common/react';
-
-// TODO: this will NOT work for ordered and unordered lists
-const serializeToMarkdown = (template: any) => {
-  const templ = template['template'] as Map<
-    string,
-    string | Map<string, string>[]
-  >;
-  let result = '<Template>\n';
-
-  if (templ != undefined) {
-    templ.forEach((item) => {
-      let headerSigns = '';
-      const itemType = item['type'] as string;
-      if (itemType.includes('h')) {
-        for (let i = Number(itemType[1]); i--; ) {
-          headerSigns += '#';
-        }
-        result += headerSigns + item['children'][0]['text'] + '\n';
-      } else {
-        result += item['children'][0]['text'] + '\n';
-      }
-    });
-  }
-
-  return (result += '</Template>');
-};
 export function AIMenu() {
-  const { api, editor, useOption } = useEditorPlugin(AIChatPlugin);
-  const open = useOption('open');
-  const mode = useOption('mode');
+  const { api, editor } = useEditorPlugin(AIChatPlugin);
+  const open = usePluginOption(AIChatPlugin, 'open');
+  const mode = usePluginOption(AIChatPlugin, 'mode');
   const isSelecting = useIsSelecting();
-  const aiEditorRef = React.useRef<PlateEditor | null>(null);
+
   const [value, setValue] = React.useState('');
-  const { data: session } = useSession();
-  const { assistantId } = useUserDataContext();
-  const { activeUserDocument } = useDocument();
-  const { activeTemplate } = useDocument();
 
-  // @ts-ignore
-  const chat = useAssistant({
-    api: '/api/ai/chat/editorassistant',
-    body: {
-      apiKey: useOpenAI().apiKey,
-      model: useOpenAI().model.value,
-      assistantId,
-      template: isSelecting
-        ? ''
-        : activeTemplate == undefined || false
-          ? ''
-          : serializeToMarkdown(activeTemplate),
-    },
-    threadId: activeUserDocument ? activeUserDocument['threadId'] : null,
-    onError(error: Error): void {
-      toast.error(
-        `Something went wrong while creating/using the assistant. Error: ${error.message}`
-      );
-    },
-  });
+  const chat = useChat();
 
-  const { input, status, messages, setInput } = chat;
-
-  let isLoading = status == 'in_progress';
-
-  // const chat = useChat({
-  //   id: 'editor',
-  //   api: `/api/ai/command`,
-  //   body: {
-  //     apiKey: useOpenAI().apiKey,
-  //     model: useOpenAI().model.value,
-  //     userId: session?.user?.email,
-  //     assistantId,
-  //     threadId,
-  //   },
-  //   onError: (error) => {
-  //     if (error.message.includes('API key')) {
-  //       toast.error(error.message);
-  //     } else {
-  //       toast.error(error.message);
-  //     }
-  //     api.aiChat.hide();
-  //   },
-  //   onResponse: (response) => {
-  //     console.log("OnResponse:", response);
-  //   },
-  //   onFinish: (finish) => {
-  //     console.log("OnFinish:", finish)
-  //   }
-  // });
-  //
-  // const { input, isLoading, messages, setInput } = chat;
-
+  const { input, isLoading, messages, setInput } = chat;
   const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(
     null
   );
+
+  const content = useLastAssistantMessage()?.content;
 
   const setOpen = (open: boolean) => {
     if (open) {
@@ -136,10 +57,11 @@ export function AIMenu() {
   };
 
   useEditorChat({
-    // @ts-ignore
+    // @ts-expect-error Plate's useEditorChat doesn't work with vercel's useAssistants, there are some missing methods
+    //  are implemented in use-chat.ts but there is some type mismatch
     chat,
-    onOpenBlockSelection: (blocks: TNodeEntry[]) => {
-      show(toDOMNode(editor, blocks.at(-1)![0])!);
+    onOpenBlockSelection: (blocks: NodeEntry[]) => {
+      show(editor.api.toDOMNode(blocks.at(-1)![0])!);
     },
     onOpenChange: (open) => {
       if (!open) {
@@ -148,32 +70,32 @@ export function AIMenu() {
       }
     },
     onOpenCursor: () => {
-      const ancestor = getAncestorNode(editor)?.[0] as TElement;
+      const [ancestor] = editor.api.block({ highest: true })!;
 
-      if (!isSelectionAtBlockEnd(editor) && !isElementEmpty(editor, ancestor)) {
+      if (!editor.api.isAt({ end: true }) && !editor.api.isEmpty(ancestor)) {
         editor
           .getApi(BlockSelectionPlugin)
-          .blockSelection.addSelectedRow(ancestor.id as string);
+          .blockSelection.set(ancestor.id as string);
       }
 
-      show(toDOMNode(editor, ancestor)!);
+      show(editor.api.toDOMNode(ancestor)!);
     },
     onOpenSelection: () => {
-      show(toDOMNode(editor, getBlocks(editor).at(-1)![0])!);
+      show(editor.api.toDOMNode(editor.api.blocks().at(-1)![0])!);
     },
   });
 
-  // useHotkeys(
-  //   'meta+j',
-  //   () => {
-  //     api.aiChat.show();
-  //   },
-  //   { enableOnContentEditable: true, enableOnFormTags: true }
-  // );
+  useHotkeys(
+    'meta+j',
+    () => {
+      api.aiChat.show();
+    },
+    { enableOnContentEditable: true, enableOnFormTags: true }
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={false}>
-      <PopoverAnchor virtualRef={{ current: anchorElement }} />
+      <PopoverAnchor virtualRef={{ current: anchorElement! }} />
 
       <PopoverContent
         className="border-none bg-transparent p-0 shadow-none"
@@ -190,7 +112,7 @@ export function AIMenu() {
           }
         }}
         align="center"
-        avoidCollisions={false}
+        // avoidCollisions={false}
         side="bottom"
       >
         <Command
@@ -198,12 +120,12 @@ export function AIMenu() {
           value={value}
           onValueChange={setValue}
         >
-          {mode === 'chat' && isSelecting && messages.length > 0 && (
-            <AIChatEditor aiEditorRef={aiEditorRef} />
+          {mode === 'chat' && isSelecting && content && (
+            <AIChatEditor content={content} />
           )}
 
           {isLoading ? (
-            <div className="flex grow select-none items-center gap-2 p-2 text-sm text-muted-foreground">
+            <div className="flex grow items-center gap-2 p-2 text-sm text-muted-foreground select-none">
               <Loader2Icon className="size-4 animate-spin" />
               {messages.length > 1 ? 'Editing...' : 'Thinking...'}
             </div>
@@ -223,14 +145,15 @@ export function AIMenu() {
                 }
               }}
               onValueChange={setInput}
-              placeholder="Ask docgpt anything..."
+              placeholder="Ask AI anything..."
+              data-plate-focus
               autoFocus
             />
           )}
 
           {!isLoading && (
             <CommandList>
-              <AIMenuItems aiEditorRef={aiEditorRef} setValue={setValue} />
+              <AIMenuItems setValue={setValue} />
             </CommandList>
           )}
         </Command>

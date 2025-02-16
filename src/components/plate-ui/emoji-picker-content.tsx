@@ -1,9 +1,18 @@
-import { memo, useCallback } from 'react';
-import { cn } from '@udecode/cn';
-import { EmojiSettings } from '@udecode/plate-emoji';
+'use client';
 
-import type { Emoji, GridRow } from '@udecode/plate-emoji';
+import { memo, useCallback } from 'react';
+
 import type { UseEmojiPickerType } from '@udecode/plate-emoji/react';
+
+import { cn } from '@udecode/cn';
+import { type Emoji, type GridRow, EmojiSettings } from '@udecode/plate-emoji';
+
+export type EmojiButtonProps = {
+  emoji: Emoji;
+  index: number;
+  onMouseOver: (emoji?: Emoji) => void;
+  onSelect: (emoji: Emoji) => void;
+};
 
 export type EmojiPickerContentProps = Pick<
   UseEmojiPickerType,
@@ -17,13 +26,6 @@ export type EmojiPickerContentProps = Pick<
   | 'settings'
   | 'visibleCategories'
 >;
-
-export type EmojiButtonProps = {
-  emoji: Emoji;
-  index: number;
-  onMouseOver: (emoji?: Emoji) => void;
-  onSelect: (emoji: Emoji) => void;
-};
 
 export type RowOfButtonsProps = {
   row: GridRow;
@@ -46,7 +48,14 @@ const Button = memo(
           className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100"
           aria-hidden="true"
         />
-        <span style={{ position: 'relative' }} data-emoji-set="native">
+        <span
+          className="relative"
+          style={{
+            fontFamily:
+              '"Apple Color Emoji", "Segoe UI Emoji", NotoColorEmoji, "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", EmojiSymbols',
+          }}
+          data-emoji-set="native"
+        >
           {emoji.skins[0].native}
         </span>
       </button>
@@ -109,7 +118,7 @@ export function EmojiPickerContent({
             style={{ width: getRowWidth }}
             data-id={categoryId}
           >
-            <div className="sticky -top-px z-[1] bg-popover/90 p-1 py-2 text-sm font-semibold backdrop-blur-sm">
+            <div className="sticky -top-px z-1 bg-popover/90 p-1 py-2 text-sm font-semibold backdrop-blur-xs">
               {i18n.categories[categoryId]}
             </div>
             <div
@@ -145,7 +154,7 @@ export function EmojiPickerContent({
   const SearchList = useCallback(() => {
     return (
       <div style={{ width: getRowWidth }} data-id="search">
-        <div className="sticky -top-px z-[1] bg-popover/90 p-1 py-2 text-sm font-semibold text-card-foreground backdrop-blur-sm">
+        <div className="sticky -top-px z-1 bg-popover/90 p-1 py-2 text-sm font-semibold text-card-foreground backdrop-blur-xs">
           {i18n.searchResult}
         </div>
         <div className="relative flex flex-wrap">
@@ -174,7 +183,7 @@ export function EmojiPickerContent({
     <div
       ref={refs.current.contentRoot}
       className={cn(
-        'h-full min-h-[50%] overflow-y-auto overflow-x-hidden px-2',
+        'h-full min-h-[50%] overflow-x-hidden overflow-y-auto px-2',
         '[&::-webkit-scrollbar]:w-4',
         '[&::-webkit-scrollbar-button]:hidden [&::-webkit-scrollbar-button]:size-0',
         '[&::-webkit-scrollbar-thumb]:min-h-11 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:hover:bg-muted-foreground/25',

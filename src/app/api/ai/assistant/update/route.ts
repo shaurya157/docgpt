@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from "openai";
 
 export async function POST(req: NextRequest) {
-  let { assistantId, instructions } = await req.json();
+  const { assistantId, instructions } = await req.json();
   const apiKey = process.env.OPEN_API_KEY;
   const openai = new OpenAI({
     apiKey: apiKey || '',

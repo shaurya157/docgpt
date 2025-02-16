@@ -4,8 +4,8 @@
   "rsc": true,
   "tsx": true,
   "tailwind": {
-    "config": "tailwind.config.js",
-    "css": "src/styles/globals.css",
+    "config": "tailwind.config.ts",
+    "css": "src/app/globals.css",
     "baseColor": "slate",
     "cssVariables": true,
     "prefix": ""
@@ -13,9 +13,17 @@
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
-    "ui": "@/components/plate-ui",
+    "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "url": "https://platejs.org/r"
+  "iconLibrary": "lucide",
+  "registries": {
+    "plate": {
+      "aliases": {
+        "ui": "@/components/plate-ui"
+      },
+      "url": "https://platejs.org/r"
+    }
+  }
 }
