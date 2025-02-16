@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       { status: 401 }
     );
   }
-
+  
   const openai = createOpenAI({ apiKey });
 
   try {
