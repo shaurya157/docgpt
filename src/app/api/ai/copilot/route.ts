@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     const result = await generateText({
       abortSignal: req.signal,
       maxTokens: 50,
+      // @ts-expect-error: not sure why model is not a supported field here but linter complains
       model: openai(model),
       prompt: prompt,
       system,
