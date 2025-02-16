@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const result = await streamText({
       maxTokens: 2048,
       messages: convertToCoreMessages(messages),
-      // @ts-ignore
+      // @ts-expect-error: not sure why model is not a supported field here but linter complains
       model: openai("o1-preview"),
       system: system,
     });

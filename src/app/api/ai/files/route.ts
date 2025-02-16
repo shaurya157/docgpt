@@ -65,8 +65,7 @@ export async function POST(req: NextRequest) {
       });
 
       // TODO: add polling here similar to /chat route where we check upload status
-      // @ts-ignore
-      await openai.beta.vectorStores.files.create(vectorStoreId, {
+      await openai.beta.vectorStores.files.create(vectorStoreId as string, {
         file_id: fileUploadResponse.id,
       });
     }
