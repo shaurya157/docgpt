@@ -356,3 +356,12 @@
     height: 30px;
   }
 }
+
+.react-markdown ol{
+  min-height: 10px;
+  overflow: hidden;
+  white-space: normal;
+}
+.react-markdown li {
+  margin-bottom: 10px;
+}

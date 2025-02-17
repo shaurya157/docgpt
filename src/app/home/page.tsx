@@ -95,6 +95,8 @@ export default function Home() {
 
     if (item["document"].length > 1) {
       setEditorOpen(true)
+    } else {
+      setEditorOpen(false)
     }
     editor.tf.setValue(item["document"])
     if (!documentRefreshOnly) {
