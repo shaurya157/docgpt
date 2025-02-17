@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
         const run = await openai.beta.threads.runs.create(threadId, {
           additional_instructions: additionalInstructions as string,
           assistant_id: assistantId as string,
+          tools:[{ "type": "file_search"}]
         });
 
         async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {

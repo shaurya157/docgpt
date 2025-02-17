@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
         // Run the assistant on the thread
         const run = await openai.beta.threads.runs.create(threadId, {
           assistant_id: assistantId,
+          tools: [{ "type": "file_search"}]
         });
 
         async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {

@@ -378,7 +378,7 @@ const ChatContent = ({
       className={
         'flex flex-col items-start p-4 ' + chatInputPositioningCssClass
       }
-      style={{ width: editorOpen ? '30%' : '50%' }}
+      style={{ width: editorOpen ? '40%' : '50%' }}
       transition={{
         damping: 20,
         duration: 0.2,
