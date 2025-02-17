@@ -21,4 +21,18 @@ export const chatSettingsHotLinks = [
     templateId: 'RBJLtWdpk6G0nqY8Eivg',
     templateName: 'Default Email Template'
   },
+  {
+    assistantName: 'Default PRD Assistant',
+    displayName: 'Jairaj PRD preset',
+    prompt: "Write a prd",
+    templateId: 'jairaj-uber-prd-template-v2',
+    templateName: 'jairaj-uber-prd-template-v2'
+  },
+  {
+    assistantName: 'Default Email Assistant',
+    displayName: 'Jairaj Email preset',
+    prompt: "Write a launch email",
+    templateId: 'GDWiL8JuCVFciU3bvD54',
+    templateName: 'Launch email Jan 14'
+  },
 ];
