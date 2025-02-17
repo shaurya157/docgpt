@@ -362,6 +362,12 @@
   overflow: hidden;
   white-space: normal;
 }
+
+.react-markdown ul{
+  min-height: 10px;
+  overflow: hidden;
+  white-space: normal;
+}
 .react-markdown li {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
