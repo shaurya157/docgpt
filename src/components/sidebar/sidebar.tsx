@@ -14,7 +14,6 @@ import DeleteIcon from '../../assets/icons/delete.svg';
 import FolderIcon from '../../assets/icons/folder.svg';
 import HelpIcon from '../../assets/icons/help.svg';
 import LogoutIcon from '../../assets/icons/logout.svg';
-import MoreIcon from '../../assets/icons/moreHorizontal.svg';
 import ProfileIcon from '../../assets/icons/profile.svg';
 import CloseIcon from '../../assets/icons/x.svg';
 import ContextDocsContent from './context-docs-content';
@@ -35,23 +34,23 @@ interface PopoverState {
 interface SidebarProps {
   activeTab: 'chat' | 'document';
   activeUserDocument: {} | string;
+  editorOpen: boolean
   isOpen: boolean;
   items: MenuItem[] | null | undefined;
+  onDeleteChat: (chatId: string) => void;
   setActiveItem: (id: MenuItem, documentRefreshOnly: boolean) => void;
   toggleSidebar: () => void;
-  onDeleteChat?: (chatId: string) => void;
-  editorOpen: boolean
 }
 
 const Sidebar = ({
   activeTab,
   activeUserDocument,
+  editorOpen,
   isOpen,
   items,
   setActiveItem,
   toggleSidebar,
-  onDeleteChat,
-  editorOpen
+  onDeleteChat
 }: SidebarProps) => {
   const sidebarWidth = 280;
   const popoverOffset = 12;
@@ -89,16 +88,9 @@ const Sidebar = ({
     }
   };
 
-  const handleDeleteChat = async (e: React.MouseEvent) => {
-    if (chatMenu.chatId && onDeleteChat) {
-      onDeleteChat(chatMenu.chatId);
-
-      const res = await deleteDocument(chatMenu.chatId);
-      if (res.error) {
-        toast.error(`Error deleting document. Error: ${res.error}`);
-      } else {
-        toast.success(`Success deleting document!`);
-      }
+  const handleDeleteChat = (id) => {
+    return () => {
+      onDeleteChat(id);
 
       setChatMenu({
         buttonRect: null,
@@ -423,7 +415,7 @@ const Sidebar = ({
           {items?.map((item) => (
             <div
               key={item.id}
-              className={`group mb-1 flex w-full items-center justify-between rounded-md p-1.5 ${
+              className={`cursor-pointer group mb-1 flex w-full items-center justify-between rounded-md p-1.5 ${
                 activeUserDocument && activeUserDocument!['id'] === item.id
                   ? 'bg-[#ECECEC]'
                   : 'hover:bg-[#ECECEC]'
@@ -445,12 +437,11 @@ const Sidebar = ({
               {activeTab === 'chat' && (
                 <button
                   className="cursor-pointer rounded-lg text-gray-400 opacity-0 transition-opacity hover:bg-gray-200 hover:text-gray-600 group-hover:opacity-100"
-                  onClick={(e) => {
-                    handleMoreClick(e, item.id);
-                  }}
+                  onClick={ handleDeleteChat(item.id) }
                   data-more-button="true"
                 >
-                  <Image alt="more" height={24} src={MoreIcon} width={24} />
+                  <Image className="cursor-pointer" alt="delete chat" height={18} src={DeleteIcon} width={18} />
+                  {/* <Image alt="more" height={24} src={MoreIcon} width={24} /> */}
                 </button>
               )}
             </div>

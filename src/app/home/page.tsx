@@ -13,7 +13,7 @@ import {useCreateEditor} from "@/components/editor/use-create-editor";
 import Sidebar from "@/components/sidebar/sidebar";
 import HomeHeader from "@/components/site/home-header";
 import OnboardingTooltip from "@/components/site/onboarding-tooltip";
-import { saveCurrentDocumentState } from '@/firebase/firestore-dao';
+import {deleteDocument, saveCurrentDocumentState} from '@/firebase/firestore-dao';
 import ChatSettingsProvider, {useChatSettings} from "@/providers/chat-settings-provider";
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
@@ -82,7 +82,14 @@ export default function Home() {
     return item;
   };
 
-  const handleDeleteChat = (chatId: string) => {
+  const handleDeleteChat = async (chatId: string) => {
+    const res = await deleteDocument(chatId);
+    if (res.error) {
+      toast.error(`Error deleting document. Error: ${res.error}`);
+    } else {
+      toast.success(`Success deleting document!`);
+    }
+
     setItems((prev) => ({
       ...prev,
       chat: prev.chat!.filter((chat) => chat.id !== chatId),
@@ -206,11 +213,11 @@ export default function Home() {
             onDeleteChat={handleDeleteChat}
             activeTab={activeTab}
             activeUserDocument={activeUserDocument}
+            editorOpen={editorOpen}
             isOpen={isSidebarOpen}
             items={currentItems}
             setActiveItem={handleSetActiveItem}
             toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-            editorOpen={editorOpen}
           />
           <ChatContent
             onNewChat={handleNewChat}
