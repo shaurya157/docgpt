@@ -92,7 +92,10 @@ export default function Home() {
   const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
     setStatus('in_progress');
     setActiveUserDocument(item);
-    console.log(item)
+
+    if (item["document"].length > 1) {
+      setEditorOpen(true)
+    }
     editor.tf.setValue(item["document"])
     if (!documentRefreshOnly) {
       setActiveChatMessages([]);

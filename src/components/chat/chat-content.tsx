@@ -80,6 +80,7 @@ const ChatContent = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [uploadInProgress, setUploadInProgress] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -232,6 +233,7 @@ const ChatContent = ({
   };
 
   const handleKeyPress = (e) => {
+    adjustTextAreaHeight()
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage()().then(
@@ -363,6 +365,14 @@ const ChatContent = ({
       handleSendMessage(hotLink["prompt"])()
     };
   };
+
+  const adjustTextAreaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto"; // Reset height to recalculate
+      textarea.style.height = textarea.scrollHeight + "px"; // Set height based on scrollHeight
+    }
+  }
 
   return (
     <motion.div
@@ -517,6 +527,7 @@ const ChatContent = ({
             <Image alt="Attach" height={20} src={AttachmentIcon} width={20} />
           </button>
           <textarea
+            ref={textareaRef}
             className="height-30 max-h-52 w-full flex-1  overflow-auto p-1 text-gray-600 focus:outline-none"
             disabled={status === 'in_progress'}
             value={inputValue}
