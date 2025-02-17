@@ -210,6 +210,7 @@ export default function Home() {
             items={currentItems}
             setActiveItem={handleSetActiveItem}
             toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            editorOpen={editorOpen}
           />
           <ChatContent
             onNewChat={handleNewChat}

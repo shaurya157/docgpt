@@ -40,6 +40,7 @@ interface SidebarProps {
   setActiveItem: (id: MenuItem, documentRefreshOnly: boolean) => void;
   toggleSidebar: () => void;
   onDeleteChat?: (chatId: string) => void;
+  editorOpen: boolean
 }
 
 const Sidebar = ({
@@ -50,6 +51,7 @@ const Sidebar = ({
   setActiveItem,
   toggleSidebar,
   onDeleteChat,
+  editorOpen
 }: SidebarProps) => {
   const sidebarWidth = 280;
   const popoverOffset = 12;
@@ -396,11 +398,12 @@ const Sidebar = ({
     }
   };
 
+
   return (
-    <div className="absolute inset-y-0 left-0">
+    <div className={editorOpen ? "" : "absolute inset-y-0 left-0"}>
       <motion.div
         ref={sidebarRef}
-        className="absolute z-10 flex h-[calc(100vh-64px)] flex-col overflow-hidden border-r bg-white md:relative"
+        className="flex h-[calc(100vh-64px)] flex-col overflow-hidden border-r bg-white md:relative"
         style={{
           maxWidth: sidebarWidth,
           minWidth: isOpen ? sidebarWidth : 0,
