@@ -112,7 +112,7 @@ export function SaveButton() {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          className="flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto"
+          className="p-4 flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto"
           align="start"
         >
           <form className="space-y-4" onSubmit={handleSaveDocument}>
@@ -128,14 +128,9 @@ export function SaveButton() {
               }
             ></Input>
 
-            <Button className="w-full" type="submit">
-              Save
+            <Button className="w-full" disabled={showSuccessMessage} type="submit">
+              {showSuccessMessage ? "Saved successfully" : "Save"}
             </Button>
-            <div
-              className={showSuccessMessage ? 'w-full text-center' : 'hidden'}
-            >
-              Successfully saved!
-            </div>
           </form>
         </DropdownMenuContent>
       </DropdownMenu>
