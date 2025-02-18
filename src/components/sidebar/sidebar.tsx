@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 
 import Popover from "@/components/sidebar/popover";
 import { TemplatesDropdown } from '@/components/sidebar/templates-dropdown';
-import { deleteDocument } from '@/firebase/firestore-dao';
 import { MenuItem, PopoverPosition } from '@/types';
 
 import DeleteIcon from '../../assets/icons/delete.svg';
@@ -52,7 +51,7 @@ const Sidebar = ({
   toggleSidebar,
   onDeleteChat
 }: SidebarProps) => {
-  const sidebarWidth = 280;
+  const sidebarWidth = 220;
   const popoverOffset = 12;
   const sidebarRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -436,7 +435,7 @@ const Sidebar = ({
               </button>
               {activeTab === 'chat' && (
                 <button
-                  className="cursor-pointer rounded-lg text-gray-400 opacity-0 transition-opacity hover:bg-gray-200 hover:text-gray-600 group-hover:opacity-100"
+                  className="cursor-pointer rounded-lg text-gray-400 opacity-0 transition-opacity hover:bg-gray-300 hover:text-gray-600 group-hover:opacity-100"
                   onClick={ handleDeleteChat(item.id) }
                   data-more-button="true"
                 >

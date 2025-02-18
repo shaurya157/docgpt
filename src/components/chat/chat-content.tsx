@@ -123,55 +123,27 @@ const ChatContent = ({
         setActiveChatMessages((prev) => [...prev, newMessage]);
 
         if (attachments.length > 0) {
-          setUploadInProgress(true);
-          attachments.forEach((attachment) =>
-              changeFileUploadStatus(attachment, 'uploading')
-          );
-          const fileIds: any[] = [];
-
-          const filesFormData = new FormData();
-          filesFormData.append('vectorStoreId', item!['vectorStoreId']);
-          filesFormData.append('userId', session!.user!.email!);
-          for (const attachment of attachments) {
-            try {
-              filesFormData.set('files', attachment.file);
-              const filesResult = await fetch('/api/ai/files', {
-                body: filesFormData,
-                method: 'POST',
-              });
-              const resultJson = await filesResult.json();
-              if (resultJson.status === 400) {
-                throw new Error(resultJson.message);
-              }
-              const filesResultJson: Map<string, string>[] =
-                  resultJson['openAiFileIds'];
-
-              fileIds.push(...filesResultJson);
-            } catch (e) {
-              toast.error(
-                  `Error uploading file ${attachment.fileName}. Please send the following message to the developers: ${e}`
-              );
-              console.error(
-                  `There was an error uploading the file: ${attachment.fileName}. Error: ${e}.`
-              );
-            }
-          }
-
-          await appendDocumentSpecificFileIds(item!['id'], fileIds);
-          setAttachments([]);
-          setUploadInProgress(false);
+          await uploadFiles(item)
         }
 
-        const formData = new FormData();
-        const serializedEditorValue = parseEditorAndGetDocumentAndSelection(
-            newMessage.content
-        );
-        formData.append('message', serializedEditorValue);
-        formData.append('threadId', item['threadId']);
-        formData.append('assistantId', chatAssistantId!);
-        formData.append(
-            'additionalInstructions',
-            `\
+        await sendMessage(item, newMessage)
+        setStatus('awaiting_message');
+      }
+    }
+  };
+
+  const sendMessage = async (item, newMessage: Message) => {
+
+    const formData = new FormData();
+    const serializedEditorValue = parseEditorAndGetDocumentAndSelection(
+      newMessage.content
+    );
+    formData.append('message', serializedEditorValue);
+    formData.append('threadId', item['threadId']);
+    formData.append('assistantId', chatAssistantId!);
+    formData.append(
+      'additionalInstructions',
+      `\
         # ROLE
         ${selectedAssistant['role']}
 
@@ -181,56 +153,52 @@ const ChatContent = ({
         # ADDITIONAL RULES
         ${selectedAssistant['rules']}
       `
-        );
+    );
 
-        const result = await fetch('/api/ai/chat/brainstormassistant', {
-          body: formData,
-          method: 'POST',
-        });
+    const result = await fetch('/api/ai/chat/brainstormassistant', {
+      body: formData,
+      method: 'POST',
+    });
 
-        if (result.body == null) {
-          throw new Error('The response body is empty.');
-        }
-
-        try {
-          for await (const { type, value } of readDataStream(
-              result.body.getReader()
-          )) {
-            switch (type) {
-              case 'assistant_message': {
-                const message: Message = {
-                  id: value.id,
-                  content: value.content[0].text.value,
-                  role: value.role,
-                }
-                setActiveChatMessages((messages: Message[]) => [
-                  ...messages,
-                  message,
-                ]);
-
-                if (message.content.includes("<Document>")) {
-                  const { document, documentTitle } = parseAssistantResponse(message)
-                  updateEditorWithNewDocument(document)()
-                  toast.success(`Changing the current document to ${documentTitle}`)
-                }
-
-                break;
-              }
-              case 'error': {
-                throw new Error(
-                    `There was an error processing the message. Please submit a bug report with the following message: ${value}`
-                );
-              }
-            }
-          }
-        } catch (error) {
-          toast.error(error.message);
-        }
-
-        setStatus('awaiting_message');
-      }
+    if (result.body == null) {
+      throw new Error('The response body is empty.');
     }
-  };
+
+    try {
+      for await (const { type, value } of readDataStream(
+        result.body.getReader()
+      )) {
+        switch (type) {
+          case 'assistant_message': {
+            const message: Message = {
+              id: value.id,
+              content: value.content[0].text.value,
+              role: value.role,
+            }
+            setActiveChatMessages((messages: Message[]) => [
+              ...messages,
+              message,
+            ]);
+
+            if (message.content.includes("<Document>")) {
+              const { document, documentTitle } = parseAssistantResponse(message)
+              updateEditorWithNewDocument(document)()
+              toast.success(`Changing the current document to ${documentTitle}`)
+            }
+
+            break;
+          }
+          case 'error': {
+            throw new Error(
+              `There was an error processing the message. Please submit a bug report with the following message: ${value}`
+            );
+          }
+        }
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
 
   const handleKeyPress = (e) => {
     adjustTextAreaHeight()
@@ -255,7 +223,48 @@ const ChatContent = ({
     setAttachments(tempAttachments);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFiles = async (item) => {
+    setUploadInProgress(true);
+    attachments.forEach((attachment) =>
+      changeFileUploadStatus(attachment, 'uploading')
+    );
+    const fileIds: any[] = [];
+
+    const filesFormData = new FormData();
+    filesFormData.append('vectorStoreId', item!['vectorStoreId']);
+    filesFormData.append('userId', session!.user!.email!);
+    for (const attachment of attachments) {
+      try {
+        filesFormData.set('files', attachment.file);
+        const filesResult = await fetch('/api/ai/files', {
+          body: filesFormData,
+          method: 'POST',
+        });
+        const resultJson = await filesResult.json();
+        if (resultJson.status === 400) {
+          throw new Error(resultJson.message);
+        }
+        const filesResultJson: Map<string, string>[] =
+          resultJson['openAiFileIds'];
+
+        fileIds.push(...filesResultJson);
+      } catch (e) {
+        toast.error(
+          `Error uploading file ${attachment.fileName}. Please send the following message to the developers: ${e}`
+        );
+        console.error(
+          `There was an error uploading the file: ${attachment.fileName}. Error: ${e}.`
+        );
+      }
+    }
+
+    await appendDocumentSpecificFileIds(item!['id'], fileIds);
+    setAttachments([]);
+    setUploadInProgress(false);
+  }
+
+  const updateAttachments = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(e.target.files)
     const files = e.target.files;
     if (files) {
       const newAttachments = Array.from(files).map((file) => ({
@@ -378,7 +387,7 @@ const ChatContent = ({
       className={
         'flex flex-col items-start p-4 ' + chatInputPositioningCssClass
       }
-      style={{ width: editorOpen ? '40%' : '50%' }}
+      style={{ width: editorOpen ? '45%' : '50%' }}
       transition={{
         damping: 20,
         duration: 0.2,
@@ -511,7 +520,7 @@ const ChatContent = ({
           <input
             ref={fileInputRef}
             className="hidden"
-            onChange={handleFileUpload}
+            onChange={updateAttachments}
             type="file"
             multiple
           />
