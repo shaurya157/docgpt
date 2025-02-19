@@ -107,6 +107,18 @@ export async function getUserOwnedDocuments(userId: string) {
   );
 }
 
+export async function updateDocumentTitle(documentId: string, documentName: string) {
+  const documentsRef = collection(db, "documents");
+  let error, result;
+  try {
+    result = await setDoc(doc(documentsRef, documentId), { documentName }, { merge: true })
+  } catch (e) {
+    error = e;
+  }
+
+  return { error, result }
+}
+
 export async function saveCurrentDocumentState(
   userId: string,
   documentName: string,

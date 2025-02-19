@@ -23,11 +23,10 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'chat' | 'document'>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
-  const { userOwnedDocuments } = useUserDataContext();
   const { activeUserDocument, setActiveUserDocument } = useDocument();
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
   const { data: session } = useSession();
-  const { chatAssistantId } = useUserDataContext();
+  const { chatAssistantId, userOwnedDocuments } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const { selectedTemplate } = useChatSettings();
@@ -40,6 +39,7 @@ export default function Home() {
     redirect('/');
   }
 
+  // TODO: Refactor to usrOwnedDocuments and setUserOwnedDocuments, no need for the below
   const [items, setItems] = useState({
     chat: userOwnedDocuments,
     document: userOwnedDocuments,
@@ -99,6 +99,12 @@ export default function Home() {
   const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
     setStatus('in_progress');
     setActiveUserDocument(item);
+
+    const newUserOwnedDocs = [item].concat(userOwnedDocuments?.filter((doc) => item["id"] !== doc["id"]))
+    setItems((prev) => ({
+      ...prev,
+      chat: newUserOwnedDocs,
+    }));
 
     if (item["document"].length > 1) {
       setEditorOpen(true)

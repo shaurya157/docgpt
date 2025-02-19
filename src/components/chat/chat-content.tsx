@@ -15,7 +15,7 @@ import { ChatSettings } from '@/components/chat/chat-settings';
 import { chatSettingsHotLinks } from '@/components/chat/hot-links';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
-import { appendDocumentSpecificFileIds } from '@/firebase/firestore-dao';
+import {appendDocumentSpecificFileIds, updateDocumentTitle} from '@/firebase/firestore-dao';
 import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import {DotAnimation} from "@/utils/animations";
@@ -182,7 +182,7 @@ const ChatContent = ({
 
             if (message.content.includes("<Document>")) {
               const { document, documentTitle } = parseAssistantResponse(message)
-              updateEditorWithNewDocument(document)()
+              updateEditorWithNewDocument(document, documentTitle)()
               toast.success(`Changing the current document to ${documentTitle}`)
             }
 
@@ -279,9 +279,11 @@ const ChatContent = ({
     }
   };
 
-  const updateEditorWithNewDocument = (document: string) => {
-    return () => {
-      if (!editorOpen) { setEditorOpen(true) }
+  const updateEditorWithNewDocument = (document: string, documentTitle: string) => {
+    return async () => {
+      if (!editorOpen) {
+        setEditorOpen(true)
+      }
       let result: any[] = [];
       const doubleNewLineSplitArr = document.split('\n\n');
       doubleNewLineSplitArr.forEach((doubleLineSplitText) => {
@@ -291,9 +293,9 @@ const ChatContent = ({
           const listStyleType = classifyStart(singleNewLineSplitText);
           if (listStyleType) {
             const deserializedList = deserializeListMd(
-              singleNewLineSplitText,
-              editor,
-              listStyleType
+                singleNewLineSplitText,
+                editor,
+                listStyleType
             );
 
             result = result.concat(deserializedList);
@@ -304,8 +306,18 @@ const ChatContent = ({
         });
       });
 
-      const currActiveDoc = { ...activeUserDocument };
+
+      // A bit messy below. TODO: Refactor a bit here
+      const currActiveDoc = {...activeUserDocument};
       currActiveDoc['document'] = result;
+      if (currActiveDoc["documentName"] === "Untitled") {
+        currActiveDoc["documentName"] = documentTitle
+        const {error, result} = await updateDocumentTitle(currActiveDoc["id"], documentTitle);
+        if (error) {
+          console.error(`Error saving title to db. Error: ${error}`)
+        }
+      }
+
       setActiveItem(currActiveDoc, true);
     };
   };
@@ -346,7 +358,7 @@ const ChatContent = ({
           <div>{prepending}</div>
           <div
             className="inline-block w-auto cursor-pointer rounded-lg bg-sky-600 bg-opacity-50 p-2"
-            onClick={updateEditorWithNewDocument(document)}
+            onClick={updateEditorWithNewDocument(document, documentTitle)}
           >
             <div className="flex">
               <FileText />

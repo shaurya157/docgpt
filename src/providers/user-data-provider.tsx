@@ -7,6 +7,7 @@ type UserDataContext = {
   setAssistantId: React.Dispatch<React.SetStateAction<string>>;
   setChatAssistantId: React.Dispatch<React.SetStateAction<string>>;
   setFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
+  setUserOwnedDocuments: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
   setUserTemplates: React.Dispatch<
     React.SetStateAction<Map<string, any>[] | null | undefined>
   >;
@@ -48,7 +49,7 @@ export default function UserDataContextProvider({
   const [files, setFiles] = useState(filesData);
   const [vectorStoreId, setVectorStoreId] = useState(openAiVectorStoreId);
   const [userTemplates, setUserTemplates] = useState(userDefinedTemplates);
-  const [userOwnedDocuments] = useState(userDocuments);
+  const [userOwnedDocuments, setUserOwnedDocuments] = useState(userDocuments);
 
   return (
     <UserDataContext.Provider
@@ -59,6 +60,7 @@ export default function UserDataContextProvider({
         setAssistantId,
         setChatAssistantId,
         setFiles,
+        setUserOwnedDocuments,
         setUserTemplates,
         setVectorStoreId,
         userOwnedDocuments,
