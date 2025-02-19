@@ -94,7 +94,7 @@ export default async function RootLayout({
                   <ChatSettingsProvider>
                     {!session?.user ? <PreLoginHeader /> : <div></div>}
                     <div className="flex-1">{children}</div>
-                    {!session?.user ? <PreLoginFooter /> : <div></div>}
+                    {/*{!session?.user ? <PreLoginFooter /> : <div></div>}*/}
                   </ChatSettingsProvider>
                 </AssistantsProvider>
               </DocumentProvider>

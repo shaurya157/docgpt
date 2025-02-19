@@ -2,10 +2,10 @@ import { Button } from '@/components/plate-ui/button';
 
 import { signIn, signOut } from '../../../auth';
 
-export function SignIn({
-  provider,
-  ...props
-}: { provider?: string } & React.ComponentPropsWithRef<typeof Button>) {
+interface SignInButtonProps {
+    displayText: string;
+}
+export function SignIn({ displayText, provider, ...props}: { provider?: string } & React.ComponentPropsWithRef<typeof Button> & SignInButtonProps) {
   return (
     <form
       className="mr-4"
@@ -14,7 +14,7 @@ export function SignIn({
         await signIn(provider, { redirectTo: '/home' });
       }}
     >
-      <Button {...props}>Sign In</Button>
+      <Button {...props}>{displayText}</Button>
     </form>
   );
 }

@@ -46,8 +46,6 @@ export default function Home() {
   });
 
   const handleNewChat = async () => {
-    setEditorOpen(false)
-    setActiveChatMessages([]);
     const createThreadResult = await fetch('/api/ai/thread/create', {
       body: JSON.stringify({ userId: session!.user!.email }),
       method: 'POST',
@@ -56,6 +54,10 @@ export default function Home() {
     toast.success(
       `Thread created successfully, using fresh session with thread ID: ${responseJson['threadId']}`
     );
+
+    // Must do this after thread is created
+    setEditorOpen(false)
+    setActiveChatMessages([]);
     const item = {
       document: selectedTemplate["template"],
       documentName: `Untitled`,

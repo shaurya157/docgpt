@@ -1,13 +1,13 @@
 import Link from 'next/link';
 
-import SignInButton from "@/components/landing/sign-in-button";
+import {SignIn} from "@/components/landing/auth";
 
 export default function PreLoginHeader() {
   return (
     <div className="flex w-full flex-row items-stretch justify-end border-b-2 border-gray-500 border-opacity-25 p-4 align-bottom">
-      <Link className="flex items-center" href="/leo">
+      <Link className="flex items-center" href="/">
         <b className="mr-14">
-          <u>Leo&#39;s capabilities</u>
+          <u>Home</u>
         </b>
       </Link>
 
@@ -18,7 +18,9 @@ export default function PreLoginHeader() {
       <Link className="flex items-center" href="/contact">
         <b className="mr-14">Contact</b>
       </Link>
-      <SignInButton />
+
+      <SignIn displayText="Sign In" className="bg-gray-400"/>
+      <SignIn displayText="Try it for free" />
     </div>
   );
 }

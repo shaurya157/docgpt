@@ -411,9 +411,9 @@ const Sidebar = ({
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-2">
-          {items?.map((item) => (
+          {items?.map((item, idx) => (
             <div
-              key={item.id}
+              key={idx}
               className={`cursor-pointer group mb-1 flex w-full items-center justify-between rounded-md p-1.5 ${
                 activeUserDocument && activeUserDocument!['id'] === item.id
                   ? 'bg-[#ECECEC]'
