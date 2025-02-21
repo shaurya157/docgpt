@@ -26,7 +26,7 @@ export default function Home() {
   const { activeUserDocument, setActiveUserDocument } = useDocument();
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
   const { data: session } = useSession();
-  const { chatAssistantId, userOwnedDocuments } = useUserDataContext();
+  const { chatAssistantId, userOwnedDocuments, setUserOwnedDocuments } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const { selectedTemplate } = useChatSettings();
@@ -55,8 +55,6 @@ export default function Home() {
       `Thread created successfully, using fresh session with thread ID: ${responseJson['threadId']}`
     );
 
-    // Must do this after thread is created
-    setEditorOpen(false)
     setActiveChatMessages([]);
     const item = {
       document: selectedTemplate["template"],
@@ -102,15 +100,11 @@ export default function Home() {
     setStatus('in_progress');
     setActiveUserDocument(item);
 
-    const newUserOwnedDocs = [item].concat(userOwnedDocuments?.filter((doc) => item["id"] !== doc["id"]))
-    setItems((prev) => ({
-      ...prev,
-      chat: newUserOwnedDocs,
-    }));
-
     if (item["document"].length > 1) {
+      console.log("OPENING")
       setEditorOpen(true)
     } else {
+      console.log("CLOSING 2")
       setEditorOpen(false)
     }
     editor.tf.setValue(item["document"])
@@ -151,8 +145,30 @@ export default function Home() {
       }
     }
 
+
+    // TODO: FIX THIS!!! IMPORTANT!!!
+    // const newUserOwnedDocs = [item].concat(userOwnedDocuments?.filter((doc) => item["id"] !== doc["id"]))
+    // setUserOwnedDocuments(newUserOwnedDocs);
     setStatus('awaiting_message');
   };
+
+  const resetState = () => {
+    setActiveChatMessages([])
+    setEditorOpen(false);
+    setActiveUserDocument({
+      document: [
+        {
+          id: '1',
+          children: [
+            {
+              text: '',
+            },
+          ],
+          type: 'h1',
+        },
+      ]
+    })
+  }
 
   const onboardingSteps = [
     {
@@ -204,7 +220,7 @@ export default function Home() {
     <ChatSettingsProvider setActiveItem={handleSetActiveItem}>
       <div className="flex h-screen flex-col">
         <HomeHeader
-          onNewChat={handleNewChat}
+          onNewChat={resetState}
           activeUserDocument={activeUserDocument}
           editorOpen={editorOpen}
           isSidebarOpen={isSidebarOpen}
