@@ -6,7 +6,6 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SessionProvider } from 'next-auth/react';
 import {Toaster} from "sonner";
 
-import PreLoginFooter from '@/components/landing/pre-login-footer';
 import PreLoginHeader from '@/components/landing/pre-login-header';
 import AssistantsProvider from '@/providers/assistants-provider';
 import ChatSettingsProvider from '@/providers/chat-settings-provider';
@@ -94,7 +93,7 @@ export default async function RootLayout({
                   <ChatSettingsProvider>
                     {!session?.user ? <PreLoginHeader /> : <div></div>}
                     <div className="flex-1">{children}</div>
-                    {/*{!session?.user ? <PreLoginFooter /> : <div></div>}*/}
+                    {/* {!session?.user ? <PreLoginFooter /> : <div></div>} */}
                   </ChatSettingsProvider>
                 </AssistantsProvider>
               </DocumentProvider>
