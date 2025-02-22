@@ -26,7 +26,7 @@ export default function Home() {
   const { activeUserDocument, setActiveUserDocument } = useDocument();
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
   const { data: session } = useSession();
-  const { chatAssistantId, userOwnedDocuments, setUserOwnedDocuments } = useUserDataContext();
+  const { chatAssistantId, setUserOwnedDocuments, userOwnedDocuments } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const { selectedTemplate } = useChatSettings();
@@ -101,10 +101,8 @@ export default function Home() {
     setActiveUserDocument(item);
 
     if (item["document"].length > 1) {
-      console.log("OPENING")
       setEditorOpen(true)
     } else {
-      console.log("CLOSING 2")
       setEditorOpen(false)
     }
     editor.tf.setValue(item["document"])
@@ -149,8 +147,21 @@ export default function Home() {
     // TODO: FIX THIS!!! IMPORTANT!!!
     // const newUserOwnedDocs = [item].concat(userOwnedDocuments?.filter((doc) => item["id"] !== doc["id"]))
     // setUserOwnedDocuments(newUserOwnedDocs);
+    updateUserOwnedDocumentsState(item)
     setStatus('awaiting_message');
   };
+
+  const updateUserOwnedDocumentsState = (item) => {
+      const userDocs = userOwnedDocuments
+      userDocs?.forEach((doc) => {
+        if (doc["id"] === item["id"]) {
+          doc["documentName"] = item["documentName"]
+          doc["document"] = item["document"]
+        }
+      })
+
+    setUserOwnedDocuments(userDocs)
+  }
 
   const resetState = () => {
     setActiveChatMessages([])

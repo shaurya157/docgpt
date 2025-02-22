@@ -3,25 +3,25 @@
 import React, { createContext, useContext, useState } from 'react';
 
 type DocumentSettings = {
-  activeTemplate?: Map<string, string | any> | null;
-  setActiveTemplate?: React.Dispatch<React.SetStateAction<Map<string, string>>>;
-  providedTemplates?: any[] | null;
-  activeUserDocument?: any | null;
   setActiveUserDocument: React.Dispatch<React.SetStateAction<any>>;
+  activeTemplate?: Map<string, any | string> | null;
+  activeUserDocument?: any | null;
+  providedTemplates?: any[] | null;
+  setActiveTemplate?: React.Dispatch<React.SetStateAction<Map<string, string>>>;
 };
 export const TemplateSettings = createContext<DocumentSettings | null>(null);
 
 interface DocumentProviderProps {
-  template?: any | null;
-  docgptProvidedTemplates?: any | null;
   children: React.ReactNode;
+  docgptProvidedTemplates?: any | null;
+  template?: any | null;
   userDocument?: any | null;
 }
 
 export default function DocumentProvider({
   children,
-  template,
   docgptProvidedTemplates,
+  template,
   userDocument,
 }: DocumentProviderProps) {
   const [activeTemplate, setActiveTemplate] = useState(template);
@@ -32,9 +32,9 @@ export default function DocumentProvider({
     <TemplateSettings.Provider
       value={{
         activeTemplate,
-        setActiveTemplate,
-        providedTemplates,
         activeUserDocument,
+        providedTemplates,
+        setActiveTemplate,
         setActiveUserDocument,
       }}
     >

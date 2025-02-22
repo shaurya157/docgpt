@@ -235,6 +235,7 @@ export const useOpenState = (initiallyOpen?: boolean) => {
 
   return {
     open,
-    onOpenChange,
+    setOpen,
+    onOpenChange
   };
 };

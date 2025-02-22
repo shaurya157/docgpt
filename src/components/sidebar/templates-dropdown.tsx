@@ -34,10 +34,6 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
       const currActiveDoc = { ...activeUserDocument };
       currActiveDoc['document'] = template['template'];
       setActiveItem(currActiveDoc, true);
-      // if (setActiveItem) {
-      //   setActiveItem(currActiveDoc, true);
-      // }
-      // setActiveTemplate?.(template);
       toast.info(`Using ${template['templateName']} to generate docs.`);
     };
   };
@@ -65,19 +61,26 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
         className="flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto p-6"
         align="start"
       >
-        <b>Your Templates</b>
-        <div className="h-64 overflow-y-scroll rounded-md border border-gray-300 border-opacity-25">
+        <div className="mb-2">
+          <b className="mr-2">Your Templates</b>
+          <Button variant="roundedClear">
+            <Link href="/templates/create" target="_blank">
+              Create New Template
+            </Link>
+          </Button>
+        </div>
+        <div className="h-64 p-2 overflow-y-scroll rounded-md border border-gray-300 border-opacity-25">
           {userTemplates?.map((templ, idx) => {
             return (
               <div
                 key={'user-templates-' + templ['templateName'] + idx}
-                className="flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
+                className="group flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
               >
                 <p className="w-64">{templ['templateName']}</p>
-                <Button className="mr-1" onClick={handleSelect(templ)}>
+                <Button variant="roundedClear" className="mr-1" onClick={handleSelect(templ)}>
                   Apply
                 </Button>
-                <Button className="mr-2">
+                <Button variant="link" className="mr-1 hidden group-hover:block">
                   <Link
                     href={`/templates/${templ['templateName']}`}
                     target="_blank"
@@ -86,7 +89,7 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
                   </Link>
                 </Button>
                 <TrashIcon
-                  className="cursor-pointer"
+                  className="hidden group-hover:block cursor-pointer"
                   onClick={handleDelete(templ['id'])}
                 />
               </div>
@@ -94,8 +97,8 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
           })}
         </div>
 
-        <b>DocGPT Provided Templates</b>
-        <div className="h-64 rounded-md border border-gray-300 border-opacity-25">
+        <b className="my-2">DocGPT Provided Templates</b>
+        <div className="group h-64 p-2 rounded-md border border-gray-300 border-opacity-25">
           {providedTemplates?.map((templ, idx) => {
             return (
               <div
@@ -103,10 +106,10 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
                 className=" flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
               >
                 <p className="w-64 ">{templ['templateName']}</p>
-                <Button className="mr-1" onClick={handleSelect(templ)}>
+                <Button variant="roundedClear" className="mr-1" onClick={handleSelect(templ)}>
                   Apply
                 </Button>
-                <Button variant="default">
+                <Button variant="link" className="hidden group-hover:block cursor-pointer">
                   <Link
                     href={`/templates/${templ['templateName']}`}
                     target="_blank"
@@ -118,12 +121,6 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
             );
           })}
         </div>
-
-        <Button>
-          <Link href="/templates/create" target="_blank">
-            Create New Template
-          </Link>
-        </Button>
       </DropdownMenuContent>
     </DropdownMenu>
   );

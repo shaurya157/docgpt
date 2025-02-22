@@ -6,7 +6,7 @@ import { deserializeMd } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
 import { Message } from 'ai';
 import { motion } from 'framer-motion';
-import { FileText } from 'lucide-react';
+import { FileText, PenIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import { ChatSettings } from '@/components/chat/chat-settings';
 import { chatSettingsHotLinks } from '@/components/chat/hot-links';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
+import { useOpenState } from '@/components/plate-ui/dropdown-menu';
 import {appendDocumentSpecificFileIds, updateDocumentTitle} from '@/firebase/firestore-dao';
 import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
@@ -81,6 +82,7 @@ const ChatContent = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatSettingsOpenState = useOpenState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -306,7 +308,6 @@ const ChatContent = ({
         });
       });
 
-
       // A bit messy below. TODO: Refactor a bit here
       const currActiveDoc = {...activeUserDocument};
       currActiveDoc['document'] = result;
@@ -418,14 +419,22 @@ const ChatContent = ({
                 return (
                   <Button
                     key={hotlink['displayName']}
+                    variant="roundedClear"
                     className="m-2"
                     onClick={handleQuickLinkClick(hotlink)}
                   >
                     {hotlink['displayName']}
                   </Button>
                 );
-              })}
+              })} or
+              <br />
+              <Button variant="roundedClear" className="m-2" onClick={() => chatSettingsOpenState.setOpen(true)}>
+                <PenIcon />
+                Create a new document
+              </Button>
             </div>
+
+
           </div>
         </div>
       )}
@@ -537,8 +546,7 @@ const ChatContent = ({
             multiple
           />
           <ChatSettings
-            activeUserDocument={activeUserDocument}
-            setActiveItem={setActiveItem}
+            chatSettingsOpenState={chatSettingsOpenState}
           />
           <button
             className="cursor-pointer rounded-lg p-2 hover:bg-gray-200"

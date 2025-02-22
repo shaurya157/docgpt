@@ -6,7 +6,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  useOpenState,
 } from '@/components/plate-ui/dropdown-menu';
 import { useAssistantDefinitions } from '@/providers/assistants-provider';
 import { useChatSettings } from '@/providers/chat-settings-provider';
@@ -14,17 +13,14 @@ import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface ChatSettingProps {
-  activeUserDocument: {} | undefined;
-  setActiveItem: (item, documentRefreshOnly?: boolean) => void;
+  chatSettingsOpenState: {}
 }
 export const ChatSettings = ({
-  activeUserDocument,
-  setActiveItem,
+  chatSettingsOpenState,
 }: ChatSettingProps) => {
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
   const { userTemplates } = useUserDataContext();
-  const openState = useOpenState(false);
   const {
     selectedAssistant,
     selectedTemplate,
@@ -41,7 +37,7 @@ export const ChatSettings = ({
   };
 
   return (
-    <DropdownMenu modal={false} {...openState}>
+    <DropdownMenu modal={false} {...chatSettingsOpenState}>
       <DropdownMenuTrigger asChild>
         <button className="cursor-pointer rounded-lg p-2 hover:bg-gray-200">
           <Settings />

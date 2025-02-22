@@ -35,8 +35,10 @@ export const buttonVariants = cva(
           link: 'text-primary underline-offset-4 hover:underline',
           outline:
               'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+          roundedClear:
+              'bg-white outline outline-black hover:bg-black hover:text-white',
           secondary:
-              'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+              'bg-secondary text-secondary-foreground hover:bg-secondary/80'
         },
       },
     }
