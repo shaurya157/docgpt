@@ -145,7 +145,7 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
 
   return (
     <div className="w-[350px] p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <h2 className="font-semibold">Context Documents</h2>
           <ToolTip

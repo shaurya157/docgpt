@@ -356,17 +356,18 @@ const ChatContent = ({
 
       return (
         <div className="space-y-4">
-          <div>{prepending}</div>
-          <div
-            className="inline-block w-auto cursor-pointer rounded-lg bg-sky-600 bg-opacity-50 p-2"
+          <div className="whitespace-normal">{prepending}</div>
+          <Button
+            variant="roundedClear"
+            className="inline-block w-auto cursor-pointer rounded-lg bg-black bg-opacity-50 p-2"
             onClick={updateEditorWithNewDocument(document, documentTitle)}
           >
-            <div className="flex">
-              <FileText />
-              <div className="mx-1 ">{documentTitle}</div>
+            <div className="flex height-20">
+              <FileText style={{ height: '100%' }}/>
+              <div className="mx-1">{documentTitle}</div>
             </div>
-          </div>
-          <div>{appending}</div>
+          </Button>
+          <div className="whitespace-normal">{appending}</div>
         </div>
       );
     }
@@ -495,21 +496,6 @@ const ChatContent = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
-
-      <style global jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-
-        .scroll-smooth {
-          scroll-behavior: smooth;
-        }
-      `}</style>
 
       <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
         {attachments.length > 0 && (

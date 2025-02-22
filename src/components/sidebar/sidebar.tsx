@@ -326,15 +326,9 @@ const Sidebar = ({
             </a>
             <a
               className="block text-gray-600 underline decoration-1 underline-offset-4 hover:text-gray-900"
-              href="mailto:leo@docgpt.work"
+              href="mailto:hello@docgpt.work"
             >
-              founders@docgpt.work
-            </a>
-            <a
-              className="block text-gray-600 underline decoration-1 underline-offset-4 hover:text-gray-900"
-              href="mailto:leo@docgpt.work"
-            >
-              bugs@docgpt.work
+              hello@docgpt.work
             </a>
           </div>
         );

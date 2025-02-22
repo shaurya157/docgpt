@@ -355,6 +355,10 @@
   .height-30 {
     height: 30px;
   }
+
+  .height-20 {
+    height: 20px;
+  }
 }
 
 .react-markdown ol{

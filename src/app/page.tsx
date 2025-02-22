@@ -1,16 +1,18 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
-import {Button} from "@/components/plate-ui/button";
 import {VideoIcon} from "lucide-react";
+import { useSession } from 'next-auth/react';
+import Image from "next/image";
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+
+import {Button} from "@/components/plate-ui/button";
 
 import Chatbox from '../assets/images/chatbox.png';
 import ContextDocs from '../assets/images/contextdocs.png';
+import QuickEdit from '../assets/images/quickedit.png';
 import Site from '../assets/images/site.png';
 import Templates from '../assets/images/templates.png';
-import QuickEdit from '../assets/images/quickedit.png';
-import Image from "next/image";
 
 export default function Landing() {
   const { data: session } = useSession();
@@ -30,8 +32,13 @@ export default function Landing() {
             Create PRDs using our tailored LLMs and purpose built chat and document editing interface.
           </p>
           <div className="flex justify-center">
-            <Button className="px-10 mr-2">Try it for free</Button>
-            <Button className="px-10">
+            <Button className="mr-2">
+              <Link href="/pricing">
+                Try it for free
+              </Link>
+
+            </Button>
+            <Button variant="roundedClear" className="px-10">
               <VideoIcon />
               DocGPT in 60 seconds
             </Button>
@@ -52,9 +59,6 @@ export default function Landing() {
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
             DocGPT will ask clarifying questions to make sure it has the necessary information to avoid vague responses.
           </p>
-          <div className="flex justify-center">
-            <Button className="px-10 mr-2">Try it for free</Button>
-          </div>
         </div>
         <div className="w-1/2 flex justify-center">
           <Image alt="ContextDocs image showing file upload functionality for RAG - Retrieval Augmented Generation to help users automatically query all their files to generate new documents" src={ContextDocs}/>
@@ -68,9 +72,6 @@ export default function Landing() {
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
             DocGPT’s document editing interface incorporates a side-by-side chat interface, allowing you to rapidly provide document editing instructions.
           </p>
-          <div className="flex justify-center">
-            <Button className="px-10 mr-2">Try it for free</Button>
-          </div>
         </div>
         <div className="w-1/2 flex justify-center">
           <Image alt="ContextDocs image showing file upload functionality for RAG - Retrieval Augmented Generation to help users automatically query all their files to generate new documents" src={Site}/>
@@ -84,9 +85,6 @@ export default function Landing() {
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
             Create a custom template and select it when creating a PRD or other document. We will default to using this custom template when creating future documents of the same type.
           </p>
-          <div className="flex justify-center">
-            <Button className="px-10 mr-2">Try it for free</Button>
-          </div>
         </div>
         <div className="w-1/2 flex justify-center">
           <Image alt="Templates for templatized AI enhanced document creation" src={Templates}/>
@@ -100,9 +98,6 @@ export default function Landing() {
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
             Create a custom template and select it when creating a PRD or other document. We will default to using this custom template when creating future documents of the same type.
           </p>
-          <div className="flex justify-center">
-            <Button className="px-10 mr-2">Try it for free</Button>
-          </div>
         </div>
         <div className="w-1/2 flex justify-center">
           <Image alt="Quick Edit functionality for editing using AI on the fly" src={QuickEdit}/>
@@ -116,9 +111,6 @@ export default function Landing() {
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
             DocGPT is built to minimize the time that tech teams spend either not talking to customers or writing code. Doc GPT can..
           </p>
-          <div className="flex justify-center">
-            <Button className="px-10 mr-2">Try it for free</Button>
-          </div>
         </div>
       </section>
 

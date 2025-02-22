@@ -1,4 +1,4 @@
-'use client';
+import Link from 'next/link';
 
 import { Button } from '@/components/plate-ui/button';
 
@@ -171,7 +171,7 @@ export default function Pricing() {
                 <span>Access to community slack channel</span>
               </li>
             </ul>
-            <Button className="mt-auto"> Get Started</Button>
+            <Button className="mt-auto">Get Started</Button>
           </div>
           <div className="mx-auto flex max-w-lg flex-col rounded-lg border border-gray-100 bg-white p-6 text-center text-gray-900 shadow dark:border-gray-600 dark:bg-gray-800 dark:text-white xl:p-8">
             <h3 className="mb-4 text-2xl font-semibold">Enterprise</h3>
@@ -230,7 +230,11 @@ export default function Pricing() {
                 </span>
               </li>
             </ul>
-            <Button className="mt-auto"> Get In Touch</Button>
+            <Button className="mt-auto">
+              <Link href="/contact">
+                Get In Touch
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
