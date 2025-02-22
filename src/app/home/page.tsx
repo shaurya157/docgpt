@@ -166,7 +166,7 @@ export default function Home() {
   const resetState = () => {
     setActiveChatMessages([])
     setEditorOpen(false);
-    setActiveUserDocument({
+    const doc = {
       document: [
         {
           id: '1',
@@ -178,7 +178,9 @@ export default function Home() {
           type: 'h1',
         },
       ]
-    })
+    }
+    setActiveUserDocument(doc)
+    editor.tf.setValue(doc["document"])
   }
 
   const onboardingSteps = [

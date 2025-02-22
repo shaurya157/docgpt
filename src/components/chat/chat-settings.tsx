@@ -48,6 +48,7 @@ export const ChatSettings = ({
           <h2 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-xl">
             Chat Settings
           </h2>
+
           <div className="flex flex-col">
             <div className="m-2">
               <span className="mb-5 text-gray-500">Assistant</span>
@@ -72,10 +73,10 @@ export const ChatSettings = ({
                 value={selectedTemplate['id']}
                 onChange={handleTemplateChange}
               >
-                {providedTemplates?.concat(userTemplates).map((template) => {
+                {providedTemplates?.concat(userTemplates).map((template, idx) => {
                   return (
                     <option
-                      key={template['templateName']}
+                      key={idx}
                       value={template['id']}
                     >
                       {template['templateName']}
