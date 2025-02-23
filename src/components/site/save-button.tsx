@@ -68,7 +68,7 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
       session!.user!.email!,
       templName,
       editor.children,
-      template!['templateOwnerId'] == session!.user!.email!,
+      template!['templateOwnerId'] === session!.user!.email!,
       template!['id']
     );
     if (res.error) {
@@ -82,7 +82,7 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
     return (
       <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
-          <Button variant="roundedClear" className="fixed right-4 bottom-4 z-50" type="submit">Save Template</Button>
+          <Button variant="roundedClear" className="fixed right-4 bottom-4 z-50" type="submit">{template["templateOwnerId"] === "docgpt" ? "Copy as new" : "Save Template"}</Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
@@ -99,7 +99,7 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
                 template ? template['templateName'] : templateName
               }
             ></Input>
-            <Button variant="roundedClear" type="submit">Save Template</Button>
+            <Button variant="roundedClear" type="submit">{template["templateOwnerId"] === "docgpt" ? "Copy as new" : "Save Template"}</Button>
           </form>
         </DropdownMenuContent>
       </DropdownMenu>

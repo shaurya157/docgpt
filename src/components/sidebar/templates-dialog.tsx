@@ -24,6 +24,7 @@ export const TemplatesDialog = ({
 }: TemplatesDialogProps) => {
   const editor = useCreateEditor(displayedTemplate["template"])
 
+  console.log(displayedTemplate)
   useEffect(() => {
     editor.tf.setValue(displayedTemplate["template"])
   }, [displayedTemplate, editor.tf]);

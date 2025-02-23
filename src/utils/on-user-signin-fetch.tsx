@@ -85,6 +85,7 @@ export async function getTemplates(templateOwnerId: string) {
             id: doc.id,
             template: doc.get('template'),
             templateName: doc.get('templateName'),
+            templateOwnerId: doc.get('templateOwnerId')
         };
 
         result.push(res);

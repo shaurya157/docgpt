@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useState } from 'react';
 
 import { FileIcon, TrashIcon } from 'lucide-react';
-import Link from 'next/link';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
@@ -26,22 +25,21 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
   const [ openDialog, setOpenDialog ] = useState(false);
   const { setUserTemplates, userTemplates } = useUserDataContext();
   const { activeUserDocument, providedTemplates } = useDocument();
-  const [ displayedTemplate, setDisplayedTemplate ] = useState(
-    {
-      template: [
-        {
-          id: '1',
-          children: [
-            {
-              text: '',
-            },
-          ],
-          type: 'h1',
-        },
-      ],
-      templateName: "No Template"
-    }
-  )
+  const newTemplate = {
+    template: [
+      {
+        id: '1',
+        children: [
+          {
+            text: '',
+          },
+        ],
+        type: 'h1',
+      },
+    ],
+    templateName: "New Template"
+  }
+  const [ displayedTemplate, setDisplayedTemplate ] = useState(newTemplate)
 
   const handleApply = (template) => {
     return () => {
@@ -69,6 +67,10 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
     }
   }
 
+  const updateUserTemplateState = () => {
+
+  }
+
   return (
     <DropdownMenu modal={false} {...openState}>
       <DropdownMenuTrigger asChild>
@@ -85,10 +87,8 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
         <TemplatesDialog open={openDialog} displayedTemplate={displayedTemplate} setOpen={setOpenDialog}/>
         <div className="mb-2 flex items-center justify-between">
           <b className="mr-2">Your Templates</b>
-          <Button variant="roundedClear">
-            <Link href="/templates/create" target="_blank">
-              Create New Template
-            </Link>
+          <Button variant="roundedClear" onClick={handlePreview(newTemplate)}>
+            Create New Template
           </Button>
         </div>
         <div className="no-scrollbar h-64 p-2 overflow-y-scroll rounded-md border border-gray-300 border-opacity-25">
