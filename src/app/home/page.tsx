@@ -13,6 +13,7 @@ import {useCreateEditor} from "@/components/editor/use-create-editor";
 import Sidebar from "@/components/sidebar/sidebar";
 import HomeHeader from "@/components/site/home-header";
 import OnboardingTooltip from "@/components/site/onboarding-tooltip";
+import { SaveButton } from '@/components/site/save-button';
 import {deleteDocument, saveCurrentDocumentState} from '@/firebase/firestore-dao';
 import ChatSettingsProvider, {useChatSettings} from "@/providers/chat-settings-provider";
 import {useDocument} from "@/providers/document-provider";
@@ -285,6 +286,7 @@ export default function Home() {
             }
           >
             <PlateEditor plateEditor={editor} />
+            <SaveButton editor={editor} purpose="document" />
           </div>
         </div>
       </div>

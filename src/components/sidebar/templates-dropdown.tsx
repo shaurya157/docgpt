@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState } from 'react';
 
 import { FileIcon, TrashIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -11,10 +12,10 @@ import {
   DropdownMenuTrigger,
   useOpenState,
 } from '@/components/plate-ui/dropdown-menu';
+import { TemplatesDialog } from '@/components/sidebar/templates-dialog';
 import { deleteTemplate } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
-import {TemplatesDialog} from "@/components/sidebar/templates-dialog";
 
 interface TemplatesDropdownProps {
   setActiveItem: (item, documentRefreshOnly) => void;
@@ -22,13 +23,26 @@ interface TemplatesDropdownProps {
 
 export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
   const openState = useOpenState();
+  const [ openDialog, setOpenDialog ] = useState(false);
   const { setUserTemplates, userTemplates } = useUserDataContext();
-  const {
-    activeUserDocument,
-    providedTemplates,
-  } = useDocument();
+  const { activeUserDocument, providedTemplates } = useDocument();
+  const [ displayedTemplate, setDisplayedTemplate ] = useState(
+    {
+      template: [
+        {
+          id: '1',
+          children: [
+            {
+              text: '',
+            },
+          ],
+          type: 'h1',
+        },
+      ]
+    }
+  )
 
-  const handleSelect = (template) => {
+  const handleApply = (template) => {
     return () => {
       const currActiveDoc = { ...activeUserDocument };
       currActiveDoc['document'] = template['template'];
@@ -47,6 +61,13 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
     };
   };
 
+  const handlePreview = (template) => {
+    return () => {
+      setOpenDialog(true)
+      setDisplayedTemplate(template)
+    }
+  }
+
   return (
     <DropdownMenu modal={false} {...openState}>
       <DropdownMenuTrigger asChild>
@@ -60,7 +81,8 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
         className="group flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto p-6"
         align="start"
       >
-        <div className="mb-2">
+        <TemplatesDialog open={openDialog} displayedTemplate={displayedTemplate} setOpen={setOpenDialog}/>
+        <div className="mb-2 flex items-center justify-between">
           <b className="mr-2">Your Templates</b>
           <Button variant="roundedClear">
             <Link href="/templates/create" target="_blank">
@@ -75,17 +97,12 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
                 key={idx}
                 className="group/item flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
               >
-                <p className="w-64">{templ['templateName']}</p>
-                <Button variant="roundedClear" className="mr-1" onClick={handleSelect(templ)}>
-                  Apply
+                <Button variant="link" className="text-justify" onClick={handlePreview(templ)}>
+                  <p className="w-64">{templ['templateName']}</p>
                 </Button>
-                <Button variant="link" className="mr-1 hidden group-hover:block">
-                  <Link
-                    href={`/templates/${templ['templateName']}`}
-                    target="_blank"
-                  >
-                    Preview
-                  </Link>
+
+                <Button variant="roundedClear" className="mr-1" onClick={handleApply(templ)}>
+                  Apply
                 </Button>
                 <TrashIcon
                   className="hidden group-hover/item:block cursor-pointer"
@@ -104,25 +121,17 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
                 key={idx}
                 className=" flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
               >
-                <p className="w-64 ">{templ['templateName']}</p>
-                <Button variant="roundedClear" className="mr-1" onClick={handleSelect(templ)}>
-                  Apply
+                <Button variant="link" className="text-justify" onClick={handlePreview(templ)}>
+                  <p className="w-64">{templ['templateName']}</p>
                 </Button>
-                <Button variant="link" className="hidden group-hover:block cursor-pointer">
-                  <Link
-                    href={`/templates/${templ['templateName']}`}
-                    target="_blank"
-                  >
-                    Preview
-                  </Link>
+                <Button variant="roundedClear" className="mr-1" onClick={handleApply(templ)}>
+                  Apply
                 </Button>
               </div>
             );
           })}
         </div>
       </DropdownMenuContent>
-      <TemplatesDialog />
-
     </DropdownMenu>
   );
 }

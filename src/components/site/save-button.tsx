@@ -3,9 +3,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 
-import {useEditorRef} from "@udecode/plate/react";
 import { useSession } from 'next-auth/react';
-import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
@@ -22,12 +20,16 @@ import {
 } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 
-export function SaveButton() {
-  const editor = useEditorRef();
+interface SaveButtonProps{
+  editor: any;
+  purpose: "document" | "template";
+  template?: any;
+}
+
+export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
   const { data: session } = useSession();
-  const params = useParams();
   const openState = useOpenState();
-  const { activeTemplate, activeUserDocument } = useDocument();
+  const { activeUserDocument } = useDocument();
   const [templateName, setTemplateName] = useState('');
   const [documentName, setDocumentName] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -61,13 +63,13 @@ export function SaveButton() {
     e.preventDefault();
     const templName = templateName
       ? templateName
-      : activeTemplate!['templateName'];
+      : template!['templateName'];
     const res = await saveUserTemplate(
       session!.user!.email!,
       templName,
       editor.children,
-      activeTemplate!['templateOwnerId'] == session!.user!.email!,
-      activeTemplate!['id']
+      template!['templateOwnerId'] == session!.user!.email!,
+      template!['id']
     );
     if (res.error) {
       toast.error(res.error.message);
@@ -76,16 +78,15 @@ export function SaveButton() {
     }
   };
 
-  // TODO: Need to change this based on url, not just the slug
-  if (params.slug) {
+  if (purpose === "template") {
     return (
       <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
-          <Button type="submit">Save Template</Button>
+          <Button variant="roundedClear" className="fixed right-4 bottom-4 z-50" type="submit">Save Template</Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          className="flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto"
+          className="p-4 flex max-h-[500px] min-w-0 flex-col gap-0.5 overflow-y-auto"
           align="start"
         >
           <form className="space-y-4" onSubmit={handleSaveTemplate}>
@@ -95,10 +96,10 @@ export function SaveButton() {
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               placeholder={
-                activeTemplate ? activeTemplate['templateName'] : templateName
+                template ? template['templateName'] : templateName
               }
             ></Input>
-            <Button type="submit">Save Template</Button>
+            <Button variant="roundedClear" type="submit">Save Template</Button>
           </form>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -107,7 +108,7 @@ export function SaveButton() {
     return (
       <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
-          <Button type="submit">Save</Button>
+          <Button variant="roundedClear" className="fixed right-4 bottom-4 z-50 w-36" type="submit">Save</Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent

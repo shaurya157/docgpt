@@ -370,6 +370,12 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+
+  .editor-dialog {
+    max-height: 80vh;
+    max-width: 80vw;
+    overflow-y: scroll;
+  }
 }
 
 .react-markdown ol{
