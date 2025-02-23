@@ -289,7 +289,6 @@ const ChatContent = ({
   }
 
   const updateAttachments = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.files)
     const files = e.target.files;
     if (files) {
       const newAttachments = Array.from(files).map((file) => ({
