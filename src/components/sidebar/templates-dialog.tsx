@@ -31,11 +31,11 @@ export const TemplatesDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="editor-dialog" aria-description="Template editor">
-          <DialogHeader className="">
-            <DialogTitle className="text-xl font-semibold">{displayedTemplate["templateName"]}</DialogTitle>
+          <DialogHeader className="flex flex-row items-center justify-between">
+            <DialogTitle className="text-xl font-semibold mr-2">{displayedTemplate["templateName"]}</DialogTitle>
+            <SaveButton editor={editor} purpose="template" template={displayedTemplate}/>
           </DialogHeader>
             <PlateEditor plateEditor={editor}/>
-            <SaveButton editor={editor} purpose="template" template={displayedTemplate}/>
         </DialogContent>
     </Dialog>
   )

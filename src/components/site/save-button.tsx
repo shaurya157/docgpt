@@ -83,9 +83,9 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
       if (template["id"] === undefined) {
         const tempTemplate = template
         tempTemplate["id"] = res.docId
-        tempTemplate['templateOwnerId'] = session!.user!.email!
       }
 
+      tempTemplate['templateOwnerId'] = session!.user!.email!
       tempTemplate['templateName'] = templName
       setUserTemplates([tempTemplate].concat(filtered))
     }
@@ -95,7 +95,7 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
     return (
       <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
-          <Button variant="roundedClear" className="fixed right-4 bottom-4 z-50" type="submit">{template["templateOwnerId"] === "docgpt" ? "Copy as new" : "Save Template"}</Button>
+          <Button variant="roundedClear" className="p-x-10 w-fit mr-4" type="submit">{template["templateOwnerId"] === "docgpt" ? "Copy as new" : "Save Template"}</Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
