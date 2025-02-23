@@ -38,7 +38,8 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
           ],
           type: 'h1',
         },
-      ]
+      ],
+      templateName: "No Template"
     }
   )
 

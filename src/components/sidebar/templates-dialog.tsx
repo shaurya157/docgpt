@@ -31,8 +31,8 @@ export const TemplatesDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="editor-dialog" aria-description="Template editor">
-          <DialogHeader className="h-20 hidden">
-            <DialogTitle className="text-xl">Settings</DialogTitle>
+          <DialogHeader className="">
+            <DialogTitle className="text-xl font-semibold">{displayedTemplate["templateName"]}</DialogTitle>
           </DialogHeader>
             <PlateEditor plateEditor={editor}/>
             <SaveButton editor={editor} purpose="template" template={displayedTemplate}/>
