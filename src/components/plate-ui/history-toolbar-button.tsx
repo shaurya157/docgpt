@@ -39,7 +39,7 @@ export const UndoToolbarButton = withRef<typeof ToolbarButton>((props, ref) => {
       disabled={disabled}
       onClick={() => editor.undo()}
       onMouseDown={(e) => e.preventDefault()}
-      tooltip="Undo"
+      tooltip=""
       {...props}
     >
       <Undo2Icon />

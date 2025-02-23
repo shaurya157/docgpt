@@ -19,6 +19,7 @@ import {
   saveUserTemplate,
 } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
+import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface SaveButtonProps{
   editor: any;
@@ -30,9 +31,10 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
   const { data: session } = useSession();
   const openState = useOpenState();
   const { activeUserDocument } = useDocument();
-  const [templateName, setTemplateName] = useState('');
+  const [templateName, setTemplateName] = useState(template?.templateName);
   const [documentName, setDocumentName] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const { setUserTemplates, userTemplates } = useUserDataContext()
 
   const handleSaveDocument = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -71,10 +73,21 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
       template!['templateOwnerId'] === session!.user!.email!,
       template!['id']
     );
+
     if (res.error) {
       toast.error(res.error.message);
     } else {
-      toast.success('Template saved successfully');
+      const filtered = userTemplates?.filter((templ) => templ["id"] != res.docId)
+      const tempTemplate = template
+
+      if (template["id"] === undefined) {
+        const tempTemplate = template
+        tempTemplate["id"] = res.docId
+        tempTemplate['templateOwnerId'] = session!.user!.email!
+      }
+
+      tempTemplate['templateName'] = templName
+      setUserTemplates([tempTemplate].concat(filtered))
     }
   };
 
