@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { FileText, PenIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import { AssistantStream } from 'openai/lib/AssistantStream';
 import { toast } from 'sonner';
 
 import { ChatSettings } from '@/components/chat/chat-settings';
@@ -21,7 +22,6 @@ import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import {DotAnimation} from "@/utils/animations";
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
-import { readDataStream } from '@/utils/read-data-stream';
 import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
 
 import UploadIcon from '../../assets/icons/arrowUp.svg';
@@ -83,6 +83,13 @@ const ChatContent = ({
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatSettingsOpenState = useOpenState(false);
+  const [streamingMessage, setStreamingMessage] = useState<Message>({
+    id: "Thinking...",
+    content: "",
+    createdAt: new Date(),
+    role: "assistant",
+  });
+  const [streamingDocument, setStreamingDocument] = useState(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -167,36 +174,52 @@ const ChatContent = ({
     }
 
     try {
-      for await (const { type, value } of readDataStream(
-        result.body.getReader()
-      )) {
-        switch (type) {
-          case 'assistant_message': {
-            const message: Message = {
-              id: value.id,
-              content: value.content[0].text.value,
-              role: value.role,
-            }
-            setActiveChatMessages((messages: Message[]) => [
-              ...messages,
-              message,
-            ]);
-
-            if (message.content.includes("<Document>")) {
-              const { document, documentTitle } = parseAssistantResponse(message)
-              updateEditorWithNewDocument(document, documentTitle)()
-              toast.success(`Changing the current document to ${documentTitle}`)
-            }
-
-            break;
-          }
-          case 'error': {
-            throw new Error(
-              `There was an error processing the message. Please submit a bug report with the following message: ${value}`
-            );
-          }
+      const runner = AssistantStream.fromReadableStream(result.body)
+      runner.on('textDelta', (_delta, contentSnapshot) => {
+        const newStreamingMessage = {
+          ...streamingMessage,
+          content: contentSnapshot.value,
         }
-      }
+
+        // Streaming returns is one word at a time. <Document indicates the beginning of a document creation. </ marks the end of it.
+        if (!streamingDocument && contentSnapshot.value.includes("<Document")) {
+          setStreamingDocument(true)
+        } else if (streamingDocument && contentSnapshot.value.includes("</Document>")) {
+          console.log("END")
+          setStreamingDocument(false)
+        } else {
+          setStreamingMessage(newStreamingMessage)
+        }
+      });
+
+      runner.on('messageDone', (message) => {
+        const finalContent =  message.content[0].type == "text" ? message.content[0].text.value : "";
+        setStreamingDocument(false)
+        const tempMessage: Message = {
+          id: message.id,
+          content: finalContent,
+          role: message.role,
+        }
+        if (finalContent.includes("<Document>") && finalContent.includes("</Document>")) {
+          const { document, documentTitle } = parseAssistantResponse({
+            ...streamingMessage,
+            content: finalContent
+          })
+          updateEditorWithNewDocument(document, documentTitle)()
+          toast.success(`Changing the current document to ${documentTitle}`)
+        }
+
+
+        setStreamingMessage({
+          ...streamingMessage,
+          content: ""
+        })
+
+        setActiveChatMessages((messages: Message[]) => [
+          ...messages,
+          tempMessage,
+        ]);
+      })
     } catch (error) {
       toast.error(error.message);
     }
@@ -454,37 +477,28 @@ const ChatContent = ({
                 }`}
               >
                 {parseUserAndAssistantMessageContent(message)}
-
-                {message['attachments'] && (
-                  <div className="mt-2 overflow-x-auto">
-                    <div className="flex gap-2 pb-2">
-                      {message['attachments'].map((attachment, index) =>
-                        attachment.fileType.startsWith('image/') ? (
-                          <img
-                            key={index}
-                            className="h-32 w-48 shrink-0 rounded-lg border object-cover"
-                            alt={attachment.fileName}
-                            src={attachment.url}
-                          />
-                        ) : (
-                          <div
-                            key={index}
-                            className="flex h-32 w-48 items-center justify-center rounded-lg border bg-gray-50"
-                          >
-                            <span className="text-sm text-gray-500">
-                              PDF: {attachment.fileName}
-                            </span>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ))}
 
-          {status === 'in_progress' && (
+          {streamingDocument ? <div className="flex 'justify-start'">
+            <Button variant="roundedClear" className="ml-2" disabled>
+              <Icons.spinner className="size-5 animate-spin text-black" />
+              <p>Creating document...</p>
+            </Button>
+          </div> : <></>}
+
+          {
+            streamingMessage.content != '' && (
+              <div className="flex 'justify-start'">
+                <div className="rounded-xl px-4 py-2">
+                  {parseUserAndAssistantMessageContent(streamingMessage)}
+                </div>
+              </div>
+            )
+          }
+
+          {status === 'in_progress' && streamingMessage.content === "" && (
             <span className="flex gap-x-2 text-white">
               <Icons.spinner className="size-5 animate-spin text-black" />
               <p className="text-black">
