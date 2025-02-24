@@ -13,7 +13,6 @@ import { AssistantStream } from 'openai/lib/AssistantStream';
 import { toast } from 'sonner';
 
 import { ChatSettings } from '@/components/chat/chat-settings';
-import { chatSettingsHotLinks } from '@/components/chat/hot-links';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
 import { useOpenState } from '@/components/plate-ui/dropdown-menu';
@@ -164,16 +163,16 @@ const ChatContent = ({
       `
     );
 
-    const result = await fetch('/api/ai/chat/brainstormassistant', {
-      body: formData,
-      method: 'POST',
-    });
-
-    if (result.body == null) {
-      throw new Error('The response body is empty.');
-    }
-
     try {
+      const result = await fetch('/api/ai/chat/brainstormassistant', {
+        body: formData,
+        method: 'POST',
+      });
+
+      if (result.body == null) {
+        throw new Error('The response body is empty.');
+      }
+
       const runner = AssistantStream.fromReadableStream(result.body)
       runner.on('textDelta', (_delta, contentSnapshot) => {
         const newStreamingMessage = {
@@ -438,26 +437,24 @@ const ChatContent = ({
           </h1>
           <div className="mb-8 flex flex-col">
             <div>
-              {chatSettingsHotLinks.map((hotlink) => {
-                return (
-                  <Button
-                    key={hotlink['displayName']}
-                    variant="roundedClear"
-                    className="m-2"
-                    onClick={handleQuickLinkClick(hotlink)}
-                  >
-                    {hotlink['displayName']}
-                  </Button>
-                );
-              })} or
-              <br />
+              {/* {chatSettingsHotLinks.map((hotlink) => { */}
+              {/*  return ( */}
+              {/*    <Button */}
+              {/*      key={hotlink['displayName']} */}
+              {/*      variant="roundedClear" */}
+              {/*      className="m-2" */}
+              {/*      onClick={handleQuickLinkClick(hotlink)} */}
+              {/*    > */}
+              {/*      {hotlink['displayName']} */}
+              {/*    </Button> */}
+              {/*  ); */}
+              {/* })} or */}
+              {/* <br /> */}
               <Button variant="roundedClear" className="m-2" onClick={() => chatSettingsOpenState.setOpen(true)}>
                 <PenIcon />
                 Create a new document
               </Button>
             </div>
-
-
           </div>
         </div>
       )}

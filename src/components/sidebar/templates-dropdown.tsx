@@ -67,10 +67,6 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
     }
   }
 
-  const updateUserTemplateState = () => {
-
-  }
-
   return (
     <DropdownMenu modal={false} {...openState}>
       <DropdownMenuTrigger asChild>
@@ -96,7 +92,7 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
             return (
               <div
                 key={idx}
-                className="group/item flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
+                className="width-420 group/item flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
               >
                 <Button variant="link" className="text-justify" onClick={handlePreview(templ)}>
                   <p className="w-64">{templ['templateName']}</p>

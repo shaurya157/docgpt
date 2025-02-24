@@ -360,6 +360,10 @@
     height: 20px;
   }
 
+  .width-420 {
+    width: 420px
+  }
+
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
