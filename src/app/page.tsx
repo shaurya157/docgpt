@@ -21,8 +21,8 @@ export default function Landing() {
     return redirect('/home');
   }
 
-  return <div className="flex flex-col">
-    <div className="flex flex-col items-center">
+  return <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center container">
       <section className="my-20 p-10 flex h-1/3 w-full flex-row-reverse items-center">
         <div className="w-1/2 flex flex-col px-10 h-full">
           <h1 className="mb-8 text-xl font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">

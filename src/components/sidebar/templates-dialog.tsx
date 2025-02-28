@@ -35,7 +35,7 @@ export const TemplatesDialog = ({
             <DialogTitle className="text-xl font-semibold mr-2">{displayedTemplate["templateName"]}</DialogTitle>
             <SaveButton editor={editor} purpose="template" template={displayedTemplate}/>
           </DialogHeader>
-            <PlateEditor plateEditor={editor}/>
+          <PlateEditor plateEditor={editor}/>
         </DialogContent>
     </Dialog>
   )

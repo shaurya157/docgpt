@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { GoogleAnalytics } from '@next/third-parties/google';
 import {cn} from "@udecode/cn";
 import {Analytics} from "@vercel/analytics/react";
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -62,6 +63,7 @@ export default async function RootLayout({
                 fontSans.variable
             )}
         >
+        <GoogleAnalytics gaId="G-ZFB84M0FYS" />
         <ThemeProvider attribute="class" defaultTheme="light">
           <SessionProvider session={session}>
             <UserDataContextProvider

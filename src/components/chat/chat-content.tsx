@@ -347,7 +347,7 @@ const ChatContent = ({
   const extractTitleFromDocument = (document: string): string => {
     const titleRegex = /^(#{1,6})\s+(.*)/m;
     const match = document.match(titleRegex);
-    return match ? match[2].trim() : 'New Document';
+    return match ? match[2].trim().replaceAll("*", "") : 'New Document';
   }
 
   const parseAssistantResponse = (message: Message) => {
@@ -399,7 +399,7 @@ const ChatContent = ({
   };
 
   const chatInputPositioningCssClass =
-    activeChatMessages.length !== 0 || editorOpen ? 'h-full' : '';
+    activeChatMessages.length !== 0 ? 'h-full' : '';
 
   const handleQuickLinkClick = (hotLink: {}) => {
     return () => {
@@ -417,6 +417,7 @@ const ChatContent = ({
     }
   }
 
+  console.log(editor.children.length)
   return (
     <motion.div
       className={
@@ -431,7 +432,7 @@ const ChatContent = ({
       }}
     >
       {activeChatMessages.length === 0 && (
-        <div>
+        <div className={editor.children.length <= 2 ? "" : "hidden"}>
           <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-4xl">
             What can I help with?
           </h1>
