@@ -115,7 +115,6 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
                 template ? template['templateName'] : templateName
               }
             ></Input>
-            <p className="text-xs w-2xs">Note: Remove all tables in the template before saving for optimal outputs</p>
             <Button variant="roundedClear" disabled={showSuccessMessage}
                     type="submit">{showSuccessMessage ? 'Saved Successfully' : template['templateOwnerId'] === 'docgpt' ? 'Copy as new' : 'Save Template'}</Button>
           </form>

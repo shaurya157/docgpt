@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import * as React from 'react';
 
 import { DialogTitle } from '@radix-ui/react-dialog';
 
@@ -32,7 +33,10 @@ export const TemplatesDialog = ({
     <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="editor-dialog" aria-description="Template editor">
           <DialogHeader className="flex flex-row items-center justify-between">
-            <DialogTitle className="text-xl font-semibold mr-2">{displayedTemplate["templateName"]}</DialogTitle>
+            <div>
+              <DialogTitle className="text-xl font-semibold mr-2">{displayedTemplate['templateName']}</DialogTitle>
+              <p className="text-xs w-2xs text-red-500">(Note: Tables are not supported yet in templates. Please remove all tables from the editor.)</p>
+            </div>
             <SaveButton editor={editor} purpose="template" template={displayedTemplate}/>
           </DialogHeader>
           <PlateEditor plateEditor={editor}/>
