@@ -303,7 +303,7 @@ const ChatContent = ({
 
       setAttachments((prev) => [...prev, ...newAttachments]);
 
-      if (fileInputRef) {
+      if (fileInputRef != null && fileInputRef.current != null) {
         fileInputRef.current.value = '';
       }
     }

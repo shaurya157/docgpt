@@ -21,7 +21,7 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'chat' | 'document'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'settings'>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const { activeUserDocument, setActiveUserDocument } = useDocument();
@@ -235,10 +235,7 @@ export default function Home() {
       <div className="flex h-screen flex-col">
         <HomeHeader
           onNewChat={resetState}
-          activeUserDocument={activeUserDocument}
           editorOpen={editorOpen}
-          isSidebarOpen={isSidebarOpen}
-          setActiveItem={handleSetActiveItem}
           setEditorOpen={setEditorOpen}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />

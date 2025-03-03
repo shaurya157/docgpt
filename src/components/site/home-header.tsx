@@ -4,18 +4,14 @@ import Image from 'next/image';
 import SidebarIcon from '../../assets/icons/sidebar.svg';
 
 interface HeaderProps {
-  activeUserDocument: {};
   editorOpen: boolean;
-  isSidebarOpen: boolean;
   onNewChat: () => void;
-  setActiveItem: (item, documentRefreshOnly) => void;
   setEditorOpen: (open: boolean) => void;
   toggleSidebar: () => void;
 }
 
 const HomeHeader = ({
   editorOpen,
-  isSidebarOpen,
   setEditorOpen,
   toggleSidebar,
   onNewChat,

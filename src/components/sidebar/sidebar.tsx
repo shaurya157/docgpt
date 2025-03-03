@@ -1,21 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { motion } from 'framer-motion';
+import {SettingsIcon} from "lucide-react";
 import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
+import {useRouter} from "next/navigation";
 import { toast } from 'sonner';
 
 import Popover from "@/components/sidebar/popover";
 import { TemplatesDropdown } from '@/components/sidebar/templates-dropdown';
 import { MenuItem, PopoverPosition } from '@/types';
 
-import DeleteIcon from '../../assets/icons/delete.svg';
 import FolderIcon from '../../assets/icons/folder.svg';
 import HelpIcon from '../../assets/icons/help.svg';
 import LogoutIcon from '../../assets/icons/logout.svg';
 import ProfileIcon from '../../assets/icons/profile.svg';
 import CloseIcon from '../../assets/icons/x.svg';
 import ContextDocsContent from './context-docs-content';
+import {ChatSidebarItems} from "@/components/chat/chat-sidebar-items";
+import {SettingsSidebarItems} from "@/components/settings/SettingsSidebarItems";
 
 interface ChatMenuState {
   buttonRect: DOMRect | null;
@@ -31,8 +34,8 @@ interface PopoverState {
 }
 
 interface SidebarProps {
-  activeTab: 'chat' | 'document';
-  activeUserDocument: {} | string;
+  activeTab: 'chat' | 'settings';
+  activeUserDocument?: {} | string;
   editorOpen: boolean
   isOpen: boolean;
   items: MenuItem[] | null | undefined;
@@ -48,7 +51,6 @@ const Sidebar = ({
   isOpen,
   items,
   setActiveItem,
-  toggleSidebar,
   onDeleteChat
 }: SidebarProps) => {
   const sidebarWidth = 220;
@@ -56,6 +58,7 @@ const Sidebar = ({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { data: session } = useSession();
+  const router = useRouter();
 
   const [chatMenu, setChatMenu] = useState<ChatMenuState>({
     buttonRect: null,
@@ -63,42 +66,6 @@ const Sidebar = ({
     isOpen: false,
     position: { left: 0, top: 0 },
   });
-
-  const handleMoreClick = (e: React.MouseEvent, chatId: string) => {
-    e.stopPropagation();
-    if (activeTab === 'chat') {
-      const button = e.currentTarget;
-      const rect = button.getBoundingClientRect();
-      const sidebarRect = sidebarRef.current?.getBoundingClientRect();
-
-      if (sidebarRect) {
-        const shouldOpenMenu = chatMenu.chatId !== chatId || !chatMenu.isOpen;
-
-        setChatMenu({
-          buttonRect: rect,
-          chatId: shouldOpenMenu ? chatId : null,
-          isOpen: shouldOpenMenu,
-          position: {
-            left: rect.right - 120, // Align right edge of menu with more button
-            top: rect.bottom + window.scrollY,
-          },
-        });
-      }
-    }
-  };
-
-  const handleDeleteChat = (id) => {
-    return () => {
-      onDeleteChat(id);
-
-      setChatMenu({
-        buttonRect: null,
-        chatId: null,
-        isOpen: false,
-        position: { left: 0, top: 0 },
-      });
-    }
-  };
 
   const handleClickOutside = (e: MouseEvent) => {
     if (
@@ -202,6 +169,13 @@ const Sidebar = ({
       title: 'Help & Support',
     },
     {
+      id: 'settings',
+      icon: (
+        <SettingsIcon />
+      ),
+      title: 'Settings',
+    },
+    {
       id: 'profile',
       icon: <Image alt="Profile" height={20} src={ProfileIcon} width={20} />,
       title: 'My Profile',
@@ -223,6 +197,9 @@ const Sidebar = ({
     e: React.MouseEvent<HTMLButtonElement>,
     itemId: string
   ) => {
+    if (itemId === "settings") {
+      router.push(`/settings`);
+    }
     e.stopPropagation();
     const button = e.currentTarget;
     const sidebarRect = sidebarRef.current?.getBoundingClientRect();
@@ -400,45 +377,19 @@ const Sidebar = ({
       >
         <div className="px-4 pt-2">
           <h2 className="flex items-center gap-2 font-semibold">
-            {activeTab === 'chat' ? 'Chats' : 'Documents'}
+            {activeTab === 'chat' ? 'Chats' : 'Settings'}
           </h2>
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-2">
-          {items?.map((item, idx) => (
-            <div
-              key={idx}
-              className={`cursor-pointer group mb-1 flex w-full items-center justify-between rounded-md p-1.5 ${
-                activeUserDocument && activeUserDocument!['id'] === item.id
-                  ? 'bg-[#ECECEC]'
-                  : 'hover:bg-[#ECECEC]'
-              }`}
-            >
-              <button
-                className="flex-1 truncate text-left cursor-pointer"
-                onClick={() => {
-                  toggleSidebar();
-                  setActiveItem(
-                    item,
-                    activeUserDocument != undefined &&
-                      item['id'] === activeUserDocument['id']
-                  );
-                }}
-              >
-                <span className="block truncate">{item['documentName']}</span>
-              </button>
-              {activeTab === 'chat' && (
-                <button
-                  className="cursor-pointer rounded-lg text-gray-400 opacity-0 transition-opacity hover:bg-gray-300 hover:text-gray-600 group-hover:opacity-100"
-                  onClick={ handleDeleteChat(item.id) }
-                  data-more-button="true"
-                >
-                  <Image className="cursor-pointer" alt="delete chat" height={18} src={DeleteIcon} width={18} />
-                  {/* <Image alt="more" height={24} src={MoreIcon} width={24} /> */}
-                </button>
-              )}
-            </div>
-          ))}
+          {
+            activeTab === "chat" ? <ChatSidebarItems
+                onDeleteChat={onDeleteChat}
+                activeUserDocument={activeUserDocument}
+                items={items}
+                setActiveItem={setActiveItem}
+            /> : <SettingsSidebarItems />
+          }
         </div>
 
         <div className="border-t px-3 py-2">
@@ -457,26 +408,6 @@ const Sidebar = ({
           </div>
         </div>
       </motion.div>
-
-      {isOpen && chatMenu.isOpen && activeTab === 'chat' && (
-        <div
-          ref={menuRef}
-          className="fixed z-50 scale-100 rounded-xl border border-gray-200 bg-white opacity-100 shadow-xl transition-all duration-200 ease-out"
-          style={{
-            left: chatMenu.position.left,
-            top: chatMenu.position.top,
-            width: '150px',
-          }}
-        >
-          <button
-            className="flex w-full items-center gap-2 rounded-xl px-4 py-2 text-sm text-red-600 transition-colors duration-150 hover:bg-gray-100"
-            onClick={handleDeleteChat}
-          >
-            <Image className="cursor-pointer" alt="delete chat" height={18} src={DeleteIcon} width={18} />
-            Delete Chat
-          </button>
-        </div>
-      )}
 
       {isOpen && (
         <Popover
