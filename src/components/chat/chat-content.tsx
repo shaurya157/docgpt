@@ -302,7 +302,10 @@ const ChatContent = ({
       }));
 
       setAttachments((prev) => [...prev, ...newAttachments]);
-      fileInputRef.current.value = '';
+
+      if (fileInputRef) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
