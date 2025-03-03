@@ -101,6 +101,10 @@ const ChatContent = ({
   const parseEditorAndGetDocumentAndSelection = (
     newMessage: string
   ): string => {
+    if (editor.children.length <= 2) {
+      return newMessage
+    }
+
     const editorPrompt = getEditorPrompt(editor, {
       prompt: newMessage,
       promptTemplate: editorPromptTemplate,
@@ -417,7 +421,6 @@ const ChatContent = ({
     }
   }
 
-  console.log(editor.children.length)
   return (
     <motion.div
       className={
