@@ -101,7 +101,7 @@ const ChatContent = ({
   const parseEditorAndGetDocumentAndSelection = (
     newMessage: string
   ): string => {
-    if (editor.children.length <= 2) {
+    if (editor.children.length <= 2 && editor.children[0].children[0].text === "") {
       return newMessage
     }
 
@@ -188,7 +188,6 @@ const ChatContent = ({
         if (!streamingDocument && contentSnapshot.value.includes("<Document")) {
           setStreamingDocument(true)
         } else if (streamingDocument && contentSnapshot.value.includes("</Document>")) {
-          console.log("END")
           setStreamingDocument(false)
         } else {
           setStreamingMessage(newStreamingMessage)
@@ -303,6 +302,7 @@ const ChatContent = ({
       }));
 
       setAttachments((prev) => [...prev, ...newAttachments]);
+      fileInputRef.current.value = '';
     }
   };
 
