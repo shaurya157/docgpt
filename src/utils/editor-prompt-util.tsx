@@ -56,7 +56,7 @@
 const userDefault = `\
 <Reminder>
 - CRITICAL: If a <Document> is provided, consider the added context while preparing your response. The <Document> provided might be empty, contain a template OR contain the current state of the user's document.
-  - For Templates: ONLY when creating a new document, adhere strictly to the template provided. Unless otherwise specified, prompt the user for additional information for all sections in the template before attempting to create/edit the document.
+<!--  - For Templates: ONLY when creating a new document, adhere strictly to the template provided. Unless otherwise specified, prompt the user for additional information for all sections in the template before attempting to create/edit the document.-->
   - For empty documents: prompt the user to use a template or to provide additional information meeting the minimum bar specified in the goals. Do NOT create a new document unless explicitly requested.
   - For documents containing non template content: consider the context while generating a new document/response.
 - CRITICAL: if a <SectionInstruction> is provided, use the section instruction while generating content for the section. DO NOT use the same section instruction for other sections.

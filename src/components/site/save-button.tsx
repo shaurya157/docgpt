@@ -3,7 +3,9 @@
 import * as React from 'react';
 import { useState } from 'react';
 
+import { useEditorRef } from '@udecode/plate/react';
 import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
@@ -15,27 +17,23 @@ import {
 } from '@/components/plate-ui/dropdown-menu';
 import { Input } from '@/components/plate-ui/input';
 import {
-  saveCurrentDocumentState,
-  saveUserTemplate,
+  saveCurrentDocumentState, saveUserTemplate,
 } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
-interface SaveButtonProps{
-  editor: any;
-  purpose: "document" | "template";
-  template?: any;
-}
-
-export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
+export function SaveButton() {
   const { data: session } = useSession();
+  const editor = useEditorRef();
   const openState = useOpenState();
-  const { activeUserDocument } = useDocument();
-  const [templateName, setTemplateName] = useState(template?.templateName);
+  const { activeTemplate, activeUserDocument } = useDocument();
+  const [templateName, setTemplateName] = useState('');
   const [documentName, setDocumentName] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const pathName = usePathname();
   const { setUserTemplates, userTemplates } = useUserDataContext()
 
+  console.log(activeTemplate)
   const handleSaveDocument = async (event: React.FormEvent) => {
     event.preventDefault();
     const docName = documentName
@@ -63,24 +61,22 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
 
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const templName = templateName
-      ? templateName
-      : template!['templateName'];
+    const templName = templateName ? templateName : activeTemplate!['templateName'];
     const res = await saveUserTemplate(
       session!.user!.email!,
       templName,
       editor.children,
-      template!['templateOwnerId'] === session!.user!.email!,
-      template!['id']
+      activeTemplate ? activeTemplate!['templateOwnerId'] === session!.user!.email! : false,
+      activeTemplate ? activeTemplate!['id'] : null
     );
 
     if (res.error) {
       toast.error(res.error.message);
     } else {
       const filtered = userTemplates?.filter((templ) => templ["id"] != res.docId)
-      const tempTemplate = template
+      const tempTemplate = activeTemplate!
 
-      if (template["id"] === undefined) {
+      if (tempTemplate!["id"] === undefined || tempTemplate!["templateOwnerId"] === "docgpt") {
         tempTemplate["id"] = res.docId
       }
 
@@ -94,11 +90,11 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
     }
   };
 
-  if (purpose === "template") {
+  if (pathName.includes("settings")) {
     return (
       <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
-          <Button variant="roundedClear" className="p-x-10 w-fit mr-4" type="submit">{template["templateOwnerId"] === "docgpt" ? "Copy as new" : "Save Template"}</Button>
+          <Button variant="roundedClear" className="p-x-10 w-fit mr-4" type="submit">Save Template</Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
@@ -112,11 +108,11 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               placeholder={
-                template ? template['templateName'] : templateName
+                activeTemplate ? activeTemplate.templateName : templateName
               }
             ></Input>
             <Button variant="roundedClear" disabled={showSuccessMessage}
-                    type="submit">{showSuccessMessage ? 'Saved Successfully' : template['templateOwnerId'] === 'docgpt' ? 'Copy as new' : 'Save Template'}</Button>
+                    type="submit">{showSuccessMessage ? 'Saved Successfully' : 'Save Template'}</Button>
           </form>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -125,7 +121,7 @@ export function SaveButton({ editor, purpose, template }: SaveButtonProps) {
     return (
       <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
-          <Button variant="roundedClear" className="fixed right-4 bottom-4 z-50 w-36" type="submit">Save</Button>
+          <Button variant="roundedClear" className=" w-36" type="submit">Save</Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent

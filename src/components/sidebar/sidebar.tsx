@@ -7,6 +7,8 @@ import Image from 'next/image';
 import {useRouter} from "next/navigation";
 import { toast } from 'sonner';
 
+import {ChatSidebarItems} from "@/components/chat/chat-sidebar-items";
+import {SettingsSidebarItems} from "@/components/settings/settings-sidebar-items";
 import Popover from "@/components/sidebar/popover";
 import { TemplatesDropdown } from '@/components/sidebar/templates-dropdown';
 import { MenuItem, PopoverPosition } from '@/types';
@@ -17,8 +19,6 @@ import LogoutIcon from '../../assets/icons/logout.svg';
 import ProfileIcon from '../../assets/icons/profile.svg';
 import CloseIcon from '../../assets/icons/x.svg';
 import ContextDocsContent from './context-docs-content';
-import {ChatSidebarItems} from "@/components/chat/chat-sidebar-items";
-import {SettingsSidebarItems} from "@/components/settings/SettingsSidebarItems";
 
 interface ChatMenuState {
   buttonRect: DOMRect | null;
@@ -35,22 +35,26 @@ interface PopoverState {
 
 interface SidebarProps {
   activeTab: 'chat' | 'settings';
-  activeUserDocument?: {} | string;
   editorOpen: boolean
   isOpen: boolean;
   items: MenuItem[] | null | undefined;
   onDeleteChat: (chatId: string) => void;
   setActiveItem: (id: MenuItem, documentRefreshOnly: boolean) => void;
   toggleSidebar: () => void;
+  activeSetting?: string;
+  activeUserDocument?: {} | string;
+  setActiveSetting?: (id: string) => void;
 }
 
 const Sidebar = ({
+  activeSetting,
   activeTab,
   activeUserDocument,
   editorOpen,
   isOpen,
   items,
   setActiveItem,
+  setActiveSetting,
   onDeleteChat
 }: SidebarProps) => {
   const sidebarWidth = 220;
@@ -362,7 +366,7 @@ const Sidebar = ({
 
 
   return (
-    <div className={editorOpen ? "" : "absolute inset-y-0 left-0"}>
+    <div className={editorOpen || activeSetting ? "" : "absolute inset-y-0 left-0"}>
       <motion.div
         ref={sidebarRef}
         className="flex h-[calc(100vh-64px)] flex-col overflow-hidden border-r bg-white md:relative"
@@ -388,7 +392,7 @@ const Sidebar = ({
                 activeUserDocument={activeUserDocument}
                 items={items}
                 setActiveItem={setActiveItem}
-            /> : <SettingsSidebarItems />
+            /> : <SettingsSidebarItems activeSetting={activeSetting} setActiveSetting={setActiveSetting}/>
           }
         </div>
 

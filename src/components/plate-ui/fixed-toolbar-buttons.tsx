@@ -36,6 +36,7 @@ import {
 import {useSession} from "next-auth/react";
 
 import { MoreDropdownMenu } from '@/components/plate-ui/more-dropdown-menu';
+import { SaveButton } from '@/components/site/save-button';
 
 import { AIToolbarButton } from './ai-toolbar-button';
 import { AlignDropdownMenu } from './align-dropdown-menu';
@@ -72,6 +73,9 @@ export function FixedToolbarButtons() {
     <div className="flex w-full">
       {!readOnly && (
         <>
+          <ToolbarGroup>
+            <SaveButton />
+          </ToolbarGroup>
           <ToolbarGroup>
             <UndoToolbarButton />
             <RedoToolbarButton />

@@ -73,7 +73,7 @@ export const ChatSettings = ({
                 value={selectedTemplate['id']}
                 onChange={handleTemplateChange}
               >
-                {providedTemplates?.concat(userTemplates).map((template, idx) => {
+                {userTemplates?.map((template, idx) => {
                   return (
                     <option
                       key={idx}

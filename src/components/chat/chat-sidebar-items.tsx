@@ -1,6 +1,7 @@
-import {MenuItem} from "@/types";
 import Image from "next/image";
+
 import DeleteIcon from "@/assets/icons/delete.svg";
+import {MenuItem} from "@/types";
 
 interface ChatSidebarItemsProps {
     items: MenuItem[] | null | undefined;

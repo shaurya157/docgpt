@@ -10,7 +10,6 @@ import {
   Dialog,
   DialogContent, DialogHeader,
 } from '@/components/plate-ui/dialog';
-import { SaveButton } from '@/components/site/save-button';
 
 interface TemplatesDialogProps {
   displayedTemplate: any;
@@ -37,7 +36,6 @@ export const TemplatesDialog = ({
               <DialogTitle className="text-xl font-semibold mr-2">{displayedTemplate['templateName']}</DialogTitle>
               <p className="text-xs w-2xs text-red-500">(Note: Tables are not supported yet in templates. Please remove all tables from the editor.)</p>
             </div>
-            <SaveButton editor={editor} purpose="template" template={displayedTemplate}/>
           </DialogHeader>
           <PlateEditor plateEditor={editor}/>
         </DialogContent>
