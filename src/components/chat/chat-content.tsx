@@ -27,17 +27,6 @@ import UploadIcon from '../../assets/icons/arrowUp.svg';
 import AttachmentIcon from '../../assets/icons/attachment.svg';
 import CloseIcon from '../../assets/icons/x.svg';
 
-// interface Message {
-//   id: string;
-//   type: 'user' | 'bot';
-//   content: string;
-//   attachments?: Array<{
-//     url: string;
-//     fileName: string;
-//     fileType: string;
-//   }>;
-// }
-
 interface ContentProps {
   activeChatMessages: Message[];
   activeUserDocument: any;
@@ -103,7 +92,7 @@ const ChatContent = ({
     setUploadedFilesDialog(false)
     if (hideChat) toggleHideChat()
     scrollToBottom();
-  }, [activeChatMessages]);
+  }, [activeChatMessages]); // do not add hidechat + toggle as a dependency here, forces a refresh which breaks hiding
 
   const parseEditorAndGetDocumentAndSelection = (
     newMessage: string
@@ -184,8 +173,8 @@ const ChatContent = ({
       }
 
       const runner = AssistantStream.fromReadableStream(result.body)
+      setStatus('awaiting_message');
       runner.on('textDelta', (_delta, contentSnapshot) => {
-        setStatus('awaiting_message');
         const newStreamingMessage = {
           ...streamingMessage,
           content: contentSnapshot.value,
@@ -461,6 +450,7 @@ const ChatContent = ({
                 <span>{activeUserDocument["documentName"]}</span>
               </div>
               <div className="relative flex">
+                <span>( {activeUserDocument["files"] ? activeUserDocument["files"].length : 0} )</span>
                 <ChevronDownIcon className="mr-2 cursor-pointer" onClick={ () => {
                   uploadedFilesDialog ? setUploadedFilesDialog(false) : setUploadedFilesDialog(true)
                 } }/>
