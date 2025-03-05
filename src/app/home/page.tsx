@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import {cn} from "@udecode/cn";
 import { AssistantStatus, Message } from 'ai';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
@@ -30,6 +31,8 @@ export default function Home() {
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const { selectedTemplate } = useChatSettings();
+  const [hideChat, setHideChat] = useState(false);
+
   // TODO: can prolly move this out to layout instead and provide it globally with a provider.
   // TODO: fix here and the other page.tsx file
   const editor = useCreateEditor();
@@ -226,7 +229,6 @@ export default function Home() {
   }, []);
 
   const currentItems = activeTab === 'chat' ? items.chat : items.document;
-  const editorCssClass = editorOpen ? '' : 'hidden';
   const chatWindowCssClass = editorOpen ? '' : 'justify-center items-center';
 
   return (
@@ -259,11 +261,13 @@ export default function Home() {
             activeUserDocument={activeUserDocument}
             editor={editor}
             editorOpen={editorOpen}
+            hideChat={hideChat}
             setActiveChatMessages={setActiveChatMessages}
             setActiveItem={handleSetActiveItem}
             setEditorOpen={setEditorOpen}
             setStatus={setStatus}
             status={status}
+            toggleHideChat={() => hideChat ? setHideChat(false) : setHideChat(true)}
           />
           {!onboardingCompleted && (
             <OnboardingTooltip
@@ -276,10 +280,11 @@ export default function Home() {
           )}
 
           <div
-            className={
-              'z-10 overflow-y-scroll border bg-background shadow w-3/4 ' +
-              editorCssClass
-            }
+            className={cn(
+                'z-10 overflow-y-scroll border bg-background shadow',
+                editorOpen ? '' : 'hidden',
+                hideChat ? 'w-full' : 'w-3/4'
+            )}
           >
             <PlateEditor plateEditor={editor} />
           </div>

@@ -6,7 +6,7 @@ import { deserializeMd } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
 import { Message } from 'ai';
 import { motion } from 'framer-motion';
-import { FileText, PenIcon } from 'lucide-react';
+import {ChevronDownIcon, FileText, MessageCircleOffIcon, MessageCirclePlusIcon, PenIcon} from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { AssistantStream } from 'openai/lib/AssistantStream';
@@ -43,12 +43,14 @@ interface ContentProps {
   activeUserDocument: any;
   editor: PlateEditor;
   editorOpen: boolean;
+  hideChat: boolean;
   setActiveChatMessages: Dispatch<SetStateAction<Message[]>>;
   setStatus: Dispatch<SetStateAction<string>>;
   status: 'awaiting_message' | 'in_progress';
   onNewChat: () => {};
   setActiveItem: (id: any, documentRefreshOnly: boolean) => void;
   setEditorOpen: (bool: boolean) => void;
+  toggleHideChat: () => void;
 }
 
 const ChatContent = ({
@@ -56,12 +58,14 @@ const ChatContent = ({
   activeUserDocument,
   editor,
   editorOpen,
+  hideChat,
   setActiveChatMessages,
   setActiveItem,
   setEditorOpen,
   setStatus,
   status,
-  onNewChat,
+  toggleHideChat,
+  onNewChat
 }: ContentProps) => {
   const { data: session } = useSession();
   const { selectedAssistant, handleSelectedAssistant, handleSelectedTemplate } =
@@ -89,12 +93,15 @@ const ChatContent = ({
     role: "assistant",
   });
   const [streamingDocument, setStreamingDocument] = useState(false)
+  const [ uploadedFilesDialog, setUploadedFilesDialog ] = useState(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
+    setUploadedFilesDialog(false)
+    if (hideChat) toggleHideChat()
     scrollToBottom();
   }, [activeChatMessages]);
 
@@ -139,7 +146,6 @@ const ChatContent = ({
         }
 
         await sendMessage(item, newMessage)
-        setStatus('awaiting_message');
       }
     }
   };
@@ -179,6 +185,7 @@ const ChatContent = ({
 
       const runner = AssistantStream.fromReadableStream(result.body)
       runner.on('textDelta', (_delta, contentSnapshot) => {
+        setStatus('awaiting_message');
         const newStreamingMessage = {
           ...streamingMessage,
           content: contentSnapshot.value,
@@ -424,6 +431,15 @@ const ChatContent = ({
     }
   }
 
+  console.log(hideChat)
+  if (hideChat && activeChatMessages.length > 1) {
+    return (
+        <div className="h-full p-4">
+          <MessageCirclePlusIcon onClick={ toggleHideChat } />
+        </div>
+    )
+  }
+
   return (
     <motion.div
       className={
@@ -437,6 +453,41 @@ const ChatContent = ({
         type: 'spring',
       }}
     >
+
+      {
+        activeChatMessages.length != 0 && (
+            <div className="w-full h-30px p-2 flex justify-between items-center border-b-2 mb-2">
+              <div className="truncate flex justify-center items-center text-xl">
+                <span>{activeUserDocument["documentName"]}</span>
+              </div>
+              <div className="relative flex">
+                <ChevronDownIcon className="mr-2 cursor-pointer" onClick={ () => {
+                  uploadedFilesDialog ? setUploadedFilesDialog(false) : setUploadedFilesDialog(true)
+                } }/>
+                {
+                  editorOpen && (
+                        <MessageCircleOffIcon className="cursor-pointer" onClick={ toggleHideChat }/>
+                    )
+                }
+                { uploadedFilesDialog && (
+                    <div className="bg-white border-2 absolute top-10 p-2 z-100 w-96 rounded-md">
+                      <span className="text-xl w-full block border-b-2 mb-2">Uploaded files</span>
+                      {
+                        activeUserDocument["files"] && (
+                              activeUserDocument.files.map((file, idx) => {
+                                return <div key={idx} className="truncate">
+                                  <span>{file["fileName"]}</span>
+                                </div>
+                              })
+                          )
+                      }
+                    </div>
+                )}
+              </div>
+            </div>
+          )
+      }
+
       {activeChatMessages.length === 0 && (
         <div className={editor.children.length <= 2 ? "" : "hidden"}>
           <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-4xl">

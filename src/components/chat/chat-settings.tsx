@@ -9,7 +9,6 @@ import {
 } from '@/components/plate-ui/dropdown-menu';
 import { useAssistantDefinitions } from '@/providers/assistants-provider';
 import { useChatSettings } from '@/providers/chat-settings-provider';
-import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface ChatSettingProps {
@@ -19,7 +18,6 @@ export const ChatSettings = ({
   chatSettingsOpenState,
 }: ChatSettingProps) => {
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
-  const { providedTemplates } = useDocument();
   const { userTemplates } = useUserDataContext();
   const {
     selectedAssistant,
@@ -73,6 +71,7 @@ export const ChatSettings = ({
                 value={selectedTemplate['id']}
                 onChange={handleTemplateChange}
               >
+                <option value="">No Template</option>
                 {userTemplates?.map((template, idx) => {
                   return (
                     <option
@@ -83,7 +82,6 @@ export const ChatSettings = ({
                     </option>
                   );
                 })}
-                <option value="">No Template</option>
               </select>
             </div>
           </div>

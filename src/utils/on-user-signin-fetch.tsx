@@ -101,8 +101,9 @@ export async function getUserDocs(session: Session) {
             id: doc.id,
             document: doc.get('document'),
             documentName: doc.get('documentName'),
+            files: doc.get("files"),
             threadId: doc.get('threadId'),
-            vectorStoreId: doc.get('vectorStoreId'),
+            vectorStoreId: doc.get('vectorStoreId')
         };
 
         result.push(res);
