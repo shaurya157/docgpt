@@ -33,7 +33,6 @@ export function SaveButton() {
   const pathName = usePathname();
   const { setUserTemplates, userTemplates } = useUserDataContext()
 
-  console.log(activeTemplate)
   const handleSaveDocument = async (event: React.FormEvent) => {
     event.preventDefault();
     const docName = documentName
@@ -57,6 +56,7 @@ export function SaveButton() {
         setShowSuccessMessage(false);
       }, 5000);
     }
+    setDocumentName("")
   };
 
   const handleSaveTemplate = async (e: React.FormEvent) => {
@@ -74,7 +74,7 @@ export function SaveButton() {
       toast.error(res.error.message);
     } else {
       const filtered = userTemplates?.filter((templ) => templ["id"] != res.docId)
-      const tempTemplate = activeTemplate!
+      const tempTemplate = {...activeTemplate!}
 
       if (tempTemplate!["id"] === undefined || tempTemplate!["templateOwnerId"] === "docgpt") {
         tempTemplate["id"] = res.docId
@@ -82,11 +82,13 @@ export function SaveButton() {
 
       tempTemplate['templateOwnerId'] = session!.user!.email!
       tempTemplate['templateName'] = templName
+
       setUserTemplates([tempTemplate].concat(filtered))
       setShowSuccessMessage(true);
       setTimeout(() => {
         setShowSuccessMessage(false);
       }, 5000);
+      setTemplateName("")
     }
   };
 

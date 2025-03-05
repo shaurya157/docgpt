@@ -11,8 +11,8 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 export const TemplateSettings = () => {
   const {setUserTemplates, userTemplates} = useUserDataContext();
   const {providedTemplates} = useDocument();
-  const [displayedTemplatesTitle, setDisplayedTemplatesTitle] = useState<"provided" | "subscribed">("provided")
-  const [displayedTemplates, setDisplayedTemplates] = useState(displayedTemplatesTitle === "provided" ? providedTemplates : userTemplates)
+  const [displayedTemplatesTitle, setDisplayedTemplatesTitle] = useState<"owned" | "provided">("owned")
+  const [displayedTemplates, setDisplayedTemplates] = useState(displayedTemplatesTitle === "owned" ? providedTemplates : userTemplates)
   const editor = useCreateEditor()
   const { setActiveTemplate } = useDocument();
 
@@ -20,7 +20,7 @@ export const TemplateSettings = () => {
     displayedTemplatesTitle === "provided" ? setDisplayedTemplates(providedTemplates) : setDisplayedTemplates(userTemplates)
   }, [displayedTemplatesTitle, providedTemplates, userTemplates]);
 
-  const handleTitleChange = (title: "provided" | "subscribed") => {
+  const handleTitleChange = (title: "owned" | "provided") => {
     return () => {
       title === "provided" ? setDisplayedTemplates(providedTemplates) : setDisplayedTemplates(userTemplates)
       setDisplayedTemplatesTitle(title)
@@ -58,7 +58,7 @@ export const TemplateSettings = () => {
       <div className="w-1/5 p-4">
         <h1 className="text-xl font-semibold mb-2">Template Settings</h1>
         <div className="mb-2">
-          <span className={displayedTemplatesTitle === "subscribed" ? "underline" : "cursor-pointer"} onClick={handleTitleChange("subscribed")}>Subscribed</span>
+          <span className={displayedTemplatesTitle === "owned" ? "underline" : "cursor-pointer"} onClick={handleTitleChange("owned")}>Owned</span>
           <span> | </span>
           <span className={displayedTemplatesTitle === "provided" ? "underline" : "cursor-pointer"} onClick={handleTitleChange("provided")}>Provided</span>
         </div>
@@ -70,13 +70,12 @@ export const TemplateSettings = () => {
         />
         {
           displayedTemplates?.map((templ, idx) => (
-            <div key={idx} className="flex flex-row items-center justify-between group/templates w-full w-full mt-2 hover:bg-slate-200 p-2 cursor-pointer">
-              <div onClick={() => {
-                handleTemplateChange(templ);
-              }}>
+            <div key={idx}
+                 className="flex flex-row items-center justify-between group/templates w-full w-full mt-2 hover:bg-slate-200 p-2 cursor-pointer" onClick={() => { handleTemplateChange(templ) } }>
+              <div>
                 {templ['templateName']}
               </div>
-              <TrashIcon className={displayedTemplatesTitle === "subscribed" ? " group-hover:block" : "hidden group-hover:block"} onClick={handleDelete(templ["id"])}/>
+              <TrashIcon className={displayedTemplatesTitle === "owned" ? " group-hover:block" : "hidden group-hover:block"} onClick={handleDelete(templ["id"])}/>
             </div>
           ))
         }
