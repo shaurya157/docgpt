@@ -203,6 +203,7 @@ const Sidebar = ({
   ) => {
     if (itemId === "settings") {
       router.push(`/settings`);
+      return;
     }
     e.stopPropagation();
     const button = e.currentTarget;
