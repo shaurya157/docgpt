@@ -2,7 +2,8 @@
 
 import {useState} from "react";
 
-import {useRouter} from "next/navigation";
+import { useSession } from 'next-auth/react';
+import { redirect, useRouter } from 'next/navigation';
 
 import { AssistantSettings } from '@/components/settings/assistant-settings';
 import { TemplateSettings } from '@/components/settings/template-settings';
@@ -14,9 +15,15 @@ export default function Settings({params}) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const router = useRouter();
     const [activeSetting, setActiveSetting] = useState("templates")
+    const { data: session } = useSession();
 
     const redirectToHome = () => {
         router.push("/home")
+    }
+
+    // TODO: a bit hacky...
+    if (!session?.user) {
+      redirect('/');
     }
 
     const getSettingsItem = () => {
@@ -32,6 +39,7 @@ export default function Settings({params}) {
         }
       }
     }
+
     return (
         <div className="flex h-screen flex-col">
             <HomeHeader
