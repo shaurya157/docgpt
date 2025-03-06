@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useState } from 'react';
 
-import { FileIcon, TrashIcon } from 'lucide-react';
+import { FileIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
@@ -12,7 +13,6 @@ import {
   useOpenState,
 } from '@/components/plate-ui/dropdown-menu';
 import { TemplatesDialog } from '@/components/sidebar/templates-dialog';
-import { deleteTemplate } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
@@ -24,7 +24,9 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
   const openState = useOpenState();
   const [ openDialog, setOpenDialog ] = useState(false);
   const { setUserTemplates, userTemplates } = useUserDataContext();
-  const { activeUserDocument, providedTemplates } = useDocument();
+  const { activeUserDocument } = useDocument();
+  const router = useRouter();
+
   const newTemplate = {
     template: [
       {
@@ -50,23 +52,6 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
     };
   };
 
-  const handleDelete = (templateId: string) => {
-    return async () => {
-      await deleteTemplate(templateId);
-      const filteredTemplates = userTemplates?.filter(
-        (templ) => templ['id'] !== templateId
-      );
-      setUserTemplates(filteredTemplates);
-    };
-  };
-
-  const handlePreview = (template) => {
-    return () => {
-      setOpenDialog(true)
-      setDisplayedTemplate(template)
-    }
-  }
-
   return (
     <DropdownMenu modal={false} {...openState}>
       <DropdownMenuTrigger asChild>
@@ -83,7 +68,7 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
         <TemplatesDialog open={openDialog} displayedTemplate={displayedTemplate} setOpen={setOpenDialog}/>
         <div className="mb-2 flex items-center justify-between">
           <b className="mr-2">Your Templates</b>
-          <Button variant="roundedClear" onClick={handlePreview(newTemplate)}>
+          <Button variant="roundedClear" onClick={() => router.push("/settings")}>
             Create New Template
           </Button>
         </div>
@@ -92,35 +77,10 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
             return (
               <div
                 key={idx}
-                className="width-420 group/item flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
+                className=" group/item flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
               >
-                <Button variant="link" className="text-justify" onClick={handlePreview(templ)}>
-                  <p className="w-64">{templ['templateName']}</p>
-                </Button>
+                <p className="w-64">{templ['templateName']}</p>
 
-                <Button variant="roundedClear" className="mr-1" onClick={handleApply(templ)}>
-                  Apply
-                </Button>
-                <TrashIcon
-                  className="hidden group-hover/item:block cursor-pointer"
-                  onClick={handleDelete(templ['id'])}
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        <b className="my-2">DocGPT Provided Templates</b>
-        <div className="no-scrollbar h-64 p-2 overflow-y-scroll rounded-md border border-gray-300 border-opacity-25">
-          {providedTemplates?.map((templ, idx) => {
-            return (
-              <div
-                key={idx}
-                className=" flex flex-row items-center space-y-1 p-2 hover:bg-gray-300"
-              >
-                <Button variant="link" className="text-justify" onClick={handlePreview(templ)}>
-                  <p className="w-64">{templ['templateName']}</p>
-                </Button>
                 <Button variant="roundedClear" className="mr-1" onClick={handleApply(templ)}>
                   Apply
                 </Button>

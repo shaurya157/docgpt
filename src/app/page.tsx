@@ -25,7 +25,7 @@ export default function Landing() {
     <div className="flex flex-col items-center container">
       <section className="my-20 p-10 flex h-1/3 w-full flex-row-reverse items-center">
         <div className="w-1/2 flex flex-col px-10 h-full">
-          <h1 className="mb-8 text-xl font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+          <h1 className="mb-8 text-5xl font-bold leading-none tracking-tight text-gray-900 dark:text-white ">
             Create product artifact documents in minutes
           </h1>
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
@@ -50,7 +50,7 @@ export default function Landing() {
       </section>
       <section className="my-20 p-10 flex h-1/3 w-full flex-row items-center">
         <div className="w-1/2 flex flex-col px-10 h-full">
-          <h1 className="mb-8 text-xl font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+          <h1 className="mb-8 text-5xl font-bold leading-none tracking-tight text-gray-900 dark:text-white">
             Hyper relevant responses
           </h1>
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
@@ -66,7 +66,7 @@ export default function Landing() {
       </section>
       <section className="my-20 p-10 flex h-1/3 w-full flex-row-reverse items-center">
         <div className="w-1/2 flex flex-col px-10 h-full">
-          <h1 className="mb-8 text-xl font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+          <h1 className="mb-8 text-5xl font-bold leading-none tracking-tight text-gray-900 dark:text-white">
             Next generation document editing
           </h1>
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
@@ -79,7 +79,7 @@ export default function Landing() {
       </section>
       <section className="my-20 p-10 flex h-1/3 w-full flex-row items-center">
         <div className="w-1/2 flex flex-col px-10 h-full">
-          <h1 className="mb-8 text-xl font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+          <h1 className="mb-8 text-5xl font-bold leading-none tracking-tight text-gray-900 dark:text-white">
             Add a custom template for your company’s document format
           </h1>
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
@@ -92,7 +92,7 @@ export default function Landing() {
       </section>
       <section className="my-20 p-10 flex h-1/3 w-full flex-row-reverse items-center">
         <div className="w-1/2 flex flex-col px-10 h-full">
-          <h1 className="mb-8 text-xl font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+          <h1 className="mb-8 text-5xl font-bold leading-none tracking-tight text-gray-900 dark:text-white">
             Add a custom template for your company’s document format
           </h1>
           <p className="mb-6 text-lg font-normal  dark:text-gray-400">
@@ -103,16 +103,16 @@ export default function Landing() {
           <Image alt="Quick Edit functionality for editing using AI on the fly" src={QuickEdit}/>
         </div>
       </section>
-      <section className="my-20 p-10 flex h-1/3 w-full items-center justify-center">
-        <div className="w-1/2 flex flex-col px-10 h-full">
-          <h1 className="mb-8 text-xl font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
-            Supercharge your team’s shipping speed for $20/month
-          </h1>
-          <p className="mb-6 text-lg font-normal  dark:text-gray-400">
-            DocGPT is built to minimize the time that tech teams spend either not talking to customers or writing code. Doc GPT can..
-          </p>
-        </div>
-      </section>
+      {/* <section className="my-20 p-10 flex h-1/3 w-full items-center justify-center"> */}
+      {/*  <div className="w-1/2 flex flex-col px-10 h-full"> */}
+      {/*    <h1 className="mb-8 text-xl font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl"> */}
+      {/*      Supercharge your team’s shipping speed for $20/month */}
+      {/*    </h1> */}
+      {/*    <p className="mb-6 text-lg font-normal  dark:text-gray-400"> */}
+      {/*      DocGPT is built to minimize the time that tech teams spend either not talking to customers or writing code. Doc GPT can.. */}
+      {/*    </p> */}
+      {/*  </div> */}
+      {/* </section> */}
 
     </div>
   </div>;

@@ -2,10 +2,8 @@
 
 import React, { createContext, useContext, useState } from 'react';
 
-import { Template } from '@/types';
-
 type DocumentSettings = {
-  setActiveTemplate: React.Dispatch<React.SetStateAction<Template | null>>
+  setActiveTemplate: React.Dispatch<React.SetStateAction<any | null>>
   setActiveUserDocument: React.Dispatch<React.SetStateAction<any>>;
   activeTemplate?: any | null;
   activeUserDocument?: any | null;

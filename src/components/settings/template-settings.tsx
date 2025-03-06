@@ -4,6 +4,7 @@ import { TrashIcon } from 'lucide-react';
 
 import { PlateEditor } from '@/components/editor/plate-editor';
 import { useCreateEditor } from '@/components/editor/use-create-editor';
+import { Button } from '@/components/plate-ui/button';
 import { deleteTemplate } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
@@ -43,6 +44,26 @@ export const TemplateSettings = () => {
     )
   }
 
+  const handleNewTemplate = () => {
+    const emptyEditor = [
+      {
+        id: '1',
+        children: [
+          {
+            text: '',
+          },
+        ],
+        type: 'h1',
+      },
+    ]
+
+    setActiveTemplate({
+      template: emptyEditor,
+      templateName: "New Template"
+    })
+    editor.tf.setValue(emptyEditor)
+  }
+
   const handleDelete = (templateId: string) => {
     return async () => {
       await deleteTemplate(templateId);
@@ -56,7 +77,10 @@ export const TemplateSettings = () => {
   return (
     <div className="flex flex-row items-start">
       <div className="w-1/5 p-4">
-        <h1 className="text-xl font-semibold mb-2">Template Settings</h1>
+        <div className="flex justify-between">
+          <h1 className="text-xl font-semibold mb-2">Template Settings</h1>
+          <Button variant="roundedClear" onClick={handleNewTemplate}>New</Button>
+        </div>
         <div className="mb-2">
           <span className={displayedTemplatesTitle === "owned" ? "underline" : "cursor-pointer"} onClick={handleTitleChange("owned")}>Owned</span>
           <span> | </span>
@@ -75,7 +99,7 @@ export const TemplateSettings = () => {
               <div>
                 {templ['templateName']}
               </div>
-              <TrashIcon className={displayedTemplatesTitle === "owned" ? " group-hover:block" : "hidden group-hover:block"} onClick={handleDelete(templ["id"])}/>
+              <TrashIcon className={displayedTemplatesTitle === "owned" ? "group-hover/templates:block" : "hidden"} onClick={handleDelete(templ["id"])}/>
             </div>
           ))
         }
