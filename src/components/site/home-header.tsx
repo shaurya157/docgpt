@@ -1,5 +1,6 @@
-import { SquarePen } from 'lucide-react';
+import { HomeIcon, SquarePen } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 import SidebarIcon from '../../assets/icons/sidebar.svg';
 
@@ -17,6 +18,7 @@ const HomeHeader = ({
   onNewChat,
 }: HeaderProps) => {
   const isProduction = process.env.NODE_ENV === 'production'
+  const router = useRouter();
 
   const toggleEditor = () => {
     if (editorOpen) {
@@ -35,12 +37,13 @@ const HomeHeader = ({
         <Image className="cursor-pointer" alt="Toggle Sidebar" height={24} src={SidebarIcon} width={24} />
       </button>
       <div className="flex items-center ">
-        <SquarePen
-          className="mr-3 cursor-pointer"
-          onClick={() => {
-            onNewChat();
-          }}
-        />
+        <button className="rounded-lg p-2 hover:bg-[#ECECEC] cursor-pointer" onClick={() => { router.push("/home") }}>
+          <HomeIcon/>
+        </button>
+        <button className="rounded-lg p-2 hover:bg-[#ECECEC] cursor-pointer" onClick={() => { onNewChat() }}>
+          <SquarePen />
+        </button>
+
         { !isProduction && (
           <label className="me-5 inline-flex cursor-pointer items-center">
           <span className="mr-3 ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">

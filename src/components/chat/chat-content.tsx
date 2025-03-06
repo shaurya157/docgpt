@@ -142,11 +142,12 @@ const ChatContent = ({
   const sendMessage = async (item, newMessage: Message) => {
 
     const formData = new FormData();
+    const threadId = item.threadId;
     const serializedEditorValue = parseEditorAndGetDocumentAndSelection(
       newMessage.content
     );
     formData.append('message', serializedEditorValue);
-    formData.append('threadId', item['threadId']);
+    formData.append('threadId', threadId);
     formData.append('assistantId', chatAssistantId!);
     formData.append(
       'additionalInstructions',
@@ -174,6 +175,7 @@ const ChatContent = ({
 
       const runner = AssistantStream.fromReadableStream(result.body)
       setStatus('awaiting_message');
+
       runner.on('textDelta', (_delta, contentSnapshot) => {
         const newStreamingMessage = {
           ...streamingMessage,
@@ -420,7 +422,6 @@ const ChatContent = ({
     }
   }
 
-  console.log(hideChat)
   if (hideChat && activeChatMessages.length > 1) {
     return (
         <div className="h-full p-4">
@@ -465,7 +466,7 @@ const ChatContent = ({
                       {
                         activeUserDocument["files"] && (
                               activeUserDocument.files.map((file, idx) => {
-                                return <div key={idx} className="truncate">
+                                return <div key={idx} className="truncate mb-2">
                                   <span>{file["fileName"]}</span>
                                 </div>
                               })
@@ -554,7 +555,7 @@ const ChatContent = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
-
+      
       <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
         {attachments.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-2">

@@ -186,6 +186,11 @@ export default function Home() {
     editor.tf.setValue(doc["document"])
   }
 
+  // this resets the state when user goes to settings from home then back to home from settings
+  useEffect(() => {
+    resetState()
+  }, []);
+
   const onboardingSteps = [
     {
       content: 'Your chats with DocGPT will show here',

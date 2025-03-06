@@ -3,7 +3,6 @@ import { useState } from 'react';
 
 import { FileIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
 import {
@@ -48,7 +47,6 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
       const currActiveDoc = { ...activeUserDocument };
       currActiveDoc['document'] = template['template'];
       setActiveItem(currActiveDoc, true);
-      toast.info(`Using ${template['templateName']} to generate docs.`);
     };
   };
 

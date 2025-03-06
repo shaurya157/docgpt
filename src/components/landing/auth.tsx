@@ -11,7 +11,7 @@ export function SignIn({ displayText, provider, ...props}: { provider?: string }
       className="mr-4"
       action={async () => {
         'use server';
-        await signIn(provider, { redirectTo: '/home' });
+        await signIn('google', { redirectTo: '/home' });
       }}
     >
       <Button {...props}>{displayText}</Button>

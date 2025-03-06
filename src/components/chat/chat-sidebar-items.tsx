@@ -21,16 +21,16 @@ export const ChatSidebarItems = ({activeUserDocument, items, setActiveItem, onDe
                             ? 'bg-[#ECECEC]'
                             : 'hover:bg-[#ECECEC]'
                     }`}
+                    onClick={() => {
+                        setActiveItem(
+                          item,
+                          activeUserDocument != undefined &&
+                          item['id'] === activeUserDocument['id']
+                        );
+                    }}
                 >
                     <button
                         className="flex-1 truncate text-left cursor-pointer"
-                        onClick={() => {
-                            setActiveItem(
-                                item,
-                                activeUserDocument != undefined &&
-                                item['id'] === activeUserDocument['id']
-                            );
-                        }}
                     >
                         <span className="block truncate">{item['documentName']}</span>
                     </button>
