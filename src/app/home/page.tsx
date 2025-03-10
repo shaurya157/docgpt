@@ -30,7 +30,7 @@ export default function Home() {
   const { chatAssistantId, setUserOwnedDocuments, userOwnedDocuments } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
-  const { selectedTemplate } = useChatSettings();
+  const { getCurrentTemplate } = useChatSettings();
   const [hideChat, setHideChat] = useState(false);
 
   // TODO: can prolly move this out to layout instead and provide it globally with a provider.
@@ -59,8 +59,9 @@ export default function Home() {
     );
 
     setActiveChatMessages([]);
+    const currentTemplate = getCurrentTemplate();
     const item = {
-      document: selectedTemplate["template"],
+      document: currentTemplate["template"],
       documentName: `Untitled`,
       threadId: responseJson['threadId'],
       vectorStoreId: responseJson['vectorStoreId'],
