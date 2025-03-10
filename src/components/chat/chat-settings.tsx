@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import { useChatSettings } from '@/providers/chat-settings-provider';
 
 export const ChatSettings = () => {
