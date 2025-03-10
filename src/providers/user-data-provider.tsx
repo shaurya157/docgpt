@@ -7,6 +7,7 @@ type UserDataContext = {
   setAssistantId: React.Dispatch<React.SetStateAction<string>>;
   setChatAssistantId: React.Dispatch<React.SetStateAction<string>>;
   setFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
+  setUserAssistants: React.Dispatch<React.SetStateAction<AssistantDefinition[] | null | undefined>>;
   setUserOwnedDocuments: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
   setUserTemplates: React.Dispatch<
     React.SetStateAction<Map<string, any>[] | null | undefined>
@@ -14,27 +15,26 @@ type UserDataContext = {
   setVectorStoreId: React.Dispatch<React.SetStateAction<string>>;
   assistantId?: string | null;
   chatAssistantId?: string | null;
+  userAssistants?: AssistantDefinition[] | null;
   userOwnedDocuments?: any[] | null;
   userTemplates?: Map<string, any | string>[] | null;
   vectorStoreId?: string | null;
-  setUserAssistants: React.Dispatch<React.SetStateAction<AssistantDefinition[] | null | undefined>>;
-  userAssistants?: AssistantDefinition[] | null;
 };
 export const UserDataContext = createContext<UserDataContext | null>(null);
+
+export interface AssistantDefinition {
+  description: string;
+  goals: string;
+  name: string;
+  ownerId: string;
+  role: string;
+  rules: string;
+  id?: string;
+}
 
 export interface FileInfo {
   fileName: string;
   openAiFileId: string;
-}
-
-export interface AssistantDefinition {
-  id?: string;
-  name: string;
-  description: string;
-  role: string;
-  goals: string;
-  rules: string;
-  ownerId: string;
 }
 
 interface UserDataProviderProps {
@@ -43,9 +43,9 @@ interface UserDataProviderProps {
   openAiAssistantId?: string | null;
   openAiChatAssistantId?: string | null;
   openAiVectorStoreId?: string | null;
+  userDefinedAssistants?: AssistantDefinition[] | null;
   userDefinedTemplates?: Map<string, any | string>[] | null;
   userDocuments?: any[] | null;
-  userDefinedAssistants?: AssistantDefinition[] | null;
 }
 
 export default function UserDataContextProvider({
@@ -54,9 +54,9 @@ export default function UserDataContextProvider({
   openAiAssistantId,
   openAiChatAssistantId,
   openAiVectorStoreId,
+  userDefinedAssistants,
   userDefinedTemplates,
   userDocuments,
-  userDefinedAssistants,
 }: UserDataProviderProps) {
   const [assistantId, setAssistantId] = useState(openAiAssistantId);
   const [chatAssistantId, setChatAssistantId] = useState(openAiChatAssistantId);
@@ -75,14 +75,14 @@ export default function UserDataContextProvider({
         setAssistantId,
         setChatAssistantId,
         setFiles,
+        setUserAssistants,
         setUserOwnedDocuments,
         setUserTemplates,
         setVectorStoreId,
+        userAssistants,
         userOwnedDocuments,
         userTemplates,
         vectorStoreId,
-        userAssistants,
-        setUserAssistants,
       }}
     >
       {children}

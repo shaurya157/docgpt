@@ -1,13 +1,15 @@
+import React from 'react';
+
 import { useChatSettings } from '@/providers/chat-settings-provider';
 
 export const ChatSettings = () => {
   const { 
+    allAssistants, 
     selectedAssistant, 
     selectedTemplate, 
+    userTemplates, 
     handleSelectedAssistant, 
-    handleSelectedTemplate, 
-    allAssistants, 
-    userTemplates 
+    handleSelectedTemplate 
   } = useChatSettings();
 
   return (

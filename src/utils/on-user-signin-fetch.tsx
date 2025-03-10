@@ -136,12 +136,12 @@ export async function getUserDefinedAssistants(userId: string) {
     assistantsSnapshot.docs.forEach((doc) => {
         const res = {
             id: doc.id,
-            name: doc.get('name'),
             description: doc.get('description'),
-            role: doc.get('role'),
             goals: doc.get('goals'),
-            rules: doc.get('rules'),
-            ownerId: doc.get('ownerId')
+            name: doc.get('name'),
+            ownerId: doc.get('ownerId'),
+            role: doc.get('role'),
+            rules: doc.get('rules')
         };
         result.push(res);
     });

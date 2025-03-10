@@ -483,27 +483,6 @@ const ChatContent = ({
           <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-4xl">
             What can I help with?
           </h1>
-          <div className="mb-8 flex flex-col">
-            <div>
-              {/* {chatSettingsHotLinks.map((hotlink) => { */}
-              {/*  return ( */}
-              {/*    <Button */}
-              {/*      key={hotlink['displayName']} */}
-              {/*      variant="roundedClear" */}
-              {/*      className="m-2" */}
-              {/*      onClick={handleQuickLinkClick(hotlink)} */}
-              {/*    > */}
-              {/*      {hotlink['displayName']} */}
-              {/*    </Button> */}
-              {/*  ); */}
-              {/* })} or */}
-              {/* <br /> */}
-              <Button variant="roundedClear" className="m-2" onClick={() => chatSettingsOpenState.setOpen(true)}>
-                <PenIcon />
-                Create a new document
-              </Button>
-            </div>
-          </div>
         </div>
       )}
       <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">

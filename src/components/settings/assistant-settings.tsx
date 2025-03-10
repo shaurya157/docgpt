@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
+
 import { TrashIcon } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 import { Button } from '@/components/plate-ui/button';
 import { deleteAssistant, saveAssistant } from '@/firebase/firestore-dao';
-import { useUserDataContext, AssistantDefinition } from '@/providers/user-data-provider';
-import { useSession } from 'next-auth/react';
+import { AssistantDefinition, useUserDataContext } from '@/providers/user-data-provider';
 
 export const AssistantSettings = () => {
-  const { userAssistants, setUserAssistants } = useUserDataContext();
+  const { setUserAssistants, userAssistants } = useUserDataContext();
   const [displayedAssistants, setDisplayedAssistants] = useState(userAssistants);
   const { data: session } = useSession();
   const [activeAssistant, setActiveAssistant] = useState<AssistantDefinition>({
-    name: '',
     description: '',
-    role: '',
     goals: '',
+    name: '',
+    ownerId: session!.user!.email!,
+    role: '',
     rules: '',
-    ownerId: session?.user?.email!,
   });
 
   console.log(userAssistants);
@@ -35,12 +36,12 @@ export const AssistantSettings = () => {
 
   const handleNewAssistant = () => {
     setActiveAssistant({
-      name: '',
       description: '',
-      role: '',
       goals: '',
+      name: '',
+      ownerId: session!.user!.email!,
+      role: '',
       rules: '',
-      ownerId: session?.user?.email!,
     });
   };
 

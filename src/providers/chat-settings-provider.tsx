@@ -8,12 +8,12 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 import { MenuItem } from '@/types';
 
 type ChatSettings = {
+  allAssistants: any[];
   selectedAssistant: {};
   selectedTemplate: {};
+  userTemplates: any[] | null | undefined;
   handleSelectedAssistant: (name: string) => void;
   handleSelectedTemplate: (id: string) => void;
-  allAssistants: any[];
-  userTemplates: any[] | null | undefined;
 };
 
 export const ChatSettingsContext = createContext<ChatSettings | null>(null);
@@ -29,7 +29,7 @@ export default function ChatSettingsProvider({
 }: ChatSettingsProviderProps) {
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
-  const { userTemplates, userAssistants } = useUserDataContext();
+  const { userAssistants, userTemplates } = useUserDataContext();
   const { activeUserDocument, setActiveUserDocument } = useDocument();
 
   // Combine default and user assistants
@@ -91,12 +91,12 @@ export default function ChatSettingsProvider({
   return (
     <ChatSettingsContext.Provider
       value={{
+        allAssistants,
         selectedAssistant,
         selectedTemplate,
+        userTemplates,
         handleSelectedAssistant,
         handleSelectedTemplate,
-        allAssistants,
-        userTemplates,
       }}
     >
       {children}
