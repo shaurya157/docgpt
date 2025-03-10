@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 
 import firebase_app from '@/firebase/config';
+import { AssistantDefinition } from '@/providers/user-data-provider';
 
 const db = getFirestore(firebase_app);
 
@@ -271,4 +272,41 @@ export async function getAssistants(assistantOwnerId: string) {
       where('ownerId', '==', assistantOwnerId)
     )
   );
+}
+
+export async function saveAssistant(
+  assistant: AssistantDefinition,
+  assistantId?: string
+) {
+  const assistantsRef = collection(db, "assistants");
+  let docId, error, result;
+
+  try {
+    if (assistantId) {
+      await setDoc(doc(assistantsRef, assistantId), assistant, { merge: true });
+      docId = assistantId;
+    } else {
+      const docRef = await addDoc(assistantsRef, assistant);
+      docId = docRef.id;
+      result = docRef;
+    }
+  } catch (e) {
+    error = e;
+  }
+
+  return { docId, error, result };
+}
+
+export async function deleteAssistant(assistantId: string) {
+  const assistantsRef = collection(db, 'assistants');
+  const docRef = doc(assistantsRef, assistantId);
+  let error, result;
+
+  try {
+    result = await deleteDoc(docRef);
+  } catch (e) {
+    error = e;
+  }
+
+  return { error, result };
 }

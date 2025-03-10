@@ -12,6 +12,7 @@ type ChatSettings = {
   selectedTemplate: {};
   handleSelectedAssistant: (name: string) => void;
   handleSelectedTemplate: (id: string) => void;
+  allAssistants: any[];
 };
 
 export const ChatSettingsContext = createContext<ChatSettings | null>(null);
@@ -27,11 +28,14 @@ export default function ChatSettingsProvider({
 }: ChatSettingsProviderProps) {
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
-  const { userTemplates } = useUserDataContext();
+  const { userTemplates, userAssistants } = useUserDataContext();
   const { activeUserDocument, setActiveUserDocument } = useDocument();
 
+  // Combine default and user assistants
+  const allAssistants = [...docgptProvidedAssistantDefinitions, ...(userAssistants || [])];
+
   const [selectedAssistant, setSelectedAssistant] = useState(
-    docgptProvidedAssistantDefinitions.find(
+    allAssistants.find(
       (assistant) => assistant['name'] === 'Default'
     )!
   );
@@ -46,11 +50,8 @@ export default function ChatSettingsProvider({
     templateName: 'No Template',
   });
 
-  // We are querying based on name here. This works fine as we do not support custom assistants yet.
-  // Case: when users define 2 assistants with the same name, only assistant 1 will show up due to the find below
-  // TODO: CHANGE to query based on ID, similar to handleSelectedTemplate method
   const handleSelectedAssistant = (name: string) => {
-    const assistant = docgptProvidedAssistantDefinitions.find(
+    const assistant = allAssistants.find(
       (assistant) => assistant['name'] === name
     );
 
@@ -93,6 +94,7 @@ export default function ChatSettingsProvider({
         selectedTemplate,
         handleSelectedAssistant,
         handleSelectedTemplate,
+        allAssistants,
       }}
     >
       {children}

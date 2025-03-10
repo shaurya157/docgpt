@@ -17,13 +17,13 @@ interface ChatSettingProps {
 export const ChatSettings = ({
   chatSettingsOpenState,
 }: ChatSettingProps) => {
-  const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { userTemplates } = useUserDataContext();
   const {
     selectedAssistant,
     selectedTemplate,
     handleSelectedAssistant,
     handleSelectedTemplate,
+    allAssistants,
   } = useChatSettings();
 
   const handleAssistantChange = (e) => {
@@ -55,13 +55,11 @@ export const ChatSettings = ({
                 value={selectedAssistant['name']}
                 onChange={handleAssistantChange}
               >
-                {docgptProvidedAssistantDefinitions.map((definition) => {
-                  return (
-                    <option key={definition['name']} value={definition['name']}>
-                      {definition['name']}
-                    </option>
-                  );
-                })}
+                {allAssistants.map((assistant) => (
+                  <option key={assistant.id || assistant.name} value={assistant.name}>
+                    {assistant.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="m-2">

@@ -130,3 +130,21 @@ export async function getAssistantDefinitions(assistantOwnerId) {
     return result;
 }
 
+export async function getUserDefinedAssistants(userId: string) {
+    const result: any[] = [];
+    const assistantsSnapshot = await getAssistants(userId);
+    assistantsSnapshot.docs.forEach((doc) => {
+        const res = {
+            id: doc.id,
+            name: doc.get('name'),
+            description: doc.get('description'),
+            role: doc.get('role'),
+            goals: doc.get('goals'),
+            rules: doc.get('rules'),
+            ownerId: doc.get('ownerId')
+        };
+        result.push(res);
+    });
+    return result;
+}
+

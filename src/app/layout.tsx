@@ -18,7 +18,8 @@ import {
   createAssistantIfNotExist, getAssistantDefinitions,
   getExistingUserUploadedFiles,
   getTemplates,
-  getUserDocs
+  getUserDocs,
+  getUserDefinedAssistants
 } from "@/utils/on-user-signin-fetch";
 import { TailwindIndicator } from '@/utils/tailwind-indicator';
 
@@ -41,15 +42,18 @@ export default async function RootLayout({
   let openAiAssistantId,
       openAiChatAssistantId,
       openAiVectorStoreId,
-      userDocuments;
+      userDocuments,
+      userDefinedAssistants;
   if (session?.user) {
     const res = await createAssistantIfNotExist(session);
     openAiAssistantId = res.openAiAssistantId;
     openAiVectorStoreId = res.openAiVectorStoreId;
     openAiChatAssistantId = res.openAiChatAssistantId;
     userDocuments = await getUserDocs(session);
+    userDefinedAssistants = await getUserDefinedAssistants(session.user.email!);
   }
 
+  console.log(userDefinedAssistants);
   return (
       <>
         <html lang="en" suppressHydrationWarning>
@@ -81,6 +85,7 @@ export default async function RootLayout({
                       : null
                 }
                 userDocuments={userDocuments}
+                userDefinedAssistants={session?.user ? userDefinedAssistants : null}
             >
               <DocumentProvider
                   docgptProvidedTemplates={

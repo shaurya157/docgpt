@@ -75,10 +75,10 @@ export const TemplateSettings = () => {
   };
 
   return (
-    <div className="flex flex-row items-start">
+    <div className="w-full flex flex-row items-start">
       <div className="w-1/5 p-4">
-        <div className="flex justify-between">
-          <h1 className="text-xl font-semibold mb-2">Template Settings</h1>
+        <div className="flex justify-between mb-2">
+          <h1 className="text-xl font-semibold ">Template Settings</h1>
           <Button variant="roundedClear" onClick={handleNewTemplate}>New</Button>
         </div>
         <div className="mb-2">
