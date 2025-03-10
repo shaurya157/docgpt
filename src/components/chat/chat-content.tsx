@@ -22,6 +22,7 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 import {DotAnimation} from "@/utils/animations";
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
 import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
+import { ChatInput } from '@/components/chat/chat-input';
 
 import UploadIcon from '../../assets/icons/arrowUp.svg';
 import AttachmentIcon from '../../assets/icons/attachment.svg';
@@ -536,7 +537,7 @@ const ChatContent = ({
       {status != "in_progress" && (
       <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
         {attachments.length > 0 && (
-          <div className="mb-1 flex flex-wrap gap-2">
+          <div className="mb-2 flex flex-wrap gap-2">
             {attachments.map((attachment, index) => (
               <div
                 key={index}
@@ -560,41 +561,16 @@ const ChatContent = ({
             ))}
           </div>
         )}
-        <div className="flex w-full items-center gap-1">
-          <input
-            ref={fileInputRef}
-            className="hidden"
-            onChange={updateAttachments}
-            type="file"
-            multiple
-          />
-          <button
-            className="cursor-pointer rounded-lg p-2 hover:bg-gray-200"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Image alt="Attach" height={20} src={AttachmentIcon} width={20} />
-          </button>
-          <textarea
-            ref={textareaRef}
-            className="height-30 max-h-52 w-full flex-1  overflow-auto p-1 text-gray-600 focus:outline-none"
-            disabled={status !== 'awaiting_message'}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Help me brainstorm about..."
-          />
-          <button
-            className={`rounded-full p-2 ${
-              inputValue
-                ? 'cursor-pointer bg-black'
-                : 'cursor-not-allowed bg-gray-200'
-            }`}
-            disabled={!inputValue}
-            onClick={handleSendMessage()}
-          >
-            <Image alt="Send" height={18} src={UploadIcon} width={18} />
-          </button>
-        </div>
+        <ChatInput
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          status={status}
+          handleSendMessage={handleSendMessage}
+          handleKeyPress={handleKeyPress}
+          updateAttachments={updateAttachments}
+          fileInputRef={fileInputRef}
+          textareaRef={textareaRef}
+        />
         <ChatSettings />
       </div>
       )}

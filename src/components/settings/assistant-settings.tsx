@@ -20,7 +20,6 @@ export const AssistantSettings = () => {
     rules: '',
   });
 
-  console.log(userAssistants);
   useEffect(() => {
     setDisplayedAssistants(userAssistants);
   }, [userAssistants]);

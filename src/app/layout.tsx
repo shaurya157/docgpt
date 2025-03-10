@@ -53,7 +53,6 @@ export default async function RootLayout({
     userDefinedAssistants = await getUserDefinedAssistants(session.user.email!);
   }
 
-  console.log(userDefinedAssistants);
   return (
       <>
         <html lang="en" suppressHydrationWarning>
