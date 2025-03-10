@@ -6,7 +6,7 @@ import { deserializeMd } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
 import { Message } from 'ai';
 import { motion } from 'framer-motion';
-import {ChevronDownIcon, FileText, MessageCircleOffIcon, MessageCirclePlusIcon } from 'lucide-react';
+import {FileText, MessageCircleOffIcon, MessageCirclePlusIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { AssistantStream } from 'openai/lib/AssistantStream';
@@ -24,8 +24,6 @@ import { editorPromptTemplate } from '@/utils/editor-prompt-util';
 import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
 import { ChatInput } from '@/components/chat/chat-input';
 
-import UploadIcon from '../../assets/icons/arrowUp.svg';
-import AttachmentIcon from '../../assets/icons/attachment.svg';
 import CloseIcon from '../../assets/icons/x.svg';
 import { cn } from '@/lib/utils';
 
@@ -177,12 +175,16 @@ const ChatContent = ({
       const runner = AssistantStream.fromReadableStream(result.body)
 
       runner.on('textDelta', (_delta, contentSnapshot) => {
+        // Set status to awaiting_message on first content received
+        if (streamingMessage.content === "") {
+          setStatus('awaiting_message');
+        }
+        
         const newStreamingMessage = {
           ...streamingMessage,
           content: contentSnapshot.value,
         }
 
-        setStatus('awaiting_message');
         // Streaming returns is one word at a time. <Document indicates the beginning of a document creation. </ marks the end of it.
         if (!streamingDocument && contentSnapshot.value.includes("<Document")) {
           setStreamingDocument(true)

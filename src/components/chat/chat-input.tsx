@@ -1,5 +1,4 @@
-import { Dispatch, SetStateAction, useRef } from 'react';
-import { Message } from 'ai';
+import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
 
 import UploadIcon from '../../assets/icons/arrowUp.svg';
