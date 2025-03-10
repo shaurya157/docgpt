@@ -175,7 +175,6 @@ const ChatContent = ({
       }
 
       const runner = AssistantStream.fromReadableStream(result.body)
-      setStatus('awaiting_message');
 
       runner.on('textDelta', (_delta, contentSnapshot) => {
         const newStreamingMessage = {
@@ -183,6 +182,7 @@ const ChatContent = ({
           content: contentSnapshot.value,
         }
 
+        setStatus('awaiting_message');
         // Streaming returns is one word at a time. <Document indicates the beginning of a document creation. </ marks the end of it.
         if (!streamingDocument && contentSnapshot.value.includes("<Document")) {
           setStreamingDocument(true)
@@ -431,12 +431,13 @@ const ChatContent = ({
     )
   }
 
+  console.log(activeUserDocument)
   return (
     <motion.div
       className={cn(
         'flex flex-col items-start p-4', 
         chatInputPositioningCssClass,
-        editorOpen ? 'w-2/5' : 'w-1/2'
+        editorOpen ? 'w-1/3' : 'w-1/2'
       )}
       transition={{
         damping: 20,
@@ -461,7 +462,7 @@ const ChatContent = ({
       {status != "in_progress"  && activeChatMessages.length === 0 && (
         <div className={editor.children.length <= 2 ? "" : "hidden"}>
           <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-4xl">
-            What can I help with?
+            What can I help you write?
           </h1>
         </div>
       )}
