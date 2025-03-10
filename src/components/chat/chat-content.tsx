@@ -57,8 +57,7 @@ const ChatContent = ({
   onNewChat
 }: ContentProps) => {
   const { data: session } = useSession();
-  const { selectedAssistant, selectedTemplate, handleSelectedAssistant, handleSelectedTemplate, allAssistants, userTemplates } =
-    useChatSettings();
+  const { selectedAssistant, selectedTemplate, handleSelectedAssistant, handleSelectedTemplate } = useChatSettings();
   const { chatAssistantId } = useUserDataContext();
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<
@@ -479,7 +478,7 @@ const ChatContent = ({
           )
       }
 
-      {activeChatMessages.length === 0 && (
+      {status != "in_progress"  && activeChatMessages.length === 0 && (
         <div className={editor.children.length <= 2 ? "" : "hidden"}>
           <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-4xl">
             What can I help with?
@@ -555,7 +554,7 @@ const ChatContent = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
-      
+      {status != "in_progress" && (
       <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
         {attachments.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-2">
@@ -617,36 +616,9 @@ const ChatContent = ({
             <Image alt="Send" height={18} src={UploadIcon} width={18} />
           </button>
         </div>
-        <div className="mt-2 flex w-full items-center gap-2">
-          <div className="flex-1">
-            <select
-              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-              value={selectedAssistant['name']}
-              onChange={(e) => handleSelectedAssistant(e.target.value)}
-            >
-              {allAssistants.map((assistant) => (
-                <option key={assistant.id || assistant.name} value={assistant.name}>
-                  {assistant.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex-1">
-            <select
-              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-              value={selectedTemplate['id']}
-              onChange={(e) => handleSelectedTemplate(e.target.value)}
-            >
-              <option value="">No Template</option>
-              {userTemplates?.map((template, idx) => (
-                <option key={idx} value={template['id']}>
-                  {template['templateName']}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <ChatSettings />
       </div>
+      )}
     </motion.div>
   );
 };

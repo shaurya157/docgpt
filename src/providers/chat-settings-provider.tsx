@@ -14,7 +14,6 @@ type ChatSettings = {
   handleSelectedTemplate: (id: string) => void;
   allAssistants: any[];
   userTemplates: any[] | null | undefined;
-  getCurrentTemplate: () => any;
 };
 
 export const ChatSettingsContext = createContext<ChatSettings | null>(null);
@@ -38,7 +37,7 @@ export default function ChatSettingsProvider({
 
   const [selectedAssistant, setSelectedAssistant] = useState(
     allAssistants.find(
-      (assistant) => assistant['name'] === 'Default'
+      (assistant) => assistant['name'] === 'Default Assistant'
     )!
   );
   const [selectedTemplate, setSelectedTemplate] = useState({
@@ -89,10 +88,6 @@ export default function ChatSettingsProvider({
     setActiveItem!(currActiveDoc, true);
   };
 
-  const getCurrentTemplate = () => {
-    return selectedTemplate;
-  };
-
   return (
     <ChatSettingsContext.Provider
       value={{
@@ -102,7 +97,6 @@ export default function ChatSettingsProvider({
         handleSelectedTemplate,
         allAssistants,
         userTemplates,
-        getCurrentTemplate,
       }}
     >
       {children}
