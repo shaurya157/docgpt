@@ -288,7 +288,7 @@ export default function Home() {
             className={cn(
                 'z-10 overflow-y-scroll border bg-background shadow',
                 editorOpen ? '' : 'hidden',
-                hideChat ? 'w-full' : 'w-3/4'
+                hideChat ? 'w-full' : 'w-2/3'
             )}
           >
             <PlateEditor plateEditor={editor} />

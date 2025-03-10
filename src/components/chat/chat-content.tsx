@@ -27,6 +27,7 @@ import { ChatInput } from '@/components/chat/chat-input';
 import UploadIcon from '../../assets/icons/arrowUp.svg';
 import AttachmentIcon from '../../assets/icons/attachment.svg';
 import CloseIcon from '../../assets/icons/x.svg';
+import { cn } from '@/lib/utils';
 
 interface ContentProps {
   activeChatMessages: Message[];
@@ -432,10 +433,11 @@ const ChatContent = ({
 
   return (
     <motion.div
-      className={
-        'flex flex-col items-start p-4 ' + chatInputPositioningCssClass
-      }
-      style={{ width: editorOpen ? '45%' : '50%' }}
+      className={cn(
+        'flex flex-col items-start p-4', 
+        chatInputPositioningCssClass,
+        editorOpen ? 'w-2/5' : 'w-1/2'
+      )}
       transition={{
         damping: 20,
         duration: 0.2,
@@ -446,35 +448,12 @@ const ChatContent = ({
 
       {
         activeChatMessages.length != 0 && (
-            <div className="w-full h-30px p-2 flex justify-between items-center border-b-2 mb-2">
-              <div className="truncate flex justify-center items-center text-xl">
-                <span>{activeUserDocument["documentName"]}</span>
-              </div>
-              <div className="relative flex">
-                <span>( {activeUserDocument["files"] ? activeUserDocument["files"].length : 0} )</span>
-                <ChevronDownIcon className="mr-2 cursor-pointer" onClick={ () => {
-                  uploadedFilesDialog ? setUploadedFilesDialog(false) : setUploadedFilesDialog(true)
-                } }/>
-                {
-                  editorOpen && (
-                        <MessageCircleOffIcon className="cursor-pointer" onClick={ toggleHideChat }/>
-                    )
-                }
-                { uploadedFilesDialog && (
-                    <div className="bg-white border-2 absolute top-10 p-2 z-100 w-96 rounded-md">
-                      <span className="text-xl w-full block border-b-2 mb-2">Uploaded files</span>
-                      {
-                        activeUserDocument["files"] && (
-                              activeUserDocument.files.map((file, idx) => {
-                                return <div key={idx} className="truncate mb-2">
-                                  <span>{file["fileName"]}</span>
-                                </div>
-                              })
-                          )
-                      }
-                    </div>
-                )}
-              </div>
+            <div className="w-full h-30px p-2 flex justify-end items-center">
+              {
+                editorOpen && (
+                  <MessageCircleOffIcon className="cursor-pointer" onClick={ toggleHideChat }/>
+                )
+              }
             </div>
           )
       }
@@ -534,7 +513,7 @@ const ChatContent = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
-      {status != "in_progress" && (
+      {(status === "awaiting_message" || activeChatMessages.length > 0) && (
       <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
         {attachments.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
