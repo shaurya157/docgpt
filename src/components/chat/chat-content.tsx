@@ -6,7 +6,7 @@ import { deserializeMd } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
 import { Message } from 'ai';
 import { motion } from 'framer-motion';
-import {ChevronDownIcon, FileText, MessageCircleOffIcon, MessageCirclePlusIcon, PenIcon} from 'lucide-react';
+import {ChevronDownIcon, FileText, MessageCircleOffIcon, MessageCirclePlusIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { AssistantStream } from 'openai/lib/AssistantStream';
@@ -577,7 +577,7 @@ const ChatContent = ({
           <textarea
             ref={textareaRef}
             className="height-30 max-h-52 w-full flex-1  overflow-auto p-1 text-gray-600 focus:outline-none"
-            disabled={status === 'in_progress'}
+            disabled={status !== 'awaiting_message'}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
