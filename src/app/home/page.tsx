@@ -30,7 +30,7 @@ export default function Home() {
   const { chatAssistantId, setUserOwnedDocuments, userOwnedDocuments } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
-  const { selectedTemplate } = useChatSettings();
+  const { selectedTemplate, handleSelectedTemplate } = useChatSettings();
   const [hideChat, setHideChat] = useState(false);
 
   // TODO: can prolly move this out to layout instead and provide it globally with a provider.
@@ -184,8 +184,9 @@ export default function Home() {
     }
     setActiveUserDocument(doc)
     editor.tf.setValue(doc["document"])
+    handleSelectedTemplate("")
   }
-
+  
   // this resets the state when user goes to settings from home then back to home from settings
   useEffect(() => {
     resetState()

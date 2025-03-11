@@ -85,7 +85,7 @@ export default function ChatSettingsProvider({
     setSelectedTemplate(template);
     const currActiveDoc = { ...activeUserDocument };
     currActiveDoc['document'] = template['template'];
-    setActiveItem!(currActiveDoc, true);
+    if (setActiveItem) setActiveItem(currActiveDoc, true);
   };
 
   return (

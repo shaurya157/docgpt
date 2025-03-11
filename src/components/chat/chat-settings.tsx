@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { useChatSettings } from '@/providers/chat-settings-provider';
+import { useDocument } from '@/providers/document-provider';
 
 export const ChatSettings = () => {
   const { 
@@ -11,7 +12,9 @@ export const ChatSettings = () => {
     handleSelectedAssistant, 
     handleSelectedTemplate 
   } = useChatSettings();
+  const { providedTemplates } = useDocument();
 
+  console.log(selectedTemplate)
   return (
     <div className="mt-2 flex w-full items-center gap-2">
       <div className="flex-1">
@@ -21,7 +24,7 @@ export const ChatSettings = () => {
           onChange={(e) => handleSelectedTemplate(e.target.value)}
         >
           <option value="">No Template</option>
-          {userTemplates?.map((template, idx) => (
+          {userTemplates?.concat(providedTemplates).map((template, idx) => (
             <option key={idx} value={template['id']}>
               {template['templateName']}
             </option>
