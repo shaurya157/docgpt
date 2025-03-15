@@ -146,7 +146,8 @@ const ChatContent = ({
       newMessage.content
     );
     formData.append('message', serializedEditorValue);
-    formData.append('threadId', threadId);
+    formData.append('chatId', threadId);
+    formData.append('userId', session!.user!.email!);
     formData.append('assistantId', chatAssistantId!);
     formData.append(
       'additionalInstructions',
@@ -163,7 +164,7 @@ const ChatContent = ({
     );
 
     try {
-      const result = await fetch('/api/ai/chat/brainstormassistant', {
+      const result = await fetch('/api/ai/chat/agents', {
         body: formData,
         method: 'POST',
       });
@@ -171,7 +172,7 @@ const ChatContent = ({
       if (result.body == null) {
         throw new Error('The response body is empty.');
       }
-
+      
       const runner = AssistantStream.fromReadableStream(result.body)
 
       runner.on('textDelta', (_delta, contentSnapshot) => {
@@ -433,7 +434,6 @@ const ChatContent = ({
     )
   }
 
-  console.log(activeUserDocument)
   return (
     <motion.div
       className={cn(

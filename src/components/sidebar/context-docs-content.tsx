@@ -57,6 +57,7 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
   };
 
   const handleFiles = async (files: FileList) => {
+    console.log("handleFiles called");
     setUploadInProgress(true)
     const allowedTypes = [
       'application/pdf',
@@ -77,6 +78,7 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
     });
 
     try {
+      console.log("Sending request to /api/ai/files");
       const response = await fetch('/api/ai/files', {
         body: formData,
         method: 'POST',

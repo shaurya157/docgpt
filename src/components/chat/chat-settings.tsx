@@ -14,7 +14,6 @@ export const ChatSettings = () => {
   } = useChatSettings();
   const { providedTemplates } = useDocument();
 
-  console.log(selectedTemplate)
   return (
     <div className="mt-2 flex w-full items-center gap-2">
       <div className="flex-1">
