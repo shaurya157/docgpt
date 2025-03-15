@@ -30,7 +30,7 @@ export class ModelRouter {
 
     if (stream) {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "o1",
         stream: stream,
         messages: [
           { role: "system", content: system },
@@ -41,7 +41,7 @@ export class ModelRouter {
       return response.toReadableStream();
     } else {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "o1",
         messages: [
           { role: "system", content: system },
           { role: "user", content: input }

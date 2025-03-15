@@ -138,6 +138,7 @@ const ChatContent = ({
     }
   };
 
+  console.log(activeChatMessages)
   const sendMessage = async (item, newMessage: Message) => {
 
     const formData = new FormData();
@@ -173,57 +174,93 @@ const ChatContent = ({
         throw new Error('The response body is empty.');
       }
       
-      const runner = AssistantStream.fromReadableStream(result.body)
-
-      runner.on('textDelta', (_delta, contentSnapshot) => {
-        // Set status to awaiting_message on first content received
-        if (streamingMessage.content === "") {
-          setStatus('awaiting_message');
+      // Replace AssistantStream with direct stream handling
+      const reader = result.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedContent = '';
+      
+      const processStream = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              // Stream is complete, finalize the message
+              const finalMessage: Message = {
+                id: Date.now().toString(),
+                content: accumulatedContent,
+                role: "assistant",
+              };
+              
+              // Check if the content contains a document
+              if (accumulatedContent.includes("<Document>") && accumulatedContent.includes("</Document>")) {
+                const { document, documentTitle } = parseAssistantResponse({
+                  ...streamingMessage,
+                  content: accumulatedContent
+                });
+                updateEditorWithNewDocument(document, documentTitle)();
+                toast.success(`Changing the current document to ${documentTitle}`);
+              }
+              
+              // Reset streaming state
+              setStreamingDocument(false);
+              setStreamingMessage({
+                ...streamingMessage,
+                content: ""
+              });
+              
+              // Add the final message to the chat
+              setActiveChatMessages((messages) => [...messages, finalMessage]);
+              break;
+            }
+            
+            // Decode the chunk and update the streaming message
+            const chunk = decoder.decode(value, { stream: true });
+            
+            // Split by newlines to handle multiple JSON objects in a single chunk
+            const jsonStrings = chunk.split('\n').filter(str => str.trim() !== '');
+            
+            for (const jsonStr of jsonStrings) {
+              try {
+                const jsonChunk = JSON.parse(jsonStr);
+                // Extract only the content from the delta field if it exists
+                if (jsonChunk.choices && jsonChunk.choices[0]?.delta?.content) {
+                  accumulatedContent += jsonChunk.choices[0].delta.content;
+                }
+              } catch (e) {
+                // If not valid JSON, skip this part
+                console.warn("Failed to parse JSON chunk:", e);
+              }
+            }
+            
+            // Set status to awaiting_message on first content received
+            if (streamingMessage.content === "") {
+              setStatus('awaiting_message');
+            }
+            
+            // Update the streaming message with the accumulated content
+            const newStreamingMessage = {
+              ...streamingMessage,
+              content: accumulatedContent,
+            };
+            
+            // Check for document tags
+            if (!streamingDocument && accumulatedContent.includes("<Document")) {
+              setStreamingDocument(true);
+            } else if (streamingDocument && accumulatedContent.includes("</Document>")) {
+              setStreamingDocument(false);
+            } else {
+              setStreamingMessage(newStreamingMessage);
+            }
+          }
+        } catch (error) {
+          console.error("Error processing stream:", error);
+          toast.error(`Error processing response: ${error.message}`);
         }
-        
-        const newStreamingMessage = {
-          ...streamingMessage,
-          content: contentSnapshot.value,
-        }
-
-        // Streaming returns is one word at a time. <Document indicates the beginning of a document creation. </ marks the end of it.
-        if (!streamingDocument && contentSnapshot.value.includes("<Document")) {
-          setStreamingDocument(true)
-        } else if (streamingDocument && contentSnapshot.value.includes("</Document>")) {
-          setStreamingDocument(false)
-        } else {
-          setStreamingMessage(newStreamingMessage)
-        }
-      });
-
-      runner.on('messageDone', (message) => {
-        const finalContent =  message.content[0].type == "text" ? message.content[0].text.value : "";
-        setStreamingDocument(false)
-        const tempMessage: Message = {
-          id: message.id,
-          content: finalContent,
-          role: message.role,
-        }
-        if (finalContent.includes("<Document>") && finalContent.includes("</Document>")) {
-          const { document, documentTitle } = parseAssistantResponse({
-            ...streamingMessage,
-            content: finalContent
-          })
-          updateEditorWithNewDocument(document, documentTitle)()
-          toast.success(`Changing the current document to ${documentTitle}`)
-        }
-
-
-        setStreamingMessage({
-          ...streamingMessage,
-          content: ""
-        })
-
-        setActiveChatMessages((messages: Message[]) => [
-          ...messages,
-          tempMessage,
-        ]);
-      })
+      };
+      
+      // Start processing the stream
+      processStream();
     } catch (error) {
       toast.error(error.message);
     }
