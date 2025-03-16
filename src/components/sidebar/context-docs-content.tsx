@@ -10,7 +10,7 @@ import {
   appendFileDataToUser,
   deleteUserUploadedFile,
 } from '@/firebase/firestore-dao';
-import { useUserDataContext } from '@/providers/user-data-provider';
+import { useUserDataContext, FileInfo } from '@/providers/user-data-provider';
 
 import FolderIcon from '../../assets/icons/folder.svg';
 import InfoIcon from '../../assets/icons/info.svg';
@@ -27,7 +27,6 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
   const { data: session } = useSession();
   const { files, setFiles, vectorStoreId } = useUserDataContext();
   const [ uploadInProgress, setUploadInProgress ] = useState(false);
-  // const [documents, setDocuments] = useState<FileInfo[]>(files!);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
@@ -85,60 +84,64 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
       });
 
       const responseJson = await response.json();
+      console.log("responseJson", responseJson);
 
-      await appendFileDataToUser(
-        session!.user!.email!,
-        responseJson['openAiFileIds']
-      );
-      toast.success('Success uploading file!');
+      const successfulFiles = responseJson.files.filter((file: FileInfo) => file.status === 'success');
+      if (successfulFiles.length > 0) {
+        await appendFileDataToUser(session!.user!.email!, successfulFiles);
+        setFiles((prev) => [...prev, ...successfulFiles]);
+        toast.success('Successfully uploaded files!');
+      }
+
+      const failedFiles = responseJson.files.filter((file: FileInfo) => file.status === 'error');
+      if (failedFiles.length > 0) {
+        toast.error(`Failed to upload some files: ${failedFiles.map((f: FileInfo) => f.fileName).join(', ')}`);
+      }
     } catch (e) {
       toast.error(
         `Something went wrong while uploading. Please refresh the page and try again. Error: ${e}`
       );
     }
 
-    const newDocs = validFiles.map((file) => ({
-      fileName: file.name,
-      openAiFileId: Math.random().toString(36).substr(2, 9),
-      // You can add more properties like size, type, etc.
-    }));
-
-    setFiles((prev) => [...prev, ...newDocs]);
-
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
 
-    setUploadInProgress(false)
+    setUploadInProgress(false);
   };
 
-  const handleDeleteFile = async (openAiFileId: string, fileName: string) => {
-    const response = await fetch('/api/ai/files', {
-      body: JSON.stringify({ openAiFileId }),
-      method: 'DELETE',
-    });
+  const handleDeleteFile = async (fileIds: string[], fileName: string) => {
+    try {
+      // First delete from Pinecone
+      const response = await fetch('/api/ai/files', {
+        body: JSON.stringify({ fileIds }),
+        method: 'DELETE',
+      });
 
-    const responseJson = await response.json();
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
 
-    if (response.ok) {
+      // Then delete from Firestore
       const res = await deleteUserUploadedFile(
         session!.user!.email!,
         fileName,
-        openAiFileId
+        fileIds
       );
 
       if (!res.error) {
         toast.success('Successfully deleted');
+        setFiles((prev) =>
+          prev.filter((doc) => doc.fileName !== fileName)
+        );
       } else {
         toast.error(`Error deleting file. Error: ${res.error.message}`);
       }
-    } else {
-      console.log(`Error deleting! Error: ${responseJson.message}`);
+    } catch (error) {
+      toast.error(`Error deleting file: ${error}`);
     }
-    setFiles((prev) =>
-      prev.filter((doc) => doc.openAiFileId !== openAiFileId)
-    );
   };
 
   const handleBrowseClick = () => {
@@ -208,18 +211,18 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
         <div className="max-h-[150px] overflow-y-auto rounded-xl border">
           {files!.map((file, idx) => (
             <div
-              key={file!.openAiFileId + idx}
+              key={file.fileIds[0] + idx}
               className="group flex cursor-pointer items-center justify-between rounded-lg p-2 hover:rounded-none hover:bg-[#ECECEC]"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <Image alt="doc" height={16} src={FolderIcon} width={16} />
                 <span className="truncate text-sm text-gray-700">
-                  {file!.fileName}
+                  {file.fileName}
                 </span>
               </div>
               <button
                 className="cursor-pointer shrink-0 rounded-lg p-1.5 text-gray-400 transition-all duration-200 hover:bg-gray-300 hover:text-gray-600"
-                onClick={() => handleDeleteFile(file!.openAiFileId, file!.fileName)}
+                onClick={() => handleDeleteFile(file.fileIds, file.fileName)}
               >
                 <Image alt="remove" height={16} src={RemoveIcon} width={16} />
               </button>

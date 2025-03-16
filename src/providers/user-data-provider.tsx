@@ -34,7 +34,9 @@ export interface AssistantDefinition {
 
 export interface FileInfo {
   fileName: string;
-  openAiFileId: string;
+  fileIds: string[];
+  status?: string;
+  error?: string;
 }
 
 interface UserDataProviderProps {

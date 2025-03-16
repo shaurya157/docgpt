@@ -3,32 +3,31 @@ import OpenAI from 'openai';
 import { Pinecone } from '@pinecone-database/pinecone';
 import fs from "fs";
 import pdfParse from "pdf-parse";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function DELETE(req: NextRequest) {
   const reqJson = await req.json();
-  const { openAiFileId } = reqJson;
+  const { fileIds } = reqJson;
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const openai = new OpenAI({
-    apiKey: apiKey || '',
+  const pinecone = new Pinecone({
+    apiKey: process.env.PINECONE_API_KEY || '',
   });
+  const index = pinecone.Index(process.env.PINECONE_INDEX || "");
 
   try {
-    const deleteFileResponse = await openai.files.del(openAiFileId);
+    // Delete all chunks associated with the file
+    await index.deleteMany(fileIds);
 
-    if (deleteFileResponse.deleted) {
-      return NextResponse.json({
-        message: 'File deleted successfully.',
-      });
-    } else {
-      return NextResponse.json({
-        message: `Encountered an error while deleting from Open AI, non 200 status code`,
-      });
-    }
-  } catch (deleteError) {
     return NextResponse.json({
-      message: `Error deleting file. Error: ${deleteError}`,
+      message: 'File chunks deleted successfully.',
+      status: 200
     });
+  } catch (deleteError) {
+    console.error("Error deleting chunks:", deleteError);
+    return NextResponse.json({
+      message: `Error deleting file chunks. Error: ${deleteError}`,
+      status: 500
+    }, { status: 500 });
   }
 }
 
@@ -56,7 +55,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result: any[] = [];
+    const result: { fileName: string; fileIds: string[]; status: string; error?: string }[] = [];
+    
     // Process each file
     for (const file of files) {
       try {        
@@ -135,27 +135,37 @@ export async function POST(req: NextRequest) {
           { inputType: 'passage' }
         )
 
-        // TODO: add a unique identifier to the id and proper metadata
-        const vectors = chunks.map((chunk, index) => ({
-          id: `${userId}-${file.name}-${index}`,
-          values: embeddings.data[index]["values"],
-          metadata: {
-            userId: userId?.toString() || '',
-            fileName: file.name,
-            text: chunk
-          }
-        }))
+        const chunkIds: string[] = [];
+        
+        // Create vectors with UUID as ids
+        const vectors = chunks.map((chunk, index) => {
+          const chunkId = uuidv4();
+          chunkIds.push(chunkId);
+          return {
+            id: chunkId,
+            values: embeddings.data[index]["values"],
+            metadata: {
+              userId: userId?.toString() || '',
+              fileName: file.name,
+              text: chunk
+            }
+          };
+        });
 
         await index.upsert(vectors);
 
-        return NextResponse.json({
-          message: `Successfully uploaded ${chunks.length} chunks from file: ${file.name}`
+        result.push({
+          fileName: file.name,
+          fileIds: chunkIds,
+          status: 'success'
         });
+
       } catch (fileError) {
         console.error(`Error processing file ${file.name}:`, fileError);
         console.error("File error message:", fileError.message)
         result.push({
           fileName: file.name,
+          fileIds: [],
           status: 'error',
           error: fileError.message
         });
@@ -188,20 +198,3 @@ function chunkText(text: string, maxLength: number): string[] {
 
   return chunks;
 }
-            
-// OpenAI API file upload
-// TODO: add polling here similar to /chat route where we check upload status
-// const fileUploadResponse = await openai.files.create({
-//   file,
-//   purpose: 'assistants',
-// });
-
-// result.push({
-//   fileName: file.name,
-//   openAiFileId: fileUploadResponse.id,
-// });
-
-// // TODO: add polling here similar to /chat route where we check upload status
-// await openai.beta.vectorStores.files.create(vectorStoreId as string, {
-//   file_id: fileUploadResponse.id,
-// });

@@ -68,7 +68,7 @@ export async function getExistingUserUploadedFiles(session: Session) {
             data.result.forEach((file) => {
                 result.push({
                     fileName: file.fileName,
-                    openAiFileId: file.openAiFileId,
+                    fileIds: file.fileIds,
                 });
             });
         }

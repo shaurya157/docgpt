@@ -20,25 +20,23 @@ const db = getFirestore(firebase_app);
 
 export async function appendFileDataToUser(
   userId: string,
-  filesData: Map<string, string>[]
+  filesData: { fileName: string; fileIds: string[]; status: string }[]
 ) {
   const usersRef = collection(db, 'users');
   const docRef = doc(usersRef, userId);
 
-  // TODO: Fix this when I fix firebase realtime update, this should be one api call not many
-  for (const data of filesData) {
-    const value = {
-      files: arrayUnion({
-        fileName: data['fileName'],
-        openAiFileId: data['openAiFileId'],
-      }),
-    };
+  const value = {
+    files: arrayUnion(...filesData.map(file => ({
+      fileName: file.fileName,
+      fileIds: file.fileIds
+    })))
+  };
 
-    try {
-      await setDoc(docRef, value, { merge: true });
-    } catch (e) {
-      console.log(e);
-    }
+  try {
+    await setDoc(docRef, value, { merge: true });
+  } catch (e) {
+    console.error('Error appending file data:', e);
+    throw e;
   }
 }
 
@@ -243,7 +241,7 @@ export async function deleteDocument(documentId: string) {
 export async function deleteUserUploadedFile(
   userId: string,
   fileName: string,
-  openAiFileId: string
+  fileIds: string[]
 ) {
   const usersRef = collection(db, 'users');
   const docRef = doc(usersRef, userId);
@@ -252,7 +250,7 @@ export async function deleteUserUploadedFile(
   const value = {
     files: arrayRemove({
       fileName: fileName,
-      openAiFileId: openAiFileId,
+      fileIds: fileIds
     }),
   };
 

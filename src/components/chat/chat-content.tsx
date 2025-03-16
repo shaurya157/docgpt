@@ -138,7 +138,6 @@ const ChatContent = ({
     }
   };
 
-  console.log(activeChatMessages)
   const sendMessage = async (item, newMessage: Message) => {
 
     const formData = new FormData();
