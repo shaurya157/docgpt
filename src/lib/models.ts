@@ -30,7 +30,7 @@ export class ModelRouter {
 
     if (stream) {
       const response = await this.openai.chat.completions.create({
-        model: "o1",
+        model: "gpt-4o",
         stream: stream,
         messages: [
           { role: "system", content: system },
@@ -41,7 +41,7 @@ export class ModelRouter {
       return response.toReadableStream();
     } else {
       const response = await this.openai.chat.completions.create({
-        model: "o1",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: system },
           { role: "user", content: input }
@@ -56,7 +56,7 @@ export class ModelRouter {
     console.log("Generating with DeepSeek");
     if (stream) {
       const response = await this.deepseek.chat.completions.create({
-        model: "deepseek-chat",
+        model: "deepseek-reasoner",
         stream: stream,
         messages: [
         { role: "system", content: system },
@@ -66,7 +66,7 @@ export class ModelRouter {
       return response.toReadableStream();
     } else {
       const response = await this.deepseek.chat.completions.create({
-        model: "deepseek-chat",
+        model: "deepseek-reasoner",
         messages: [
           { role: "system", content: system },
           { role: "user", content: input }

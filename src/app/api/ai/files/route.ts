@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { Pinecone } from '@pinecone-database/pinecone';
-import fs from "fs";
-import pdfParse from "pdf-parse";
 import { v4 as uuidv4 } from 'uuid';
 
 export async function DELETE(req: NextRequest) {
@@ -32,11 +30,9 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  console.log("Beginning upload")
   const formData = await req.formData();
   const files = formData.getAll('files') as File[];
   const userId = formData.get('userId');
-  const vectorStoreId = formData.get('vectorStoreId');
 
   const pinecone = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY || '',

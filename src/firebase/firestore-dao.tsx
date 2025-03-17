@@ -42,26 +42,24 @@ export async function appendFileDataToUser(
 
 export async function appendDocumentSpecificFileIds(
   documentId: string,
-  files: Map<string, string>[]
+  files: { fileName: string; fileIds: string[]; status: string }[]
 ) {
   const result: any[] = [];
   const error: Error[] = [];
   const documentsRef = collection(db, 'documents');
   const docRef = doc(documentsRef, documentId);
 
-  for (const file of files) {
-    const value = {
-      files: arrayUnion({
-        fileName: file['fileName'],
-        openAiFileId: file['openAiFileId'],
-      }),
-    };
+  const value = {
+    files: arrayUnion(...files.map(file => ({
+      fileName: file.fileName,
+      fileIds: file.fileIds
+    })))
+  };
 
-    try {
-      result.push(await setDoc(docRef, value, { merge: true }));
-    } catch (e) {
-      error.push(e);
-    }
+  try {
+    result.push(await setDoc(docRef, value, { merge: true }));
+  } catch (e) {
+    error.push(e);
   }
 
   return { error, result };

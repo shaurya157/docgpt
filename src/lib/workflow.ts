@@ -35,7 +35,6 @@ export class DocumentWorkflow {
   }
 
   private async retrieveNode(state: TAgentState) {
-    console.log("Retrieving context for query:", state.query);
     const index = this.pinecone.Index(process.env.PINECONE_INDEX || "");
     let results;
 
@@ -66,10 +65,8 @@ export class DocumentWorkflow {
   }
 
   private async generateNode(state: TAgentState) {
-    console.log("Generating draft for query:", state.query);
     const prompt = this.createGenerationPrompt(state);
     const output = await this.model.generate("openai", prompt, state.query, true)
-    console.log("Output: ", output);
     return {
       ...state,
       draft: output
@@ -95,6 +92,10 @@ export class DocumentWorkflow {
 
       User Query:
       ${state.query}
+
+      Rules:
+      - Always respond in markdown format.
+      - When the user specifically asks to create a document or make edits to the existing document, prepend the document created with <Document> and append the end of the document with </Document>.
     `;
   }
 }

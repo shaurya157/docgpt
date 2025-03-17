@@ -309,10 +309,16 @@ const ChatContent = ({
         if (resultJson.status === 400) {
           throw new Error(resultJson.message);
         }
-        const filesResultJson: Map<string, string>[] =
-          resultJson['openAiFileIds'];
 
-        fileIds.push(...filesResultJson);
+        const successfulFiles = resultJson.files.filter((file: any) => file.status === 'success');
+        if (successfulFiles.length > 0) {
+          fileIds.push(...successfulFiles);
+        }
+
+        const failedFiles = resultJson.files.filter((file: any) => file.status === 'error');
+        if (failedFiles.length > 0) {
+          toast.error(`Failed to upload some files: ${failedFiles.map((f: any) => f.fileName).join(', ')}`);
+        }
       } catch (e) {
         toast.error(
           `Error uploading file ${attachment.fileName}. Please send the following message to the developers: ${e}`
@@ -323,7 +329,9 @@ const ChatContent = ({
       }
     }
 
-    await appendDocumentSpecificFileIds(item!['id'], fileIds);
+    if (fileIds.length > 0) {
+      await appendDocumentSpecificFileIds(item!['id'], fileIds);
+    }
     setAttachments([]);
     setUploadInProgress(false);
   }
