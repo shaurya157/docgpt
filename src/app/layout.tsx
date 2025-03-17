@@ -41,13 +41,11 @@ export default async function RootLayout({
   const session = await auth();
   let openAiAssistantId,
       openAiChatAssistantId,
-      openAiVectorStoreId,
       userDefinedAssistants,
       userDocuments;
   if (session?.user) {
     const res = await createAssistantIfNotExist(session);
     openAiAssistantId = res.openAiAssistantId;
-    openAiVectorStoreId = res.openAiVectorStoreId;
     openAiChatAssistantId = res.openAiChatAssistantId;
     userDocuments = await getUserDocs(session);
     userDefinedAssistants = await getUserDefinedAssistants(session.user.email!);
@@ -77,7 +75,6 @@ export default async function RootLayout({
                 }
                 openAiAssistantId={session?.user ? openAiAssistantId : null}
                 openAiChatAssistantId={openAiChatAssistantId}
-                openAiVectorStoreId={openAiVectorStoreId}
                 userDefinedAssistants={session?.user ? userDefinedAssistants : null}
                 userDefinedTemplates={
                   session?.user

@@ -87,14 +87,12 @@ export async function getUserInfo(userid: string) {
 
   const result = await getDoc(docRef);
   const savedAssistantId = result.get('assistantId');
-  const savedVectorStoreId = result.get('vectorStoreId');
   const savedOpenAiChatAssistantId = result.get('openAiChatAssistantId');
   const savedActiveDocumentName = result.get('activeDocumentName');
   return {
     savedActiveDocumentName,
     savedAssistantId,
     savedOpenAiChatAssistantId,
-    savedVectorStoreId,
   };
 }
 
@@ -120,7 +118,6 @@ export async function saveCurrentDocumentState(
   userId: string,
   documentName: string,
   threadId: string,
-  documentVectorStoreId: string,
   document: any,
   documentId?: string
 ) {
@@ -132,7 +129,6 @@ export async function saveCurrentDocumentState(
       documentName: documentName,
       documentOwnerId: userId,
       threadId: threadId,
-      vectorStoreId: documentVectorStoreId,
     };
 
     result = documentId
@@ -180,7 +176,6 @@ export async function saveUserTemplate(
 export async function saveUserActiveAssistant(
   userId: string,
   assistantId: string,
-  vectoreStoreId: string,
   openAiChatAssistantId: string
 ) {
   const usersRef = collection(db, 'users');
@@ -191,7 +186,6 @@ export async function saveUserActiveAssistant(
     {
       assistantId: assistantId,
       openAiChatAssistantId: openAiChatAssistantId,
-      vectorStoreId: vectoreStoreId,
     },
     { merge: true }
   );

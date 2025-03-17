@@ -43,7 +43,6 @@ export function SaveButton() {
       session!.user!.email!,
       docName,
       activeUserDocument!['threadId'],
-      activeUserDocument!['vectorStoreId'],
       editor.children,
       activeUserDocument!['id']
     );

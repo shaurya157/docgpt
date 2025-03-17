@@ -11,7 +11,6 @@ import {FileInfo} from "@/providers/user-data-provider";
 
 export async function createAssistantIfNotExist(session: Session) {
     let openAiAssistantId;
-    let openAiVectorStoreId;
     let openAiChatAssistantId;
     // TODO: this is very inelegant. We are making the call in the site header/page and then passing all the children the user uploaded files.
     // I've done this due to a lack of knowledge about how to make server side callbacks when a user signs in. This is also potentially running multiple times...
@@ -22,11 +21,10 @@ export async function createAssistantIfNotExist(session: Session) {
     // All 3 should be done as a callback. If we do this, the user needs to refresh the page to see any details which isn't ideal.
     // The same is done on layout.tsx, once refactor make the same change there
     // Maybe we can use useEffect() here?
-    const { savedAssistantId, savedOpenAiChatAssistantId, savedVectorStoreId } =
+    const { savedAssistantId, savedOpenAiChatAssistantId } =
         await getUserInfo(session.user!.email!);
-    if (savedAssistantId && savedVectorStoreId && savedOpenAiChatAssistantId) {
+    if (savedAssistantId && savedOpenAiChatAssistantId) {
         openAiAssistantId = savedAssistantId;
-        openAiVectorStoreId = savedVectorStoreId;
         openAiChatAssistantId = savedOpenAiChatAssistantId;
     } else {
         const userId = session.user!.email!;
@@ -41,14 +39,12 @@ export async function createAssistantIfNotExist(session: Session) {
         );
         const responseJson = await createAssistantResult.json();
         openAiAssistantId = responseJson['assistantId'];
-        openAiVectorStoreId = responseJson['vectorStoreId'];
         openAiChatAssistantId = responseJson['chatAssistantId'];
 
         // TODO: Move this to the server, no need for this to happen here, potentially unsafe
         await saveUserActiveAssistant(
             userId,
             openAiAssistantId,
-            openAiVectorStoreId,
             openAiChatAssistantId
         );
     }
@@ -56,7 +52,6 @@ export async function createAssistantIfNotExist(session: Session) {
     return {
         openAiAssistantId,
         openAiChatAssistantId,
-        openAiVectorStoreId,
     };
 }
 
@@ -103,7 +98,6 @@ export async function getUserDocs(session: Session) {
             documentName: doc.get('documentName'),
             files: doc.get("files"),
             threadId: doc.get('threadId'),
-            vectorStoreId: doc.get('vectorStoreId')
         };
 
         result.push(res);

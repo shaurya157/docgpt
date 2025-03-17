@@ -296,7 +296,6 @@ const ChatContent = ({
     const fileIds: any[] = [];
 
     const filesFormData = new FormData();
-    filesFormData.append('vectorStoreId', item!['vectorStoreId']);
     filesFormData.append('userId', session!.user!.email!);
     for (const attachment of attachments) {
       try {

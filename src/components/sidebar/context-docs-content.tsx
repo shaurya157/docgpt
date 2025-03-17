@@ -25,7 +25,7 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
   const [dragActive, setDragActive] = useState(false);
 
   const { data: session } = useSession();
-  const { files, setFiles, vectorStoreId } = useUserDataContext();
+  const { files, setFiles } = useUserDataContext();
   const [ uploadInProgress, setUploadInProgress ] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,7 +56,6 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
   };
 
   const handleFiles = async (files: FileList) => {
-    console.log("handleFiles called");
     setUploadInProgress(true)
     const allowedTypes = [
       'application/pdf',
@@ -70,7 +69,6 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
     );
 
     const formData = new FormData();
-    formData.append('vectorStoreId', vectorStoreId!);
     formData.append('userId', session!.user!.email!);
     validFiles.forEach((file) => {
       formData.append('files', file);

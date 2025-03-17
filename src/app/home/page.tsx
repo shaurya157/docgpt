@@ -63,14 +63,12 @@ export default function Home() {
       document: selectedTemplate["template"],
       documentName: `Untitled`,
       threadId: responseJson['threadId'],
-      vectorStoreId: responseJson['vectorStoreId'],
     };
 
     const res = await saveCurrentDocumentState(
       session!.user!.email!,
       item['documentName'],
       item['threadId'],
-      item['vectorStoreId'],
       item['document']
     );
 
