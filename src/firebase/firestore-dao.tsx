@@ -40,14 +40,15 @@ export async function appendFileDataToUser(
   }
 }
 
-export async function appendDocumentSpecificFileIds(
-  documentId: string,
+export async function appendChatSpecificFileIds(
+  chatId: string,
   files: { fileName: string; fileIds: string[]; status: string }[]
 ) {
+  console.log("chatId", chatId);
   const result: any[] = [];
   const error: Error[] = [];
-  const documentsRef = collection(db, 'documents');
-  const docRef = doc(documentsRef, documentId);
+  const chatsRef = collection(db, 'chats');
+  const chatRef = doc(chatsRef, chatId);
 
   const value = {
     files: arrayUnion(...files.map(file => ({
@@ -57,7 +58,7 @@ export async function appendDocumentSpecificFileIds(
   };
 
   try {
-    result.push(await setDoc(docRef, value, { merge: true }));
+    result.push(await setDoc(chatRef, value, { merge: true }));
   } catch (e) {
     error.push(e);
   }
@@ -376,6 +377,20 @@ export async function getChatMessages(chatId: string) {
     } else {
       result = [];
     }
+  } catch (e) {
+    error = e;
+  }
+
+  return { error, result };
+}
+
+export async function deleteChat(chatId: string) {
+  const chatsRef = collection(db, 'chats');
+  const docRef = doc(chatsRef, chatId);
+  let error, result;
+
+  try {
+    result = await deleteDoc(docRef);
   } catch (e) {
     error = e;
   }

@@ -15,7 +15,7 @@ import {useCreateEditor} from "@/components/editor/use-create-editor";
 import Sidebar from "@/components/sidebar/sidebar";
 import HomeHeader from "@/components/site/home-header";
 import OnboardingTooltip from "@/components/site/onboarding-tooltip";
-import {createNewChat, deleteDocument, getChatMessages, saveCurrentDocumentState} from '@/firebase/firestore-dao';
+import {createNewChat, deleteDocument, getChatMessages, saveCurrentDocumentState, deleteChat} from '@/firebase/firestore-dao';
 import ChatSettingsProvider, {useChatSettings} from "@/providers/chat-settings-provider";
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
@@ -89,8 +89,63 @@ export default function Home() {
     return item;
   };
 
+  const deleteUserData = async (chat) => {
+    // 1. Get all file IDs from chat
+    const fileIds = chat.files?.reduce((acc, file) => [...acc, ...file.fileIds], []) || [];
+
+    console.log("fileIds", fileIds);
+    console.log("chat", chat);
+    // 2. Delete files from Pinecone if any exist
+    if (fileIds.length > 0) {
+      try {
+        await fetch('/api/ai/files', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileIds })
+        });
+      } catch (e) {
+        console.error('Error deleting files:', e);
+        toast.error('Error deleting files');
+      }
+    }
+
+    // 3. Delete document from Firestore
+    if (chat.documentIds?.length > 0) {
+      for (const docId of chat.documentIds) {
+        const docRes = await deleteDocument(docId);
+        if (docRes.error) {
+          console.error('Error deleting document:', docRes.error);
+          toast.error(`Error deleting document: ${docRes.error}`);
+        }
+      }
+    }
+
+    // 4. Delete chat from Firestore
+    const chatRes = await deleteChat(chat.id);
+    if (chatRes?.error) {
+      console.error('Error deleting chat:', chatRes.error);
+      toast.error(`Error deleting chat: ${chatRes.error}`);
+      return false;
+    }
+
+    return true;
+  };
+
   const handleDeleteChat = async (chatId: string) => {
-    console.log("chatId", chatId)
+    const chat = userChats?.find(c => c.id === chatId);
+    if (!chat) {
+      toast.error('Chat not found');
+      return;
+    }
+
+    const success = await deleteUserData(chat);
+    if (success) {
+      // Update local state
+      setUserChats(prev => prev?.filter(c => c.id !== chatId));
+      setUserOwnedDocuments(prev => prev?.filter(doc => !chat.documentIds.includes(doc.id)));
+      toast.success('Chat deleted successfully');
+      resetState();
+    }
   };
 
   const handleSetActiveItem = async (chat, documentRefreshOnly?: boolean) => {

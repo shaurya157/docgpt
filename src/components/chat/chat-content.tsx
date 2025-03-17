@@ -16,7 +16,7 @@ import { ChatSettings } from '@/components/chat/chat-settings';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
 import { useOpenState } from '@/components/plate-ui/dropdown-menu';
-import {appendDocumentSpecificFileIds, updateDocumentTitle, storeMessage} from '@/firebase/firestore-dao';
+import { appendChatSpecificFileIds, updateDocumentTitle, storeMessage} from '@/firebase/firestore-dao';
 import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import {DotAnimation} from "@/utils/animations";
@@ -58,7 +58,9 @@ const ChatContent = ({
 }: ContentProps) => {
   const { data: session } = useSession();
   const { selectedAssistant, selectedTemplate, handleSelectedAssistant, handleSelectedTemplate } = useChatSettings();
-  const { chatAssistantId } = useUserDataContext();
+  const userDataContext = useUserDataContext();
+  const { chatAssistantId } = userDataContext;
+  const { setUserChats } = userDataContext;
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<
     Array<{
@@ -73,7 +75,6 @@ const ChatContent = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const chatSettingsOpenState = useOpenState(false);
   const [streamingMessage, setStreamingMessage] = useState<Message>({
     id: "Thinking...",
     content: "",
@@ -140,7 +141,7 @@ const ChatContent = ({
         setActiveChatMessages((prev) => [...prev, newMessage]);
 
         if (attachments.length > 0) {
-          await uploadFiles(item)
+          await uploadFiles(item.chatId)
         }
 
         await sendMessage(item, newMessage)
@@ -304,7 +305,7 @@ const ChatContent = ({
     setAttachments(tempAttachments);
   };
 
-  const uploadFiles = async (item) => {
+  const uploadFiles = async (chatId: string) => {
     setUploadInProgress(true);
     attachments.forEach((attachment) =>
       changeFileUploadStatus(attachment, 'uploading')
@@ -313,6 +314,9 @@ const ChatContent = ({
 
     const filesFormData = new FormData();
     filesFormData.append('userId', session!.user!.email!);
+    if (chatId) {
+      filesFormData.append('chatId', chatId);
+    }
     for (const attachment of attachments) {
       try {
         filesFormData.set('files', attachment.file);
@@ -345,7 +349,24 @@ const ChatContent = ({
     }
 
     if (fileIds.length > 0) {
-      await appendDocumentSpecificFileIds(item!['id'], fileIds);
+      await appendChatSpecificFileIds(chatId, fileIds);
+      
+      // Update userChats state with new files
+      setUserChats(prev => {
+        if (!prev) return prev;
+        return prev.map(chat => {
+          if (chat.id === chatId) {
+            return {
+              ...chat,
+              files: [
+                ...(chat.files || []),
+                ...fileIds
+              ]
+            };
+          }
+          return chat;
+        });
+      });
     }
     setAttachments([]);
     setUploadInProgress(false);

@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 export async function DELETE(req: NextRequest) {
   const reqJson = await req.json();
   const { fileIds } = reqJson;
-
+  const fileIdsArray = Array.isArray(fileIds) ? fileIds : JSON.parse(fileIds);
   const pinecone = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY || '',
   });
@@ -14,7 +14,7 @@ export async function DELETE(req: NextRequest) {
 
   try {
     // Delete all chunks associated with the file
-    await index.deleteMany(fileIds);
+    await index.deleteMany(fileIdsArray);
 
     return NextResponse.json({
       message: 'File chunks deleted successfully.',
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const files = formData.getAll('files') as File[];
   const userId = formData.get('userId');
+  const chatId = formData.get('chatId')?.toString();
 
   const pinecone = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY || '',
@@ -143,7 +144,8 @@ export async function POST(req: NextRequest) {
             metadata: {
               userId: userId?.toString() || '',
               fileName: file.name,
-              text: chunk
+              text: chunk,
+              ...(chatId && { chatId })
             }
           };
         });
