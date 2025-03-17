@@ -8,6 +8,7 @@ type UserDataContext = {
   setChatAssistantId: React.Dispatch<React.SetStateAction<string>>;
   setFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
   setUserAssistants: React.Dispatch<React.SetStateAction<AssistantDefinition[] | null | undefined>>;
+  setUserChats: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
   setUserOwnedDocuments: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
   setUserTemplates: React.Dispatch<
     React.SetStateAction<Map<string, any>[] | null | undefined>
@@ -15,6 +16,7 @@ type UserDataContext = {
   assistantId?: string | null;
   chatAssistantId?: string | null;
   userAssistants?: AssistantDefinition[] | null;
+  userChats?: any[] | null;
   userOwnedDocuments?: any[] | null;
   userTemplates?: Map<string, any | string>[] | null;
 };
@@ -42,6 +44,7 @@ interface UserDataProviderProps {
   filesData: FileInfo[] | null;
   openAiAssistantId?: string | null;
   openAiChatAssistantId?: string | null;
+  userChats?: any[] | null;
   userDefinedAssistants?: AssistantDefinition[] | null;
   userDefinedTemplates?: Map<string, any | string>[] | null;
   userDocuments?: any[] | null;
@@ -52,6 +55,7 @@ export default function UserDataContextProvider({
   filesData,
   openAiAssistantId,
   openAiChatAssistantId,
+  userChats: initialUserChats,
   userDefinedAssistants,
   userDefinedTemplates,
   userDocuments,
@@ -62,6 +66,7 @@ export default function UserDataContextProvider({
   const [userTemplates, setUserTemplates] = useState(userDefinedTemplates);
   const [userOwnedDocuments, setUserOwnedDocuments] = useState(userDocuments);
   const [userAssistants, setUserAssistants] = useState(userDefinedAssistants);
+  const [userChats, setUserChats] = useState(initialUserChats);
 
   return (
     <UserDataContext.Provider
@@ -73,9 +78,11 @@ export default function UserDataContextProvider({
         setChatAssistantId,
         setFiles,
         setUserAssistants,
+        setUserChats,
         setUserOwnedDocuments,
         setUserTemplates,
         userAssistants,
+        userChats,
         userOwnedDocuments,
         userTemplates,
       }}

@@ -16,7 +16,7 @@ import { ChatSettings } from '@/components/chat/chat-settings';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
 import { useOpenState } from '@/components/plate-ui/dropdown-menu';
-import {appendDocumentSpecificFileIds, updateDocumentTitle} from '@/firebase/firestore-dao';
+import {appendDocumentSpecificFileIds, updateDocumentTitle, storeMessage} from '@/firebase/firestore-dao';
 import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import {DotAnimation} from "@/utils/animations";
@@ -120,12 +120,22 @@ const ChatContent = ({
       }
 
       if (usedInput.trim() || attachments.length > 0) {
+        const timestamp = Date.now();
         const newMessage: Message = {
-          id: Date.now().toString(),
+          id: timestamp.toString(),
           content: usedInput.trim(),
           role: 'user',
-          // attachments: attachments.length > 0 ? attachments : undefined,
         };
+
+        // Store the message in Firestore
+        const fileNames = attachments.map(att => att.fileName);
+        await storeMessage(item.chatId, {
+          content: usedInput.trim(),
+          role: 'user',
+          id: timestamp,
+          ...(fileNames.length > 0 && { fileNames })
+        });
+
         setInputValue('');
         setActiveChatMessages((prev) => [...prev, newMessage]);
 
@@ -139,14 +149,13 @@ const ChatContent = ({
   };
 
   const sendMessage = async (item, newMessage: Message) => {
-
     const formData = new FormData();
-    const threadId = item.threadId;
+    const chatId = item.chatId;
     const serializedEditorValue = parseEditorAndGetDocumentAndSelection(
       newMessage.content
     );
     formData.append('message', serializedEditorValue);
-    formData.append('chatId', threadId);
+    formData.append('chatId', chatId);
     formData.append('userId', session!.user!.email!);
     formData.append('assistantId', chatAssistantId!);
     formData.append(
@@ -173,7 +182,6 @@ const ChatContent = ({
         throw new Error('The response body is empty.');
       }
       
-      // Replace AssistantStream with direct stream handling
       const reader = result.body.getReader();
       const decoder = new TextDecoder();
       let accumulatedContent = '';
@@ -184,12 +192,20 @@ const ChatContent = ({
             const { done, value } = await reader.read();
             
             if (done) {
+              const timestamp = Date.now();
               // Stream is complete, finalize the message
               const finalMessage: Message = {
-                id: Date.now().toString(),
+                id: timestamp.toString(),
                 content: accumulatedContent,
                 role: "assistant",
               };
+              
+              // Store the assistant's message in Firestore
+              await storeMessage(chatId, {
+                content: accumulatedContent,
+                role: "assistant",
+                id: timestamp
+              });
               
               // Check if the content contains a document
               if (accumulatedContent.includes("<Document>") && accumulatedContent.includes("</Document>")) {

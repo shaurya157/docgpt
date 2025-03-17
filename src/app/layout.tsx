@@ -22,6 +22,7 @@ import {
   getUserDocs
 } from "@/utils/on-user-signin-fetch";
 import { TailwindIndicator } from '@/utils/tailwind-indicator';
+import { getUserChats } from '@/firebase/firestore-dao';
 
 import {auth} from "../../auth";
 
@@ -42,6 +43,7 @@ export default async function RootLayout({
   let openAiAssistantId,
       openAiChatAssistantId,
       userDefinedAssistants,
+      userChats,
       userDocuments;
   if (session?.user) {
     const res = await createAssistantIfNotExist(session);
@@ -49,6 +51,8 @@ export default async function RootLayout({
     openAiChatAssistantId = res.openAiChatAssistantId;
     userDocuments = await getUserDocs(session);
     userDefinedAssistants = await getUserDefinedAssistants(session.user.email!);
+    const chatsRes = await getUserChats(session.user.email!);
+    userChats = chatsRes.error ? [] : chatsRes.result;
   }
 
   return (
@@ -75,6 +79,7 @@ export default async function RootLayout({
                 }
                 openAiAssistantId={session?.user ? openAiAssistantId : null}
                 openAiChatAssistantId={openAiChatAssistantId}
+                userChats={userChats}
                 userDefinedAssistants={session?.user ? userDefinedAssistants : null}
                 userDefinedTemplates={
                   session?.user

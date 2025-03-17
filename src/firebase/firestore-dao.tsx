@@ -117,7 +117,7 @@ export async function updateDocumentTitle(documentId: string, documentName: stri
 export async function saveCurrentDocumentState(
   userId: string,
   documentName: string,
-  threadId: string,
+  chatId: string,
   document: any,
   documentId?: string
 ) {
@@ -128,7 +128,7 @@ export async function saveCurrentDocumentState(
       document: document,
       documentName: documentName,
       documentOwnerId: userId,
-      threadId: threadId,
+      chatId: chatId,
     };
 
     result = documentId
@@ -294,6 +294,88 @@ export async function deleteAssistant(assistantId: string) {
 
   try {
     result = await deleteDoc(docRef);
+  } catch (e) {
+    error = e;
+  }
+
+  return { error, result };
+}
+
+export async function createNewChat(userId: string, documentId: string, chatId: string) {
+  const chatsRef = collection(db, 'chats');
+  let error, result;
+
+  try {
+    const value = {
+      documentIds: [documentId],
+      messages: [],
+      userId: userId,
+      chatName: 'Untitled'
+    };
+
+    await setDoc(doc(chatsRef, chatId), value);
+    result = { id: chatId };
+  } catch (e) {
+    error = e;
+  }
+
+  return { error, result };
+}
+
+export async function getUserChats(userId: string) {
+  const chatsRef = collection(db, 'chats');
+  let error, result;
+
+  try {
+    const querySnapshot = await getDocs(
+      query(chatsRef, where('userId', '==', userId))
+    );
+    result = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (e) {
+    error = e;
+  }
+
+  return { error, result };
+}
+
+export async function storeMessage(chatId: string, message: {
+  content: string,
+  role: "user" | "assistant",
+  id: number,
+  fileNames?: string[]
+}) {
+  const chatsRef = collection(db, 'chats');
+  const docRef = doc(chatsRef, chatId);
+  let error, result;
+
+  try {
+    result = await setDoc(docRef, {
+      messages: arrayUnion(message)
+    }, { merge: true });
+  } catch (e) {
+    error = e;
+  }
+
+  return { error, result };
+}
+
+export async function getChatMessages(chatId: string) {
+
+  console.log("chatId", chatId);
+  const chatsRef = collection(db, 'chats');
+  const docRef = doc(chatsRef, chatId);
+  let error, result;
+
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      result = docSnap.data().messages || [];
+    } else {
+      result = [];
+    }
   } catch (e) {
     error = e;
   }

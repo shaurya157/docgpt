@@ -1,10 +1,3 @@
-export interface MenuItem {
-  id: string;
-  content: string;
-  title: string;
-  icon?: string;
-}
-
 export interface NavItem {
   title: string;
   disabled?: boolean;

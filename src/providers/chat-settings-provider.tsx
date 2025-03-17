@@ -5,7 +5,6 @@ import { createContext, useContext, useState } from 'react';
 import { useAssistantDefinitions } from '@/providers/assistants-provider';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
-import { MenuItem } from '@/types';
 
 type ChatSettings = {
   allAssistants: any[];
@@ -20,7 +19,7 @@ export const ChatSettingsContext = createContext<ChatSettings | null>(null);
 
 interface ChatSettingsProviderProps {
   children: React.ReactNode;
-  setActiveItem?: (id: MenuItem, documentRefreshOnly: boolean) => void;
+  setActiveItem?: (id: any, documentRefreshOnly: boolean) => void;
 }
 
 export default function ChatSettingsProvider({
@@ -30,7 +29,7 @@ export default function ChatSettingsProvider({
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
   const { userAssistants, userTemplates } = useUserDataContext();
-  const { activeUserDocument, setActiveUserDocument } = useDocument();
+  const { activeUserDocument } = useDocument();
 
   // Combine default and user assistants
   const allAssistants = [...docgptProvidedAssistantDefinitions, ...(userAssistants || [])];

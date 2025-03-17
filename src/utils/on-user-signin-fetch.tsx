@@ -98,6 +98,7 @@ export async function getUserDocs(session: Session) {
             documentName: doc.get('documentName'),
             files: doc.get("files"),
             threadId: doc.get('threadId'),
+            chatId: doc.get('chatId')
         };
 
         result.push(res);

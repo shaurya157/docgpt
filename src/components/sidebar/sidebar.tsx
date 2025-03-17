@@ -11,7 +11,7 @@ import {ChatSidebarItems} from "@/components/chat/chat-sidebar-items";
 import {SettingsSidebarItems} from "@/components/settings/settings-sidebar-items";
 import Popover from "@/components/sidebar/popover";
 import { TemplatesDropdown } from '@/components/sidebar/templates-dropdown';
-import { MenuItem, PopoverPosition } from '@/types';
+import { PopoverPosition } from '@/types';
 
 import FolderIcon from '../../assets/icons/folder.svg';
 import HelpIcon from '../../assets/icons/help.svg';
@@ -37,9 +37,9 @@ interface SidebarProps {
   activeTab: 'chat' | 'settings';
   editorOpen: boolean
   isOpen: boolean;
-  items: MenuItem[] | null | undefined;
+  items: any[] | null | undefined;
   onDeleteChat: (chatId: string) => void;
-  setActiveItem: (id: MenuItem, documentRefreshOnly: boolean) => void;
+  setActiveItem: (id: any, documentRefreshOnly: boolean) => void;
   toggleSidebar: () => void;
   activeSetting?: string;
   activeUserDocument?: {} | string;

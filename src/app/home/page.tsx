@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 import {cn} from "@udecode/cn";
 import { AssistantStatus, Message } from 'ai';
@@ -14,7 +15,7 @@ import {useCreateEditor} from "@/components/editor/use-create-editor";
 import Sidebar from "@/components/sidebar/sidebar";
 import HomeHeader from "@/components/site/home-header";
 import OnboardingTooltip from "@/components/site/onboarding-tooltip";
-import {deleteDocument, saveCurrentDocumentState} from '@/firebase/firestore-dao';
+import {createNewChat, deleteDocument, getChatMessages, saveCurrentDocumentState} from '@/firebase/firestore-dao';
 import ChatSettingsProvider, {useChatSettings} from "@/providers/chat-settings-provider";
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
@@ -27,7 +28,7 @@ export default function Home() {
   const { activeUserDocument, setActiveUserDocument } = useDocument();
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
   const { data: session } = useSession();
-  const { chatAssistantId, setUserOwnedDocuments, userOwnedDocuments } = useUserDataContext();
+  const { setUserOwnedDocuments, userOwnedDocuments, userChats, setUserChats } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const { selectedTemplate, handleSelectedTemplate } = useChatSettings();
@@ -42,100 +43,91 @@ export default function Home() {
     redirect('/');
   }
 
-  // TODO: Refactor to usrOwnedDocuments and setUserOwnedDocuments, no need for the below
-  const [items, setItems] = useState({
-    chat: userOwnedDocuments,
-    document: userOwnedDocuments,
-  });
-
   const handleNewChat = async () => {
-    const createThreadResult = await fetch('/api/ai/thread/create', {
-      body: JSON.stringify({ userId: session!.user!.email }),
-      method: 'POST',
-    });
-    const responseJson = await createThreadResult.json();
-    toast.success(
-      `Thread created successfully, using fresh session with thread ID: ${responseJson['threadId']}`
-    );
-
     setActiveChatMessages([]);
+    const chatId = uuidv4();
     const item = {
       document: selectedTemplate["template"],
-      documentName: `Untitled`,
-      threadId: responseJson['threadId'],
+      documentName: `Untitled document`,
+      chatId: chatId
     };
 
     const res = await saveCurrentDocumentState(
       session!.user!.email!,
       item['documentName'],
-      item['threadId'],
+      chatId,
       item['document']
     );
 
-    item['id'] = res.result.id;
-    setItems((prev) => ({
-      ...prev,
-      chat: [...prev.chat!, item],
-    }));
+    if (res.error) {
+      toast.error(`Error creating document: ${res.error}`);
+      return;
+    }
 
+    item['id'] = res.result.id;
+
+    const chatRes = await createNewChat(session!.user!.email!, res.result.id, chatId);
+    if (chatRes.error) {
+      toast.error(`Error creating chat: ${chatRes.error}`);
+      return;
+    }
+    
+    const newChat = {
+      id: chatId,
+      documentIds: [res.result.id],
+      chatName: 'Untitled',
+      userId: session!.user!.email!,
+      messages: []
+    };
+    
+    // Update both chats and documents state
+    setUserChats(prev => prev ? [newChat, ...prev] : [newChat]);
+    setUserOwnedDocuments(prev => prev ? [item, ...prev] : [item]);
+    
     setActiveUserDocument(item);
     setActiveTab('chat');
     return item;
   };
 
   const handleDeleteChat = async (chatId: string) => {
-    const res = await deleteDocument(chatId);
-    if (res.error) {
-      toast.error(`Error deleting document. Error: ${res.error}`);
-    } else {
-      toast.success(`Success deleting document!`);
-    }
-
-    setItems((prev) => ({
-      ...prev,
-      chat: prev.chat!.filter((chat) => chat.id !== chatId),
-    }));
+    console.log("chatId", chatId)
   };
 
-  const handleSetActiveItem = async (item, documentRefreshOnly?: boolean) => {
+  const handleSetActiveItem = async (chat, documentRefreshOnly?: boolean) => {
     setStatus('in_progress');
-    setActiveUserDocument(item);
+    
+    // Find the corresponding document from userOwnedDocuments
+    const document = userOwnedDocuments?.find(doc => doc.id === chat.documentIds[0]);
+    if (!document) {
+      toast.error('Could not find associated document');
+      return;
+    }
 
-    if (item["document"].length > 1) {
+    setActiveUserDocument(document);
+
+    if (document.document.length > 1) {
       setEditorOpen(true)
     } else {
       setEditorOpen(false)
     }
-    editor.tf.setValue(item["document"])
+    editor.tf.setValue(document.document)
+    
     if (!documentRefreshOnly) {
       setActiveChatMessages([]);
       try {
-        const chatHistoryResponse = await fetch('/api/ai/thread/messages', {
-          body: JSON.stringify({
-            chatAssistantId,
-            threadId: item['threadId'],
-            userId: session!.user!.email!,
-          }),
-          method: 'POST',
-        });
-        const json = await chatHistoryResponse.json();
-        if (!chatHistoryResponse.ok) {
-          toast.error(json['error']);
+        const { error, result: messages } = await getChatMessages(chat.id);
+        if (error) {
+          toast.error(`Error fetching messages: ${error}`);
         } else {
-          const messages = json['messages'] as Message[];
-          if (messages.length == 0) {
+          if (messages.length === 0) {
             setActiveChatMessages([]);
           } else {
-            messages.reverse().forEach((message) => {
-              setActiveChatMessages((messages: Message[]) => [
-                ...messages,
-                {
-                  id: message.id,
-                  content: message.content[0]['text']['value'],
-                  role: message.role,
-                },
-              ]);
-            });
+            const formattedMessages = messages.map(message => ({
+              id: message.id.toString(),
+              content: message.content,
+              role: message.role
+            }));
+            setActiveChatMessages(formattedMessages);
           }
         }
       } catch (e) {
@@ -144,11 +136,7 @@ export default function Home() {
       }
     }
 
-
-    // TODO: FIX THIS!!! IMPORTANT!!!
-    // const newUserOwnedDocs = [item].concat(userOwnedDocuments?.filter((doc) => item["id"] !== doc["id"]))
-    // setUserOwnedDocuments(newUserOwnedDocs);
-    updateUserOwnedDocumentsState(item)
+    updateUserOwnedDocumentsState(document)
     setStatus('awaiting_message');
   };
 
@@ -232,7 +220,6 @@ export default function Home() {
     }
   }, []);
 
-  const currentItems = activeTab === 'chat' ? items.chat : items.document;
   const chatWindowCssClass = editorOpen ? '' : 'justify-center items-center';
 
   return (
@@ -255,7 +242,7 @@ export default function Home() {
             activeUserDocument={activeUserDocument}
             editorOpen={editorOpen}
             isOpen={isSidebarOpen}
-            items={currentItems}
+            items={userChats}
             setActiveItem={handleSetActiveItem}
             toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           />
