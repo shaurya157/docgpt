@@ -55,9 +55,7 @@ const ChatContent = ({
   onNewChat
 }: ContentProps) => {
   const { data: session } = useSession();
-  const { selectedAssistant, selectedTemplate, handleSelectedAssistant, handleSelectedTemplate } = useChatSettings();
   const userDataContext = useUserDataContext();
-  const { chatAssistantId } = userDataContext;
   const { setUserChats } = userDataContext;
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<
@@ -154,20 +152,6 @@ const ChatContent = ({
     formData.append('message', serializedEditorValue);
     formData.append('chatId', chatId);
     formData.append('userId', session!.user!.email!);
-    formData.append('assistantId', chatAssistantId!);
-    formData.append(
-      'additionalInstructions',
-      `\
-        # ROLE
-        ${selectedAssistant['role']}
-
-        # GOALS
-        ${selectedAssistant['goals']}
-
-        # ADDITIONAL RULES
-        ${selectedAssistant['rules']}
-      `
-    );
 
     try {
       const result = await fetch('/api/ai/chat/agents', {

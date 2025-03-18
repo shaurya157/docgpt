@@ -35,6 +35,7 @@
     "@radix-ui/react-toolbar": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@types/pdf-parse": "^1.1.4",
+    "@types/uuid": "^10.0.0",
     "@udecode/cmdk": "^0.2.0",
     "@udecode/cn": "44.0.1",
     "@udecode/plate": "44.0.1",
@@ -118,6 +119,7 @@
     "unstorage": "^1.14.4",
     "uploadthing": "7.2.0",
     "use-file-picker": "^2.1.2",
+    "uuid": "^11.1.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

@@ -14,7 +14,6 @@ import {
 } from 'firebase/firestore';
 
 import firebase_app from '@/firebase/config';
-import { AssistantDefinition } from '@/providers/user-data-provider';
 
 const db = getFirestore(firebase_app);
 
@@ -80,21 +79,6 @@ export async function getUserUploadedFilesData(userid: string) {
   }
 
   return { error, result };
-}
-
-export async function getUserInfo(userid: string) {
-  const usersRef = collection(db, 'users');
-  const docRef = doc(usersRef, userid);
-
-  const result = await getDoc(docRef);
-  const savedAssistantId = result.get('assistantId');
-  const savedOpenAiChatAssistantId = result.get('openAiChatAssistantId');
-  const savedActiveDocumentName = result.get('activeDocumentName');
-  return {
-    savedActiveDocumentName,
-    savedAssistantId,
-    savedOpenAiChatAssistantId,
-  };
 }
 
 export async function getUserOwnedDocuments(userId: string) {
@@ -174,26 +158,6 @@ export async function saveUserTemplate(
   return { docId, error, result };
 }
 
-export async function saveUserActiveAssistant(
-  userId: string,
-  assistantId: string,
-  openAiChatAssistantId: string
-) {
-  const usersRef = collection(db, 'users');
-  const docRef = doc(usersRef, userId);
-
-  const result = await setDoc(
-    docRef,
-    {
-      assistantId: assistantId,
-      openAiChatAssistantId: openAiChatAssistantId,
-    },
-    { merge: true }
-  );
-
-  return { result };
-}
-
 export async function getOwnedTemplates(templateOwnerId: string) {
   return await getDocs(
     query(
@@ -249,52 +213,6 @@ export async function deleteUserUploadedFile(
 
   try {
     result = await setDoc(docRef, value, { merge: true });
-  } catch (e) {
-    error = e;
-  }
-
-  return { error, result };
-}
-
-export async function getAssistants(assistantOwnerId: string) {
-  return await getDocs(
-    query(
-      collection(db, 'assistants'),
-      where('ownerId', '==', assistantOwnerId)
-    )
-  );
-}
-
-export async function saveAssistant(
-  assistant: AssistantDefinition,
-  assistantId?: string
-) {
-  const assistantsRef = collection(db, "assistants");
-  let docId, error, result;
-
-  try {
-    if (assistantId) {
-      await setDoc(doc(assistantsRef, assistantId), assistant, { merge: true });
-      docId = assistantId;
-    } else {
-      const docRef = await addDoc(assistantsRef, assistant);
-      docId = docRef.id;
-      result = docRef;
-    }
-  } catch (e) {
-    error = e;
-  }
-
-  return { docId, error, result };
-}
-
-export async function deleteAssistant(assistantId: string) {
-  const assistantsRef = collection(db, 'assistants');
-  const docRef = doc(assistantsRef, assistantId);
-  let error, result;
-
-  try {
-    result = await deleteDoc(docRef);
   } catch (e) {
     error = e;
   }

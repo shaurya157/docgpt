@@ -8,17 +8,14 @@ import { SessionProvider } from 'next-auth/react';
 import {Toaster} from "sonner";
 
 import PreLoginHeader from '@/components/landing/pre-login-header';
-import AssistantsProvider from '@/providers/assistants-provider';
 import ChatSettingsProvider from '@/providers/chat-settings-provider';
 import DocumentProvider from '@/providers/document-provider';
 import {ThemeProvider} from "@/providers/theme-provider";
 import UserDataContextProvider from '@/providers/user-data-provider';
 import {fontSans} from "@/utils/fonts";
 import {
-  createAssistantIfNotExist, getAssistantDefinitions,
   getExistingUserUploadedFiles,
   getTemplates,
-  getUserDefinedAssistants,
   getUserDocs
 } from "@/utils/on-user-signin-fetch";
 import { TailwindIndicator } from '@/utils/tailwind-indicator';
@@ -40,17 +37,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  let openAiAssistantId,
-      openAiChatAssistantId,
-      userDefinedAssistants,
-      userChats,
+  let userChats,
       userDocuments;
   if (session?.user) {
-    const res = await createAssistantIfNotExist(session);
-    openAiAssistantId = res.openAiAssistantId;
-    openAiChatAssistantId = res.openAiChatAssistantId;
     userDocuments = await getUserDocs(session);
-    userDefinedAssistants = await getUserDefinedAssistants(session.user.email!);
     const chatsRes = await getUserChats(session.user.email!);
     userChats = chatsRes.error ? [] : chatsRes.result;
   }
@@ -77,10 +67,7 @@ export default async function RootLayout({
                       ? await getExistingUserUploadedFiles(session)
                       : null
                 }
-                openAiAssistantId={session?.user ? openAiAssistantId : null}
-                openAiChatAssistantId={openAiChatAssistantId}
                 userChats={userChats}
-                userDefinedAssistants={session?.user ? userDefinedAssistants : null}
                 userDefinedTemplates={
                   session?.user
                       ? await getTemplates(session!.user!.email!)
@@ -93,17 +80,11 @@ export default async function RootLayout({
                     session?.user ? await getTemplates('docgpt') : null
                   }
               >
-                <AssistantsProvider
-                    providedAssistantDefinitions={await getAssistantDefinitions(
-                        'docgpt'
-                    )}
-                >
-                  <ChatSettingsProvider>
+                <ChatSettingsProvider>
                     {!session?.user ? <PreLoginHeader /> : <div></div>}
                     <div className="flex-1">{children}</div>
                     {/* {!session?.user ? <PreLoginFooter /> : <div></div>} */}
                   </ChatSettingsProvider>
-                </AssistantsProvider>
               </DocumentProvider>
             </UserDataContextProvider>
           </SessionProvider>

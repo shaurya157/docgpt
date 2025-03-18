@@ -2,16 +2,12 @@
 
 import { createContext, useContext, useState } from 'react';
 
-import { useAssistantDefinitions } from '@/providers/assistants-provider';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
 type ChatSettings = {
-  allAssistants: any[];
-  selectedAssistant: {};
   selectedTemplate: {};
   userTemplates: any[] | null | undefined;
-  handleSelectedAssistant: (name: string) => void;
   handleSelectedTemplate: (id: string) => void;
 };
 
@@ -26,19 +22,9 @@ export default function ChatSettingsProvider({
   children,
   changeEditorContent,
 }: ChatSettingsProviderProps) {
-  const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
-  const { userAssistants, userTemplates } = useUserDataContext();
-  const { activeUserDocument } = useDocument();
+  const { userTemplates } = useUserDataContext();
 
-  // Combine default and user assistants
-  const allAssistants = [...docgptProvidedAssistantDefinitions, ...(userAssistants || [])];
-
-  const [selectedAssistant, setSelectedAssistant] = useState(
-    allAssistants.find(
-      (assistant) => assistant['name'] === 'Default Assistant'
-    )!
-  );
   const [selectedTemplate, setSelectedTemplate] = useState({
     id: '0',
     template: [
@@ -49,14 +35,6 @@ export default function ChatSettingsProvider({
     ],
     templateName: 'No Template',
   });
-
-  const handleSelectedAssistant = (name: string) => {
-    const assistant = allAssistants.find(
-      (assistant) => assistant['name'] === name
-    );
-
-    setSelectedAssistant(assistant!);
-  };
 
   const handleSelectedTemplate = (id: string) => {
     let template = providedTemplates
@@ -88,11 +66,8 @@ export default function ChatSettingsProvider({
   return (
     <ChatSettingsContext.Provider
       value={{
-        allAssistants,
-        selectedAssistant,
         selectedTemplate,
         userTemplates,
-        handleSelectedAssistant,
         handleSelectedTemplate,
       }}
     >

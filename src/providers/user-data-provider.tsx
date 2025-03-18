@@ -4,33 +4,17 @@ import React, { createContext, useContext, useState } from 'react';
 
 type UserDataContext = {
   files: FileInfo[] | null;
-  setAssistantId: React.Dispatch<React.SetStateAction<string>>;
-  setChatAssistantId: React.Dispatch<React.SetStateAction<string>>;
   setFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
-  setUserAssistants: React.Dispatch<React.SetStateAction<AssistantDefinition[] | null | undefined>>;
   setUserChats: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
   setUserOwnedDocuments: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
   setUserTemplates: React.Dispatch<
     React.SetStateAction<Map<string, any>[] | null | undefined>
   >;
-  assistantId?: string | null;
-  chatAssistantId?: string | null;
-  userAssistants?: AssistantDefinition[] | null;
   userChats?: any[] | null;
   userOwnedDocuments?: any[] | null;
   userTemplates?: Map<string, any | string>[] | null;
 };
 export const UserDataContext = createContext<UserDataContext | null>(null);
-
-export interface AssistantDefinition {
-  description: string;
-  goals: string;
-  name: string;
-  ownerId: string;
-  role: string;
-  rules: string;
-  id?: string;
-}
 
 export interface FileInfo {
   fileName: string;
@@ -42,10 +26,7 @@ export interface FileInfo {
 interface UserDataProviderProps {
   children: React.ReactNode;
   filesData: FileInfo[] | null;
-  openAiAssistantId?: string | null;
-  openAiChatAssistantId?: string | null;
   userChats?: any[] | null;
-  userDefinedAssistants?: AssistantDefinition[] | null;
   userDefinedTemplates?: Map<string, any | string>[] | null;
   userDocuments?: any[] | null;
 }
@@ -53,35 +34,23 @@ interface UserDataProviderProps {
 export default function UserDataContextProvider({
   children,
   filesData,
-  openAiAssistantId,
-  openAiChatAssistantId,
   userChats: initialUserChats,
-  userDefinedAssistants,
   userDefinedTemplates,
   userDocuments,
 }: UserDataProviderProps) {
-  const [assistantId, setAssistantId] = useState(openAiAssistantId);
-  const [chatAssistantId, setChatAssistantId] = useState(openAiChatAssistantId);
   const [files, setFiles] = useState(filesData);
   const [userTemplates, setUserTemplates] = useState(userDefinedTemplates);
   const [userOwnedDocuments, setUserOwnedDocuments] = useState(userDocuments);
-  const [userAssistants, setUserAssistants] = useState(userDefinedAssistants);
   const [userChats, setUserChats] = useState(initialUserChats);
 
   return (
     <UserDataContext.Provider
       value={{
-        assistantId,
-        chatAssistantId,
         files,
-        setAssistantId,
-        setChatAssistantId,
         setFiles,
-        setUserAssistants,
         setUserChats,
         setUserOwnedDocuments,
         setUserTemplates,
-        userAssistants,
         userChats,
         userOwnedDocuments,
         userTemplates,

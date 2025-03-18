@@ -9,11 +9,9 @@ import {toast} from "sonner";
 
 import { useSettings } from '@/components/editor/settings';
 import {useDocument} from "@/providers/document-provider";
-import {useUserDataContext} from "@/providers/user-data-provider";
 
 export const useChat = () => {
   const { keys, model } = useSettings();
-  const { assistantId } = useUserDataContext();
   const { activeUserDocument } = useDocument();
 
   // Does nothing right now
@@ -31,9 +29,9 @@ export const useChat = () => {
     submitMessage,
     handleInputChange
   } = useAssistant({
-    api: '/api/ai/chat/editorassistant',
+    api: '/api/ai/chat/agents',
     body: {
-      assistantId,
+      
     },
     threadId: activeUserDocument ? activeUserDocument['threadId'] : null,
     onError(error: Error): void {

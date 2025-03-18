@@ -5,13 +5,12 @@ import {useState} from "react";
 import { useSession } from 'next-auth/react';
 import { redirect, useRouter } from 'next/navigation';
 
-import { AssistantSettings } from '@/components/settings/assistant-settings';
 import { TemplateSettings } from '@/components/settings/template-settings';
 import Sidebar from "@/components/sidebar/sidebar";
 import HomeHeader from "@/components/site/home-header";
 
 export default function Settings({params}) {
-    const [activeTab, setActiveTab] = useState<'chat' | 'settings'>('settings');
+    const [activeTab] = useState<'chat' | 'settings'>('settings');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const router = useRouter();
     const [activeSetting, setActiveSetting] = useState("templates")
@@ -28,9 +27,6 @@ export default function Settings({params}) {
 
     const getSettingsItem = () => {
       switch (activeSetting) {
-        case "assistants": {
-          return <AssistantSettings />
-        }
         case "templates": {
           return <TemplateSettings />
         }
@@ -61,6 +57,7 @@ export default function Settings({params}) {
                   setActiveItem={() => {}}
                   setActiveSetting={setActiveSetting}
                   toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                  changeEditorContent={() => {}}
               />
               { getSettingsItem() }
             </div>
