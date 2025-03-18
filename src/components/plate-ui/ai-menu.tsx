@@ -57,8 +57,6 @@ export function AIMenu() {
   };
 
   useEditorChat({
-    // @ts-expect-error Plate's useEditorChat doesn't work with vercel's useAssistants, there are some missing methods
-    //  are implemented in use-chat.ts but there is some type mismatch
     chat,
     onOpenBlockSelection: (blocks: NodeEntry[]) => {
       show(editor.api.toDOMNode(blocks.at(-1)![0])!);

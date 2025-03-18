@@ -134,19 +134,21 @@ const ChatContent = ({
   };
 
   const sendMessage = async (item, newMessage: Message) => {
-    const formData = new FormData();
-    const chatId = item.chatId;
     const serializedEditorValue = parseEditorAndGetDocumentAndSelection(
       newMessage.content
     );
-    formData.append('message', serializedEditorValue);
-    formData.append('chatId', chatId);
-    formData.append('userId', session!.user!.email!);
 
     try {
       const result = await fetch('/api/ai/chat/agents', {
-        body: formData,
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: serializedEditorValue,
+          chatId: item.chatId,
+          userId: session!.user!.email!,
+        }),
       });
 
       if (result.body == null) {
@@ -173,7 +175,7 @@ const ChatContent = ({
               };
               
               // Store the assistant's message in Firestore
-              await storeMessage(chatId, {
+              await storeMessage(item.chatId, {
                 content: accumulatedContent,
                 role: "assistant",
                 id: timestamp,

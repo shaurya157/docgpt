@@ -14,7 +14,6 @@ export class ModelRouter {
     stream: boolean = false
   ): Promise<string | ReadableStream<any>> {
     console.log("Generating with provider:", provider);
-    console.log("User input:", userInput);
     switch(provider) {
       case "openai":
         return this.generateOpenAI(systemPrompt, userInput, stream);

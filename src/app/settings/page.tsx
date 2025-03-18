@@ -40,8 +40,6 @@ export default function Settings({params}) {
         <div className="flex h-screen flex-col">
             <HomeHeader
                 onNewChat={redirectToHome}
-                editorOpen={false}
-                setEditorOpen={() => { console.log("Editor only available in home")} }
                 toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             />
 
@@ -50,8 +48,6 @@ export default function Settings({params}) {
                   onDeleteChat={() => {}}
                   activeSetting={activeSetting}
                   activeTab={activeTab}
-                  activeUserDocument={{}}
-                  editorOpen={false}
                   isOpen={isSidebarOpen}
                   items={[]}
                   setActiveItem={() => {}}
