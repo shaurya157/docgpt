@@ -14,7 +14,6 @@ import { ChatSettings } from '@/components/chat/chat-settings';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
 import { appendChatSpecificFileIds, updateDocumentTitle, storeMessage} from '@/firebase/firestore-dao';
-import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import {DotAnimation} from "@/utils/animations";
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
@@ -29,28 +28,20 @@ import { useDocument } from '@/providers/document-provider';
 interface ContentProps {
   activeChatMessages: Message[];
   editor: PlateEditor;
-  editorOpen: boolean;
-  hideChat: boolean;
   setActiveChatMessages: Dispatch<SetStateAction<Message[]>>;
   setStatus: Dispatch<SetStateAction<string>>;
   status: 'awaiting_message' | 'in_progress';
   onNewChat: () => {};
   changeEditorContent: (content: any) => void;
-  setEditorOpen: (bool: boolean) => void;
-  toggleHideChat: () => void;
 }
 
 const ChatContent = ({
   activeChatMessages,
   editor,
-  editorOpen,
-  hideChat,
   setActiveChatMessages,
   changeEditorContent,
-  setEditorOpen,
   setStatus,
   status,
-  toggleHideChat,
   onNewChat
 }: ContentProps) => {
   const { data: session } = useSession();
@@ -84,9 +75,8 @@ const ChatContent = ({
   };
 
   useEffect(() => {
-    if (hideChat) toggleHideChat()
     scrollToBottom();
-  }, [activeChatMessages]); // do not add hidechat + toggle as a dependency here, forces a refresh which breaks hiding
+  }, [activeChatMessages]);
 
   const parseEditorAndGetDocumentAndSelection = (
     newMessage: string
@@ -376,9 +366,6 @@ const ChatContent = ({
 
   const updateEditorWithNewDocument = (document: string, documentTitle: string) => {
     return async () => {
-      if (!editorOpen) {
-        setEditorOpen(true)
-      }
       let result: any[] = [];
       const doubleNewLineSplitArr = document.split('\n\n');
       doubleNewLineSplitArr.forEach((doubleLineSplitText) => {
@@ -487,21 +474,9 @@ const ChatContent = ({
     }
   };
 
-  if (hideChat && activeChatMessages.length > 1) {
-    return (
-        <div className="h-full p-4">
-          <MessageCirclePlusIcon onClick={ toggleHideChat } />
-        </div>
-    )
-  }
-
   return (
     <motion.div
-      className={cn(
-        'flex flex-col items-start p-4', 
-        chatInputPositioningCssClass,
-        editorOpen ? 'w-1/3' : 'w-1/2'
-      )}
+      className='flex flex-col items-start p-4 h-full w-1/3'
       transition={{
         damping: 20,
         duration: 0.2,
@@ -509,19 +484,6 @@ const ChatContent = ({
         type: 'spring',
       }}
     >
-
-      {
-        activeChatMessages.length != 0 && (
-            <div className="w-full h-30px p-2 flex justify-end items-center">
-              {
-                editorOpen && (
-                  <MessageCircleOffIcon className="cursor-pointer" onClick={ toggleHideChat }/>
-                )
-              }
-            </div>
-          )
-      }
-
       {status != "in_progress"  && activeChatMessages.length === 0 && (
         <div className={editor.children.length <= 2 ? "" : "hidden"}>
           <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-4xl">

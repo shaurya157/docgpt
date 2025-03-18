@@ -25,15 +25,13 @@ import { Message } from '@/types';
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'chat' | 'settings'>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [editorOpen, setEditorOpen] = useState(false);
-  const { activeUserDocument, setActiveUserDocument } = useDocument();
+  const { setActiveUserDocument } = useDocument();
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
   const { data: session } = useSession();
   const { setUserOwnedDocuments, userOwnedDocuments, userChats, setUserChats } = useUserDataContext();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const { selectedTemplate, handleSelectedTemplate } = useChatSettings();
-  const [hideChat, setHideChat] = useState(false);
 
   // TODO: can prolly move this out to layout instead and provide it globally with a provider.
   // TODO: fix here and the other page.tsx file
@@ -164,12 +162,6 @@ export default function Home() {
     }
 
     setActiveUserDocument(document);
-
-    if (document.document.length > 1) {
-      setEditorOpen(true)
-    } else {
-      setEditorOpen(false)
-    }
     changeEditorContent(document.document)
     
     if (!documentRefreshOnly) {
@@ -215,7 +207,6 @@ export default function Home() {
 
   const resetState = () => {
     setActiveChatMessages([])
-    setEditorOpen(false);
     const doc = {
       document: [
         {
@@ -281,26 +272,17 @@ export default function Home() {
     }
   }, []);
 
-  const chatWindowCssClass = editorOpen ? '' : 'justify-center items-center';
-
   return (
     <ChatSettingsProvider changeEditorContent={changeEditorContent}>
       <div className="flex h-screen flex-col">
         <HomeHeader
           onNewChat={resetState}
-          editorOpen={editorOpen}
-          setEditorOpen={setEditorOpen}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
-        <div
-          className={
-            'relative flex flex-1 overflow-hidden ' + chatWindowCssClass
-          }
-        >
+        <div className='relative flex flex-1 overflow-hidden'>
           <Sidebar
             onDeleteChat={handleDeleteChat}
             activeTab={activeTab}
-            editorOpen={editorOpen}
             isOpen={isSidebarOpen}
             items={userChats}
             setActiveItem={handleSetActiveItem}
@@ -311,14 +293,10 @@ export default function Home() {
             onNewChat={handleNewChat}
             activeChatMessages={activeChatMessages}
             editor={editor}
-            editorOpen={editorOpen}
-            hideChat={hideChat}
             setActiveChatMessages={setActiveChatMessages}
             changeEditorContent={changeEditorContent}
-            setEditorOpen={setEditorOpen}
             setStatus={setStatus}
             status={status}
-            toggleHideChat={() => hideChat ? setHideChat(false) : setHideChat(true)}
           />
           {!onboardingCompleted && (
             <OnboardingTooltip
@@ -330,13 +308,7 @@ export default function Home() {
             />
           )}
 
-          <div
-            className={cn(
-                'z-10 overflow-y-scroll border bg-background shadow',
-                editorOpen ? '' : 'hidden',
-                hideChat ? 'w-full' : 'w-2/3'
-            )}
-          >
+          <div className='z-10 overflow-y-scroll border bg-background shadow h-full w-2/3'>
             <PlateEditor plateEditor={editor} />
           </div>
         </div>

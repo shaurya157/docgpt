@@ -35,7 +35,6 @@ interface PopoverState {
 
 interface SidebarProps {
   activeTab: 'chat' | 'settings';
-  editorOpen: boolean
   isOpen: boolean;
   items: any[] | null | undefined;
   onDeleteChat: (chatId: string) => void;
@@ -49,7 +48,6 @@ interface SidebarProps {
 const Sidebar = ({
   activeSetting,
   activeTab,
-  editorOpen,
   isOpen,
   items,
   setActiveItem,
@@ -367,7 +365,7 @@ const Sidebar = ({
 
 
   return (
-    <div className={editorOpen || activeSetting ? "" : "absolute inset-y-0 left-0"}>
+    <div>
       <motion.div
         ref={sidebarRef}
         className="flex h-[calc(100vh-64px)] flex-col overflow-hidden border-r bg-white md:relative"
