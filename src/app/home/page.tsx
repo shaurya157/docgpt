@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import {cn} from "@udecode/cn";
-import { AssistantStatus, Message } from 'ai';
+import { AssistantStatus } from 'ai';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import {createNewChat, deleteDocument, getChatMessages, saveCurrentDocumentState
 import ChatSettingsProvider, {useChatSettings} from "@/providers/chat-settings-provider";
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
+import { Message } from '@/types';
 
 
 export default function Home() {
@@ -148,6 +149,10 @@ export default function Home() {
     }
   };
 
+  const changeEditorContent = (content: any[]) => {
+    editor.tf.setValue(content);
+  }
+
   const handleSetActiveItem = async (chat, documentRefreshOnly?: boolean) => {
     setStatus('in_progress');
     
@@ -165,7 +170,7 @@ export default function Home() {
     } else {
       setEditorOpen(false)
     }
-    editor.tf.setValue(document.document)
+    changeEditorContent(document.document)
     
     if (!documentRefreshOnly) {
       setActiveChatMessages([]);
@@ -177,10 +182,11 @@ export default function Home() {
           if (messages.length === 0) {
             setActiveChatMessages([]);
           } else {
-            const formattedMessages = messages.map(message => ({
+            const formattedMessages: Message[] = messages.map(message => ({
               id: message.id.toString(),
               content: message.content,
-              role: message.role
+              role: message.role as 'user' | 'assistant',
+              fileNames: message.fileNames || []
             }));
             setActiveChatMessages(formattedMessages);
           }
@@ -224,7 +230,7 @@ export default function Home() {
       ]
     }
     setActiveUserDocument(doc)
-    editor.tf.setValue(doc["document"])
+    changeEditorContent(doc["document"])
     handleSelectedTemplate("")
   }
   
@@ -278,7 +284,7 @@ export default function Home() {
   const chatWindowCssClass = editorOpen ? '' : 'justify-center items-center';
 
   return (
-    <ChatSettingsProvider setActiveItem={handleSetActiveItem}>
+    <ChatSettingsProvider changeEditorContent={changeEditorContent}>
       <div className="flex h-screen flex-col">
         <HomeHeader
           onNewChat={resetState}
@@ -299,6 +305,7 @@ export default function Home() {
             isOpen={isSidebarOpen}
             items={userChats}
             setActiveItem={handleSetActiveItem}
+            changeEditorContent={changeEditorContent}
             toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           />
           <ChatContent
@@ -309,7 +316,7 @@ export default function Home() {
             editorOpen={editorOpen}
             hideChat={hideChat}
             setActiveChatMessages={setActiveChatMessages}
-            setActiveItem={handleSetActiveItem}
+            changeEditorContent={changeEditorContent}
             setEditorOpen={setEditorOpen}
             setStatus={setStatus}
             status={status}

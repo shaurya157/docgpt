@@ -16,14 +16,13 @@ import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface TemplatesDropdownProps {
-  setActiveItem: (item, documentRefreshOnly) => void;
+  changeEditorContent: (content: any[]) => void;
 }
 
-export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
+export function TemplatesDropdown({ changeEditorContent }: TemplatesDropdownProps) {
   const openState = useOpenState();
   const [ openDialog, setOpenDialog ] = useState(false);
-  const { setUserTemplates, userTemplates } = useUserDataContext();
-  const { activeUserDocument } = useDocument();
+  const { userTemplates } = useUserDataContext();
   const router = useRouter();
 
   const newTemplate = {
@@ -44,9 +43,7 @@ export function TemplatesDropdown({ setActiveItem }: TemplatesDropdownProps) {
 
   const handleApply = (template) => {
     return () => {
-      const currActiveDoc = { ...activeUserDocument };
-      currActiveDoc['document'] = template['template'];
-      setActiveItem(currActiveDoc, true);
+      changeEditorContent(template['template'])
     };
   };
 

@@ -44,6 +44,7 @@ interface SidebarProps {
   activeSetting?: string;
   activeUserDocument?: {} | string;
   setActiveSetting?: (id: string) => void;
+  changeEditorContent: (content: any) => void;
 }
 
 const Sidebar = ({
@@ -55,7 +56,8 @@ const Sidebar = ({
   items,
   setActiveItem,
   setActiveSetting,
-  onDeleteChat
+  onDeleteChat,
+  changeEditorContent
 }: SidebarProps) => {
   const sidebarWidth = 220;
   const popoverOffset = 12;
@@ -399,7 +401,6 @@ const Sidebar = ({
 
         <div className="border-t px-3 py-2">
           <div className="space-y-1">
-            <TemplatesDropdown setActiveItem={setActiveItem} />
             {preferenceItems.map((item) => (
               <button
                 key={item.id}

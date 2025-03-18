@@ -15,3 +15,10 @@ export interface Template {
   templateName: string;
   templateOwnerId: string;
 }
+
+export interface Message {
+  content: string;
+  id: string;
+  role: 'user' | 'assistant';
+  fileNames: string[];
+}

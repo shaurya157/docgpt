@@ -4,18 +4,15 @@ import Markdown from 'react-markdown';
 import { getEditorPrompt } from '@udecode/plate-ai/react';
 import { deserializeMd } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
-import { Message } from 'ai';
 import { motion } from 'framer-motion';
-import {FileText, MessageCircleOffIcon, MessageCirclePlusIcon } from 'lucide-react';
+import { FileText, MessageCircleOffIcon, MessageCirclePlusIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { AssistantStream } from 'openai/lib/AssistantStream';
 import { toast } from 'sonner';
 
 import { ChatSettings } from '@/components/chat/chat-settings';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
-import { useOpenState } from '@/components/plate-ui/dropdown-menu';
 import { appendChatSpecificFileIds, updateDocumentTitle, storeMessage} from '@/firebase/firestore-dao';
 import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
@@ -23,6 +20,7 @@ import {DotAnimation} from "@/utils/animations";
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
 import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
 import { ChatInput } from '@/components/chat/chat-input';
+import { Message } from '@/types';
 
 import CloseIcon from '../../assets/icons/x.svg';
 import { cn } from '@/lib/utils';
@@ -37,7 +35,7 @@ interface ContentProps {
   setStatus: Dispatch<SetStateAction<string>>;
   status: 'awaiting_message' | 'in_progress';
   onNewChat: () => {};
-  setActiveItem: (id: any, documentRefreshOnly: boolean) => void;
+  changeEditorContent: (content: any) => void;
   setEditorOpen: (bool: boolean) => void;
   toggleHideChat: () => void;
 }
@@ -49,7 +47,7 @@ const ChatContent = ({
   editorOpen,
   hideChat,
   setActiveChatMessages,
-  setActiveItem,
+  changeEditorContent,
   setEditorOpen,
   setStatus,
   status,
@@ -72,24 +70,22 @@ const ChatContent = ({
     }>
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [uploadInProgress, setUploadInProgress] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [streamingMessage, setStreamingMessage] = useState<Message>({
     id: "Thinking...",
     content: "",
-    createdAt: new Date(),
     role: "assistant",
+    fileNames: []
   });
   const [streamingDocument, setStreamingDocument] = useState(false)
-  const [ uploadedFilesDialog, setUploadedFilesDialog ] = useState(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    setUploadedFilesDialog(false)
     if (hideChat) toggleHideChat()
     scrollToBottom();
   }, [activeChatMessages]); // do not add hidechat + toggle as a dependency here, forces a refresh which breaks hiding
@@ -126,15 +122,15 @@ const ChatContent = ({
           id: timestamp.toString(),
           content: usedInput.trim(),
           role: 'user',
+          fileNames: attachments.map(att => att.fileName)
         };
 
         // Store the message in Firestore
-        const fileNames = attachments.map(att => att.fileName);
         await storeMessage(item.chatId, {
           content: usedInput.trim(),
           role: 'user',
           id: timestamp,
-          ...(fileNames.length > 0 && { fileNames })
+          fileNames: newMessage.fileNames
         });
 
         setInputValue('');
@@ -199,13 +195,15 @@ const ChatContent = ({
                 id: timestamp.toString(),
                 content: accumulatedContent,
                 role: "assistant",
+                fileNames: []
               };
               
               // Store the assistant's message in Firestore
               await storeMessage(chatId, {
                 content: accumulatedContent,
                 role: "assistant",
-                id: timestamp
+                id: timestamp,
+                fileNames: []
               });
               
               // Check if the content contains a document
@@ -222,7 +220,8 @@ const ChatContent = ({
               setStreamingDocument(false);
               setStreamingMessage({
                 ...streamingMessage,
-                content: ""
+                content: "",
+                fileNames: []
               });
               
               // Add the final message to the chat
@@ -429,7 +428,7 @@ const ChatContent = ({
         }
       }
 
-      setActiveItem(currActiveDoc, true);
+      changeEditorContent(result);
     };
   };
 
@@ -482,29 +481,27 @@ const ChatContent = ({
       );
     }
 
-
-    return <Markdown className="react-markdown">{message.content}</Markdown>;
+    return (<div className="whitespace-pre-wrap">
+      <Markdown className="react-markdown">{message.content}</Markdown>
+      {message.fileNames && message.fileNames.map((fileName) => (
+        <div key={fileName} className="flex items-center gap-2">
+          <FileText className="size-5" />
+          <span>{fileName}</span>
+        </div>
+      ))}
+    </div>);
     // return <div className="whitespace-pre-wrap">{message.content}</div>;
   };
 
   const chatInputPositioningCssClass =
     activeChatMessages.length !== 0 ? 'h-full' : '';
 
-  const handleQuickLinkClick = (hotLink: {}) => {
-    return () => {
-      handleSelectedAssistant(hotLink['assistantName']);
-      handleSelectedTemplate(hotLink['templateId']);
-      handleSendMessage(hotLink["prompt"])()
-    };
-  };
-
   const adjustTextAreaHeight = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto"; // Reset height to recalculate
-      textarea.style.height = textarea.scrollHeight + "px"; // Set height based on scrollHeight
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // Reset height to recalculate
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px"; // Set height based on scrollHeight
     }
-  }
+  };
 
   if (hideChat && activeChatMessages.length > 1) {
     return (

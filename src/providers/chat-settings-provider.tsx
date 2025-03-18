@@ -19,12 +19,12 @@ export const ChatSettingsContext = createContext<ChatSettings | null>(null);
 
 interface ChatSettingsProviderProps {
   children: React.ReactNode;
-  setActiveItem?: (id: any, documentRefreshOnly: boolean) => void;
+  changeEditorContent?: (content: any) => void;
 }
 
 export default function ChatSettingsProvider({
   children,
-  setActiveItem,
+  changeEditorContent,
 }: ChatSettingsProviderProps) {
   const { docgptProvidedAssistantDefinitions } = useAssistantDefinitions();
   const { providedTemplates } = useDocument();
@@ -82,9 +82,7 @@ export default function ChatSettingsProvider({
     }
 
     setSelectedTemplate(template);
-    const currActiveDoc = { ...activeUserDocument };
-    currActiveDoc['document'] = template['template'];
-    if (setActiveItem) setActiveItem(currActiveDoc, true);
+    if (changeEditorContent) changeEditorContent(template['template']);
   };
 
   return (
