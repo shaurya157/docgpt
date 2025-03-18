@@ -42,7 +42,6 @@ interface SidebarProps {
   setActiveItem: (id: any, documentRefreshOnly: boolean) => void;
   toggleSidebar: () => void;
   activeSetting?: string;
-  activeUserDocument?: {} | string;
   setActiveSetting?: (id: string) => void;
   changeEditorContent: (content: any) => void;
 }
@@ -50,7 +49,6 @@ interface SidebarProps {
 const Sidebar = ({
   activeSetting,
   activeTab,
-  activeUserDocument,
   editorOpen,
   isOpen,
   items,
@@ -392,7 +390,6 @@ const Sidebar = ({
           {
             activeTab === "chat" ? <ChatSidebarItems
                 onDeleteChat={onDeleteChat}
-                activeUserDocument={activeUserDocument}
                 items={items}
                 setActiveItem={setActiveItem}
             /> : <SettingsSidebarItems activeSetting={activeSetting} setActiveSetting={setActiveSetting}/>

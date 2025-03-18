@@ -1,15 +1,17 @@
 import Image from "next/image";
 
 import DeleteIcon from "@/assets/icons/delete.svg";
+import { useDocument } from "@/providers/document-provider";
 
 interface ChatSidebarItemsProps {
     items: any[] | null | undefined;
     onDeleteChat: (chatId: string) => void;
     setActiveItem: (id: any, documentRefreshOnly: boolean) => void;
-    activeUserDocument?: {} | string;
 }
 
-export const ChatSidebarItems = ({activeUserDocument, items, setActiveItem, onDeleteChat}: ChatSidebarItemsProps) => {
+export const ChatSidebarItems = ({items, setActiveItem, onDeleteChat}: ChatSidebarItemsProps) => {
+    const { activeUserDocument } = useDocument();
+    
     return (
         <>
             {items?.map((chat, idx) => (

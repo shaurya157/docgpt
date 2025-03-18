@@ -300,7 +300,6 @@ export default function Home() {
           <Sidebar
             onDeleteChat={handleDeleteChat}
             activeTab={activeTab}
-            activeUserDocument={activeUserDocument}
             editorOpen={editorOpen}
             isOpen={isSidebarOpen}
             items={userChats}
@@ -311,7 +310,6 @@ export default function Home() {
           <ChatContent
             onNewChat={handleNewChat}
             activeChatMessages={activeChatMessages}
-            activeUserDocument={activeUserDocument}
             editor={editor}
             editorOpen={editorOpen}
             hideChat={hideChat}

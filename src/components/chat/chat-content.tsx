@@ -24,10 +24,10 @@ import { Message } from '@/types';
 
 import CloseIcon from '../../assets/icons/x.svg';
 import { cn } from '@/lib/utils';
+import { useDocument } from '@/providers/document-provider';
 
 interface ContentProps {
   activeChatMessages: Message[];
-  activeUserDocument: any;
   editor: PlateEditor;
   editorOpen: boolean;
   hideChat: boolean;
@@ -42,7 +42,6 @@ interface ContentProps {
 
 const ChatContent = ({
   activeChatMessages,
-  activeUserDocument,
   editor,
   editorOpen,
   hideChat,
@@ -77,7 +76,8 @@ const ChatContent = ({
     role: "assistant",
     fileNames: []
   });
-  const [streamingDocument, setStreamingDocument] = useState(false)
+  const [streamingDocument, setStreamingDocument] = useState(false);
+  const { activeUserDocument } = useDocument();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

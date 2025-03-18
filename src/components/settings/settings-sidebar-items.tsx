@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { BotIcon, FileIcon } from 'lucide-react';
+import { FileIcon } from 'lucide-react';
 
 
 interface SettingsSidebarItemsProps {
@@ -13,11 +13,6 @@ const settingsOptions = [
         id: "templates",
         icon: <FileIcon size={20} className="mr-2"/>,
         title: "Templates",
-    },
-    {
-        id: "assistants",
-        icon: <BotIcon size={20} className="mr-2"/>,
-        title: "Assistants",
     },
 ]
 

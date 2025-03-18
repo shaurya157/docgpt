@@ -42,9 +42,9 @@ export function SaveButton() {
     const res = await saveCurrentDocumentState(
       session!.user!.email!,
       docName,
-      activeUserDocument!['threadId'],
+      activeUserDocument['chatId'],
       editor.children,
-      activeUserDocument!['id']
+      activeUserDocument['id']
     );
 
     if (res.error) {
