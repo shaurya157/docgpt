@@ -74,7 +74,6 @@ export class DocumentWorkflow {
   }
 
   async buildGraph() {
-    console.log("Building graph");
     const graph = new StateGraph<TAgentState>({
       channels: {
         chatId: { value: (x) => x },

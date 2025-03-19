@@ -10,7 +10,7 @@ export interface Message {
   id: string;
   content: string;
   fileNames: string[];
-  role: 'assistant' | 'user';
+  role: 'user' | 'assistant';
 }
 
 export interface NavItem {

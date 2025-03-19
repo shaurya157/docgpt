@@ -145,7 +145,7 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
                         {renderPreview()}
                         {isOwner && (
                             <Trash2 
-                                className="absolute bottom-2 right-2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all cursor-pointer" 
+                                className="absolute bottom-2 right-2 w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all cursor-pointer" 
                                 onClick={handleDelete}
                             />
                         )}

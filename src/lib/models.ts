@@ -32,7 +32,6 @@ export class ModelRouter {
   }
   
   private async generateDeepSeek(system: string, input: string, stream: boolean = false) {
-    console.log("Generating with DeepSeek");
     if (stream) {
       const response = await this.deepseek.chat.completions.create({
         messages: [
@@ -57,8 +56,6 @@ export class ModelRouter {
   }
 
   private async generateOpenAI(system: string, input: string, model: string, stream: boolean = false) {
-    console.log("Generating with OpenAI using model:", model);
-
     if (stream) {
       const response = await this.openai.chat.completions.create({
         messages: [

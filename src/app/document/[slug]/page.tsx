@@ -160,7 +160,6 @@ export default function DocumentPage() {
             activeChatMessages={activeChatMessages}
             changeEditorContent={changeEditorContent}
             editor={editor}
-            setActiveChatMessages={setActiveChatMessages}
             setStatus={setStatus}
             status={status}
           />
