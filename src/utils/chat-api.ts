@@ -1,4 +1,3 @@
-import { Message } from '@/types';
 import { toast } from 'sonner';
 
 interface StreamCallbacks {

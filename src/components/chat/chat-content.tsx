@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 
 import { ChatInput } from '@/components/chat/chat-input';
 import { ChatSettings } from '@/components/chat/chat-settings';
-import { appendChatSpecificFileIds, storeMessage, updateDocumentTitle} from '@/firebase/firestore-dao';
+import { appendChatSpecificFileIds } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
