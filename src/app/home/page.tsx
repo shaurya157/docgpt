@@ -43,11 +43,12 @@ export default function Home() {
     <>
       <HomeHeader onSearch={setSearchQuery} />
       <div>
-        <DocumentGallery documents={filteredDocuments} />
         <TemplateGallery 
-          userTemplates={filteredUserTemplates}
-          providedTemplates={filteredProvidedTemplates}
-        />
+            userTemplates={filteredUserTemplates}
+            providedTemplates={filteredProvidedTemplates}
+          />
+        <DocumentGallery documents={filteredDocuments} />
+        
       </div>
     </>
   );

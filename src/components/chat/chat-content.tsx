@@ -5,7 +5,7 @@ import { getEditorPrompt } from '@udecode/plate-ai/react';
 import { deserializeMd } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
 import { motion } from 'framer-motion';
-import { FileText, MessageCircleOffIcon, MessageCirclePlusIcon } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -21,7 +21,6 @@ import { Message } from '@/types';
 
 import CloseIcon from '../../assets/icons/x.svg';
 import { useDocument } from '@/providers/document-provider';
-import { Document } from '@/types';
 
 interface ContentProps {
   activeChatMessages: Message[];

@@ -2,7 +2,7 @@ import GalleryItem from './gallery-item';
 import { Document } from '@/types';
 import { useSession } from 'next-auth/react';
 interface DocumentGalleryProps {
-    documents?: Document[];
+    documents?: Document[] | null;
 }
 
 export default function DocumentGallery({ documents }: DocumentGalleryProps) {

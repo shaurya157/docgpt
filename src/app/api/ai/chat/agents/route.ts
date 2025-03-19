@@ -1,5 +1,5 @@
 import { DocumentWorkflow } from "@/lib/workflow";
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
   const { messages, userId, chatId } = await req.json();
