@@ -20,7 +20,7 @@ export default function TemplateGallery({ userTemplates, providedTemplates }: Te
                         template={template.template}
                         itemId={template.id}
                         itemType="template"
-                        isSaved
+                        isOwner={true}
                     />
                 ))}
                 
@@ -31,7 +31,7 @@ export default function TemplateGallery({ userTemplates, providedTemplates }: Te
                         template={template.template}
                         itemId={template.id}
                         itemType="template"
-                        isSaved={false}
+                        isOwner={false}
                     />
                 ))}
                 

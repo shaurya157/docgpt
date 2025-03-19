@@ -88,6 +88,7 @@ export default function DocumentPage() {
             return;
           }
           changeEditorContent(document.document)
+          console.log(chat)
           setActiveChatMessages(chat.messages)
           setActiveUserDocument(document);
         }
@@ -153,6 +154,31 @@ export default function DocumentPage() {
   const changeEditorContent = (content: any[]) => {
     editor.tf.setValue(content);
   }
+
+  // const updateChat = async (chat) => {
+  //   setActiveChatMessages([]);
+  //     try {
+  //       const { error, result: messages } = await getChatMessages(chat.id);
+  //       if (error) {
+  //         toast.error(`Error fetching messages: ${error}`);
+  //       } else {
+  //         if (messages.length === 0) {
+  //           setActiveChatMessages([]);
+  //         } else {
+  //           const formattedMessages: Message[] = messages.map(message => ({
+  //             id: message.id.toString(),
+  //             content: message.content,
+  //             role: message.role as 'user' | 'assistant',
+  //             fileNames: message.fileNames || []
+  //           }));
+  //           setActiveChatMessages(formattedMessages);
+  //         }
+  //       }
+  //     } catch (e) {
+  //       toast.error('Something unexpected happened...');
+  //       console.error(e);
+  //     }
+  // }
 
   return (
     <div className="flex h-screen flex-col">

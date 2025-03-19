@@ -1,6 +1,6 @@
 import GalleryItem from './gallery-item';
 import { Document } from '@/types';
-
+import { useSession } from 'next-auth/react';
 interface DocumentGalleryProps {
     documents?: Document[];
 }
@@ -19,6 +19,7 @@ export default function DocumentGallery({ documents }: DocumentGalleryProps) {
                         template={doc.document}
                         itemId={doc.id}
                         itemType="document"
+                        isOwner={true}
                     />
                 ))}
             </div>

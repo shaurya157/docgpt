@@ -1,4 +1,8 @@
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { deleteDocument, deleteChat, deleteTemplate } from '@/firebase/firestore-dao';
+import { useUserDataContext } from '@/providers/user-data-provider';
+import { Trash2 } from 'lucide-react';
 
 interface TemplateNode {
     type: string;
@@ -9,14 +13,92 @@ interface TemplateNode {
 interface GalleryItemProps {
     title: string;
     isBlank?: boolean;
-    isSaved?: boolean;
     template?: TemplateNode[];
     itemId?: string;
     itemType?: 'document' | 'template';
+    isOwner?: boolean;
 }
 
-export default function GalleryItem({ title, isBlank, isSaved, template, itemId, itemType }: GalleryItemProps) {
+export default function GalleryItem({ title, isBlank, template, itemId, itemType, isOwner }: GalleryItemProps) {
     const router = useRouter();
+    const { userChats, setUserChats, userOwnedDocuments, setUserOwnedDocuments, userTemplates, setUserTemplates } = useUserDataContext();
+
+    const deleteUserData = async (chat: any) => {
+        // 1. Get all file IDs from chat
+        const fileIds = chat.files?.reduce((acc: string[], file: any) => [...acc, ...file.fileIds], []) || [];
+    
+        // 2. Delete files from Pinecone if any exist
+        if (fileIds.length > 0) {
+          try {
+            await fetch('/api/ai/files', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fileIds })
+            });
+          } catch (e) {
+            console.error('Error deleting files:', e);
+            toast.error('Error deleting files');
+          }
+        }
+    
+        // 3. Delete document from Firestore
+        if (chat.documentIds?.length > 0) {
+          for (const docId of chat.documentIds) {
+            const docRes = await deleteDocument(docId);
+            if (docRes.error) {
+              console.error('Error deleting document:', docRes.error);
+              toast.error(`Error deleting document: ${docRes.error}`);
+              return false;
+            }
+          }
+        }
+    
+        // 4. Delete chat from Firestore
+        const chatRes = await deleteChat(chat.id);
+        if (chatRes?.error) {
+          console.error('Error deleting chat:', chatRes.error);
+          toast.error(`Error deleting chat: ${chatRes.error}`);
+          return false;
+        }
+    
+        return true;
+    };
+    
+    const handleDelete = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent triggering the parent onClick
+
+        if (!itemId) {
+            toast.error('Item ID not found');
+            return;
+        }
+
+        if (itemType === 'template') {
+            try {
+                const res = await deleteTemplate(itemId);
+                if (res.error) {
+                    toast.error('Failed to delete template');
+                    return;
+                }
+                setUserTemplates(prev => prev?.filter(template => template.id !== itemId));
+                toast.success('Template deleted successfully');
+            } catch (error) {
+                toast.error('Failed to delete template');
+            }
+        } else if (itemType === 'document') {
+            const chat = userChats?.find(c => c.documentIds?.includes(itemId));
+            if (!chat) {
+                toast.error('Associated chat not found');
+                return;
+            }
+
+            const success = await deleteUserData(chat);
+            if (success) {
+                setUserChats(prev => prev?.filter(c => c.id !== chat.id));
+                setUserOwnedDocuments(prev => prev?.filter(doc => !chat.documentIds.includes(doc.id)));
+                toast.success('Document deleted successfully');
+            }
+        }
+    };
 
     const handleClick = () => {
         if (isBlank) {
@@ -52,7 +134,7 @@ export default function GalleryItem({ title, isBlank, isSaved, template, itemId,
 
     return (
         <div className="relative group cursor-pointer" onClick={handleClick}>
-            <div className="w-48 h-64 border rounded-lg bg-white hover:border-gray-400 transition-colors p-3 overflow-hidden">
+            <div className="w-48 h-64 border rounded-lg bg-white hover:border-gray-400 transition-colors p-3 overflow-hidden relative">
                 {isBlank ? (
                     <div className="flex items-center justify-center h-full">
                         <span className="text-4xl text-gray-400">+</span>
@@ -60,10 +142,16 @@ export default function GalleryItem({ title, isBlank, isSaved, template, itemId,
                 ) : (
                     <div className="w-full h-full bg-white">
                         {renderPreview()}
+                        {isOwner && (
+                            <Trash2 
+                                className="absolute bottom-2 right-2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all cursor-pointer" 
+                                onClick={handleDelete}
+                            />
+                        )}
                     </div>
                 )}
             </div>
-            {isSaved && (
+            {isOwner && itemType === 'template' && (
                 <div className="absolute -top-2 left-2 bg-gray-100 px-2 py-0.5 text-xs rounded">
                     Saved template
                 </div>
