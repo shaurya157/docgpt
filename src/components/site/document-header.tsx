@@ -98,7 +98,10 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
         templateName: templateName,
         templateOwnerId: session.user.email
       };
-      setUserTemplates(prev => prev ? [newTemplate, ...prev] : [newTemplate]);
+      setUserTemplates((prev) => {
+        const currentTemplates = prev || [];
+        return [newTemplate, ...currentTemplates];
+      });
       toast.success('Template saved successfully');
     }
     setActiveDropdown(null);

@@ -52,14 +52,12 @@ export default function DocumentPage() {
             if (!template) {
               toast.error('Template not found');
               redirect('/home');
-              return;
             }
 
             // Create new document with template content
             const newDoc = await handleNewChat(template.template);
             if (!newDoc) {
               redirect('/home');
-              return;
             }
             router.replace(`/document/${newDoc.id}`);
           } else {
@@ -67,7 +65,6 @@ export default function DocumentPage() {
             const newDoc = await handleNewChat();
             if (!newDoc) {
               redirect('/home');
-              return;
             }
             router.replace(`/document/${newDoc.id}`);
           }
@@ -77,7 +74,6 @@ export default function DocumentPage() {
           if (!document) {
             toast.error('Document not found');
             redirect('/home');
-            return;
           }
 
           // Find corresponding chat
@@ -85,7 +81,6 @@ export default function DocumentPage() {
           if (!chat) {
             toast.error('Chat not found');
             redirect('/home');
-            return;
           }
           changeEditorContent(document.document)
           console.log(chat)

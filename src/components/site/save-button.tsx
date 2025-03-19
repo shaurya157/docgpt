@@ -82,7 +82,7 @@ export function SaveButton() {
       tempTemplate['templateOwnerId'] = session!.user!.email!
       tempTemplate['templateName'] = templName
 
-      setUserTemplates([tempTemplate].concat(filtered))
+      setUserTemplates([tempTemplate].concat(filtered || []))
       setShowSuccessMessage(true);
       setTimeout(() => {
         setShowSuccessMessage(false);
