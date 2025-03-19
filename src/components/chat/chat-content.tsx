@@ -16,6 +16,7 @@ import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
 import { appendChatSpecificFileIds, storeMessage, updateDocumentTitle} from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
+import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message } from '@/types';
 import {DotAnimation} from "@/utils/animations";
@@ -66,6 +67,7 @@ const ChatContent = ({
     role: "assistant"
   });
   const [streamingDocument, setStreamingDocument] = useState(false);
+  const { selectedModel } = useChatSettings();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -136,6 +138,7 @@ const ChatContent = ({
           chatId: item.chatId,
           messages: serializedEditorValue,
           userId: session!.user!.email!,
+          model: selectedModel
         }),
         headers: {
           'Content-Type': 'application/json',

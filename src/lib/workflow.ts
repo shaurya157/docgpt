@@ -24,7 +24,7 @@ export class DocumentWorkflow {
 
   private async generateNode(state: TAgentState) {
     const prompt = this.createGenerationPrompt(state);
-    const output = await this.model.generate("openai", prompt, state.query, true)
+    const output = await this.model.generate(state.model, prompt, state.query, true)
     return {
       ...state,
       draft: output
@@ -82,7 +82,8 @@ export class DocumentWorkflow {
         draft: { default: () => "", value: (x, y) => y || x },
         feedback: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
         query: { value: (x) => x },
-        userId: { value: (x) => x }
+        userId: { value: (x) => x },
+        model: { value: (x) => x }
       }
     });
 

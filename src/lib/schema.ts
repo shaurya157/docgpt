@@ -10,7 +10,8 @@ export const AgentState = z.object({
   draft: z.string().default(""),
   feedback: z.array(z.string()).default([]),
   query: z.string(),
-  userId: z.string()
+  userId: z.string(),
+  model: z.string()
 });
 
 export type TAgentState = z.infer<typeof AgentState>;

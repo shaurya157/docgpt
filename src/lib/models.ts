@@ -6,18 +6,42 @@ export class ModelRouter {
     baseURL: "https://api.deepseek.com",
   })
   private openai = new OpenAI();
+
+  private getProviderAndModel(selectedModel: string): { provider: "deepseek" | "openai", model: string } {
+    if (selectedModel.toLowerCase().includes("open ai")) {
+      // Map OpenAI models
+      const modelMap = {
+        "Open AI 4o": "gpt-4o",
+        "Open AI O1": "o1"
+      };
+      return {
+        provider: "openai",
+        model: modelMap[selectedModel] || "gpt-4o" // default to gpt-4o if not found
+      };
+    } else {
+      // For DeepSeek models
+      const modelMap = {
+        "DeepSeek Chat": "deepseek-chat",
+        "DeepSeek R1": "deepseek-reasoner"
+      };
+      return {
+        provider: "deepseek",
+        model: modelMap[selectedModel] || "deepseek-chat" // default to deepseek-chat if not found
+      };
+    }
+  }
   
   private async generateDeepSeek(system: string, input: string, stream: boolean = false) {
     console.log("Generating with DeepSeek");
     if (stream) {
       const response = await this.deepseek.chat.completions.create({
         messages: [
-        { content: system, role: "system" },
-        { content: input, role: "user" }
-      ],
+          { content: system, role: "system" },
+          { content: input, role: "user" }
+        ],
         model: "deepseek-reasoner",
         stream: stream
-    });
+      });
       return response.toReadableStream();
     } else {
       const response = await this.deepseek.chat.completions.create({
@@ -32,8 +56,8 @@ export class ModelRouter {
     }
   }
 
-  private async generateOpenAI(system: string, input: string, stream: boolean = false) {
-    console.log("Generating with OpenAI");
+  private async generateOpenAI(system: string, input: string, model: string, stream: boolean = false) {
+    console.log("Generating with OpenAI using model:", model);
 
     if (stream) {
       const response = await this.openai.chat.completions.create({
@@ -41,7 +65,7 @@ export class ModelRouter {
           { content: system, role: "system" },
           { content: input, role: "user" }
         ],
-        model: "gpt-4o",
+        model: model,
         stream: stream
       });
 
@@ -52,7 +76,7 @@ export class ModelRouter {
           { content: system, role: "system" },
           { content: input, role: "user" }
         ],
-        model: "gpt-4o"
+        model: model
       });
 
       return response.choices[0].message.content!;
@@ -60,19 +84,21 @@ export class ModelRouter {
   }
 
   async generate(
-    provider: "deepseek" | "openai",
+    selectedModel: string,
     systemPrompt: string,
     userInput: string,
     stream: boolean = false
   ): Promise<ReadableStream<any> | string> {
-    console.log("Generating with provider:", provider);
+    const { provider, model } = this.getProviderAndModel(selectedModel);
+    console.log("Generating with provider:", provider, "and model:", model);
+    
     switch(provider) {
       case "deepseek":
         return this.generateDeepSeek(systemPrompt, userInput, stream);
       case "openai":
-        return this.generateOpenAI(systemPrompt, userInput, stream);
+        return this.generateOpenAI(systemPrompt, userInput, model, stream);
       default:
-        return this.generateOpenAI(systemPrompt, userInput, stream);
+        return this.generateOpenAI(systemPrompt, userInput, "gpt-4o", stream);
     }
   }
 }
