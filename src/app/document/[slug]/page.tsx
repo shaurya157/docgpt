@@ -25,7 +25,7 @@ export default function DocumentPage() {
   const editor = useCreateEditor();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
-  const { activeUserDocument, setActiveUserDocument } = useDocument();
+  const { setActiveUserDocument } = useDocument();
   const { setUserChats, setUserOwnedDocuments, userChats, userOwnedDocuments, userTemplates } = useUserDataContext();
   const { providedTemplates } = useDocument();
   const initialized = useRef(false);
@@ -157,7 +157,7 @@ export default function DocumentPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      <DocumentHeader />
+      <DocumentHeader editor={editor} />
       <div className='relative flex flex-1 overflow-hidden'>
         <ChatContent
           activeChatMessages={activeChatMessages}

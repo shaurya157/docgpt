@@ -42,9 +42,9 @@ export function SaveButton() {
     const res = await saveCurrentDocumentState(
       session!.user!.email!,
       docName,
-      activeUserDocument['chatId'],
+      activeUserDocument!['chatId'],
       editor.children,
-      activeUserDocument['id']
+      activeUserDocument!['id']
     );
 
     if (res.error) {
@@ -66,7 +66,7 @@ export function SaveButton() {
       templName,
       editor.children,
       activeTemplate ? activeTemplate!['templateOwnerId'] === session!.user!.email! : false,
-      activeTemplate ? activeTemplate!['id'] : null
+      activeTemplate ? activeTemplate!['id'] : undefined
     );
 
     if (res.error) {
