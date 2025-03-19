@@ -16,6 +16,7 @@ import {createNewChat, saveCurrentDocumentState} from '@/firebase/firestore-dao'
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Document, Message, Template } from '@/types';
+import { ChatSettingsProvider } from '@/providers/chat-settings-provider';
 
 export default function DocumentPage() {
   const params = useParams();
@@ -151,21 +152,23 @@ export default function DocumentPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <DocumentHeader editor={editor} />
-      <div className='relative flex flex-1 overflow-hidden'>
-        <ChatContent
-          activeChatMessages={activeChatMessages}
-          changeEditorContent={changeEditorContent}
-          editor={editor}
-          setActiveChatMessages={setActiveChatMessages}
-          setStatus={setStatus}
-          status={status}
-        />
-        <div className='z-10 overflow-y-scroll border bg-background shadow h-full w-2/3'>
-          <PlateEditor plateEditor={editor} />
+    <ChatSettingsProvider>
+      <div className="flex h-screen flex-col">
+        <DocumentHeader editor={editor} />
+        <div className='relative flex flex-1 overflow-hidden'>
+          <ChatContent
+            activeChatMessages={activeChatMessages}
+            changeEditorContent={changeEditorContent}
+            editor={editor}
+            setActiveChatMessages={setActiveChatMessages}
+            setStatus={setStatus}
+            status={status}
+          />
+          <div className='z-10 overflow-y-scroll border bg-background shadow h-full w-2/3'>
+            <PlateEditor plateEditor={editor} />
+          </div>
         </div>
       </div>
-    </div>
+    </ChatSettingsProvider>
   );
 }

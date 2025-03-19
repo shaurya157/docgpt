@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 
 import { ChatInput } from '@/components/chat/chat-input';
+import { ChatSettings } from '@/components/chat/chat-settings';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
 import { appendChatSpecificFileIds, storeMessage, updateDocumentTitle} from '@/firebase/firestore-dao';
@@ -569,6 +570,7 @@ const ChatContent = ({
           textareaRef={textareaRef}
           updateAttachments={updateAttachments}
         />
+        <ChatSettings />
       </div>
       )}
     </motion.div>
