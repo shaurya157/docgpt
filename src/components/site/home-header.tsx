@@ -1,38 +1,22 @@
-import { HomeIcon, SquarePen } from 'lucide-react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-
-import SidebarIcon from '../../assets/icons/sidebar.svg';
-
-interface HeaderProps {
-  onNewChat: () => void;
-  toggleSidebar: () => void;
+interface HomeHeaderProps {
+    onSearch: (query: string) => void;
 }
 
-const HomeHeader = ({
-  toggleSidebar,
-  onNewChat,
-}: HeaderProps) => {
-  const router = useRouter();
-
-  return (
-    <header className="flex h-16 items-center border-b bg-white px-4">
-      <button
-        className="rounded-lg p-2 hover:bg-[#ECECEC]"
-        onClick={toggleSidebar}
-      >
-        <Image className="cursor-pointer" alt="Toggle Sidebar" height={24} src={SidebarIcon} width={24} />
-      </button>
-      <div className="flex items-center ">
-        <button className="rounded-lg p-2 hover:bg-[#ECECEC] cursor-pointer" onClick={() => { router.push("/home") }}>
-          <HomeIcon/>
-        </button>
-        <button className="rounded-lg p-2 hover:bg-[#ECECEC] cursor-pointer" onClick={() => { onNewChat() }}>
-          <SquarePen />
-        </button>
-      </div>
-    </header>
-  );
-};
-
-export default HomeHeader;
+export default function HomeHeader({ onSearch }: HomeHeaderProps) {
+    return (
+        <header className="flex h-16 items-center justify-between border-b bg-white px-4">
+            <div className="w-48">
+                <h1 className="text-xl font-semibold">Home</h1>
+            </div>
+            <div className="w-1/3">
+                <input
+                    type="text"
+                    placeholder="Search documents and templates..."
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+                    onChange={(e) => onSearch(e.target.value)}
+                />
+            </div>
+            <div className="w-48" /> {/* Spacer for centering */}
+        </header>
+    )
+}

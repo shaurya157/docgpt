@@ -1,21 +1,21 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
-
+import { Document, Template } from '@/types';
 type DocumentSettings = {
   setActiveTemplate: React.Dispatch<React.SetStateAction<any | null>>
   setActiveUserDocument: React.Dispatch<React.SetStateAction<any>>;
-  activeTemplate?: any | null;
-  activeUserDocument?: any | null;
-  providedTemplates?: any[] | null;
+  activeTemplate?: Template | null;
+  activeUserDocument?: Document | null;
+  providedTemplates?: Template[] | null;
 };
 
 export const TemplateSettings = createContext<DocumentSettings | null>(null);
 
 interface DocumentProviderProps {
   children: React.ReactNode;
-  docgptProvidedTemplates?: any | null;
-  userDocument?: any | null;
+  docgptProvidedTemplates?: Template[] | null;
+  userDocument?: Document | null;
 }
 
 export default function DocumentProvider({

@@ -7,7 +7,7 @@ import { redirect, useRouter } from 'next/navigation';
 
 import { TemplateSettings } from '@/components/settings/template-settings';
 import Sidebar from "@/components/sidebar/sidebar";
-import HomeHeader from "@/components/site/home-header";
+import DocumentHeader from "@/components/site/document-header";
 
 export default function Settings({params}) {
     const [activeTab] = useState<'chat' | 'settings'>('settings');
@@ -38,9 +38,8 @@ export default function Settings({params}) {
 
     return (
         <div className="flex h-screen flex-col">
-            <HomeHeader
+            <DocumentHeader
                 onNewChat={redirectToHome}
-                toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             />
 
             <div className="relative flex flex-1 overflow-hidden">
