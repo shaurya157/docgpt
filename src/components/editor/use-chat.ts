@@ -3,14 +3,11 @@
 
 import {useState} from "react";
 
-import { faker } from '@faker-js/faker';
-import {useAssistant } from 'ai/react';
-import {toast} from "sonner";
+import { useChat as useBaseChat } from 'ai/react';
+import { useSession } from 'next-auth/react';
 
 import { useSettings } from '@/components/editor/settings';
 import {useDocument} from "@/providers/document-provider";
-import { useChat as useBaseChat } from 'ai/react';
-import { useSession } from 'next-auth/react';
 export const useChat = () => {
   const { keys, model } = useSettings();
   const { activeUserDocument } = useDocument();
@@ -61,11 +58,11 @@ export const useChat = () => {
   return useBaseChat({
     id: 'editor',
     api: '/api/ai/command',
-    streamProtocol: 'data',
     body: {
-      userId: session?.user?.email,
       chatId: activeUserDocument?.chatId,
+      userId: session?.user?.email,
     },
+    streamProtocol: 'data',
     fetch: async (input, init) => {
       console.log("Input: ", input)
       console.log("init: ", init)

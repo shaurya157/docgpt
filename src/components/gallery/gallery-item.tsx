@@ -1,27 +1,28 @@
+import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { deleteDocument, deleteChat, deleteTemplate } from '@/firebase/firestore-dao';
-import { useUserDataContext } from '@/providers/user-data-provider';
-import { Trash2 } from 'lucide-react';
 
-interface TemplateNode {
-    type: string;
-    children: { text: string }[];
-    id: string;
-}
+import { deleteChat, deleteDocument, deleteTemplate } from '@/firebase/firestore-dao';
+import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface GalleryItemProps {
     title: string;
     isBlank?: boolean;
-    template?: TemplateNode[];
+    isOwner?: boolean;
     itemId?: string;
     itemType?: 'document' | 'template';
-    isOwner?: boolean;
+    template?: TemplateNode[];
 }
 
-export default function GalleryItem({ title, isBlank, template, itemId, itemType, isOwner }: GalleryItemProps) {
+interface TemplateNode {
+    id: string;
+    children: { text: string }[];
+    type: string;
+}
+
+export default function GalleryItem({ isBlank, isOwner, itemId, itemType, template, title }: GalleryItemProps) {
     const router = useRouter();
-    const { userChats, setUserChats, userOwnedDocuments, setUserOwnedDocuments, userTemplates, setUserTemplates } = useUserDataContext();
+    const { setUserChats, setUserOwnedDocuments, setUserTemplates, userChats, userOwnedDocuments, userTemplates } = useUserDataContext();
 
     const deleteUserData = async (chat: any) => {
         // 1. Get all file IDs from chat
@@ -31,9 +32,9 @@ export default function GalleryItem({ title, isBlank, template, itemId, itemType
         if (fileIds.length > 0) {
           try {
             await fetch('/api/ai/files', {
-              method: 'DELETE',
+              body: JSON.stringify({ fileIds }),
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ fileIds })
+              method: 'DELETE'
             });
           } catch (e) {
             console.error('Error deleting files:', e);

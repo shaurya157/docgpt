@@ -9,18 +9,19 @@ import { FileText } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+
+import { ChatInput } from '@/components/chat/chat-input';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
-import { appendChatSpecificFileIds, updateDocumentTitle, storeMessage} from '@/firebase/firestore-dao';
+import { appendChatSpecificFileIds, storeMessage, updateDocumentTitle} from '@/firebase/firestore-dao';
+import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
+import { Message } from '@/types';
 import {DotAnimation} from "@/utils/animations";
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
 import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
-import { ChatInput } from '@/components/chat/chat-input';
-import { Message } from '@/types';
 
 import CloseIcon from '../../assets/icons/x.svg';
-import { useDocument } from '@/providers/document-provider';
 
 interface ContentProps {
   activeChatMessages: Message[];
@@ -33,9 +34,9 @@ interface ContentProps {
 
 const ChatContent = ({
   activeChatMessages,
+  changeEditorContent,
   editor,
   setActiveChatMessages,
-  changeEditorContent,
   setStatus,
   status
 }: ContentProps) => {
@@ -60,8 +61,8 @@ const ChatContent = ({
   const [streamingMessage, setStreamingMessage] = useState<Message>({
     id: "Thinking...",
     content: "",
-    role: "assistant",
-    fileNames: []
+    fileNames: [],
+    role: "assistant"
   });
   const [streamingDocument, setStreamingDocument] = useState(false);
 
@@ -91,7 +92,7 @@ const ChatContent = ({
   const handleSendMessage =  (input?: string) => {
     return async () => {
       setStatus('in_progress');
-      let item = activeUserDocument
+      const item = activeUserDocument
       const usedInput = input === undefined ? inputValue : input
 
       if (usedInput.trim() || attachments.length > 0) {
@@ -99,16 +100,16 @@ const ChatContent = ({
         const newMessage: Message = {
           id: timestamp.toString(),
           content: usedInput.trim(),
-          role: 'user',
-          fileNames: attachments.map(att => att.fileName)
+          fileNames: attachments.map(att => att.fileName),
+          role: 'user'
         };
 
         // Store the message in Firestore
         await storeMessage(item!.chatId, {
-          content: usedInput.trim(),
-          role: 'user',
           id: timestamp,
-          fileNames: newMessage.fileNames
+          content: usedInput.trim(),
+          fileNames: newMessage.fileNames,
+          role: 'user'
         });
 
         setInputValue('');
@@ -130,15 +131,15 @@ const ChatContent = ({
 
     try {
       const result = await fetch('/api/ai/chat/agents', {
-        method: 'POST',
+        body: JSON.stringify({
+          chatId: item.chatId,
+          messages: serializedEditorValue,
+          userId: session!.user!.email!,
+        }),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          messages: serializedEditorValue,
-          chatId: item.chatId,
-          userId: session!.user!.email!,
-        }),
+        method: 'POST',
       });
 
       if (result.body == null) {
@@ -160,16 +161,16 @@ const ChatContent = ({
               const finalMessage: Message = {
                 id: timestamp.toString(),
                 content: accumulatedContent,
-                role: "assistant",
-                fileNames: []
+                fileNames: [],
+                role: "assistant"
               };
               
               // Store the assistant's message in Firestore
               await storeMessage(item.chatId, {
-                content: accumulatedContent,
-                role: "assistant",
                 id: timestamp,
-                fileNames: []
+                content: accumulatedContent,
+                fileNames: [],
+                role: "assistant"
               });
               
               // Check if the content contains a document
@@ -559,14 +560,14 @@ const ChatContent = ({
           </div>
         )}
         <ChatInput
+          handleKeyPress={handleKeyPress}
+          handleSendMessage={handleSendMessage}
+          fileInputRef={fileInputRef}
           inputValue={inputValue}
           setInputValue={setInputValue}
           status={status}
-          handleSendMessage={handleSendMessage}
-          handleKeyPress={handleKeyPress}
-          updateAttachments={updateAttachments}
-          fileInputRef={fileInputRef}
           textareaRef={textareaRef}
+          updateAttachments={updateAttachments}
         />
       </div>
       )}

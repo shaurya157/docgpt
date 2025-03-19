@@ -10,7 +10,7 @@ import {
   appendFileDataToUser,
   deleteUserUploadedFile,
 } from '@/firebase/firestore-dao';
-import { useUserDataContext, FileInfo } from '@/providers/user-data-provider';
+import { FileInfo, useUserDataContext } from '@/providers/user-data-provider';
 
 import FolderIcon from '../../assets/icons/folder.svg';
 import InfoIcon from '../../assets/icons/info.svg';

@@ -47,12 +47,12 @@ export default function Settings({params}) {
                   onDeleteChat={() => {}}
                   activeSetting={activeSetting}
                   activeTab={activeTab}
+                  changeEditorContent={() => {}}
                   isOpen={isSidebarOpen}
                   items={[]}
                   setActiveItem={() => {}}
                   setActiveSetting={setActiveSetting}
                   toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-                  changeEditorContent={() => {}}
               />
               { getSettingsItem() }
             </div>

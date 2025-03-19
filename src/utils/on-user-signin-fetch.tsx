@@ -14,8 +14,8 @@ export async function getExistingUserUploadedFiles(session: Session) {
         if (data.result != undefined) {
             data.result.forEach((file) => {
                 result.push({
-                    fileName: file.fileName,
                     fileIds: file.fileIds,
+                    fileName: file.fileName,
                 });
             });
         }
@@ -46,10 +46,10 @@ export async function getUserDocs(session: Session) {
     resSnapshot.docs.forEach((doc) => {
         const res = {
             id: doc.id,
+            chatId: doc.get('chatId'),
             document: doc.get('document'),
             documentName: doc.get('documentName'),
-            threadId: doc.get('threadId'),
-            chatId: doc.get('chatId')
+            threadId: doc.get('threadId')
         };
 
         result.push(res);

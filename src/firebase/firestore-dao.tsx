@@ -19,15 +19,15 @@ const db = getFirestore(firebase_app);
 
 export async function appendFileDataToUser(
   userId: string,
-  filesData: { fileName: string; fileIds: string[]; status: string }[]
+  filesData: { fileIds: string[]; fileName: string; status: string }[]
 ) {
   const usersRef = collection(db, 'users');
   const docRef = doc(usersRef, userId);
 
   const value = {
     files: arrayUnion(...filesData.map(file => ({
-      fileName: file.fileName,
-      fileIds: file.fileIds
+      fileIds: file.fileIds,
+      fileName: file.fileName
     })))
   };
 
@@ -41,7 +41,7 @@ export async function appendFileDataToUser(
 
 export async function appendChatSpecificFileIds(
   chatId: string,
-  files: { fileName: string; fileIds: string[]; status: string }[]
+  files: { fileIds: string[]; fileName: string; status: string }[]
 ) {
   console.log("chatId", chatId);
   const result: any[] = [];
@@ -51,8 +51,8 @@ export async function appendChatSpecificFileIds(
 
   const value = {
     files: arrayUnion(...files.map(file => ({
-      fileName: file.fileName,
-      fileIds: file.fileIds
+      fileIds: file.fileIds,
+      fileName: file.fileName
     })))
   };
 
@@ -110,10 +110,10 @@ export async function saveCurrentDocumentState(
   let error, result;
   try {
     const value = {
+      chatId: chatId,
       document: document,
       documentName: documentName,
       documentOwnerId: userId,
-      chatId: chatId,
     };
 
     result = documentId
@@ -206,8 +206,8 @@ export async function deleteUserUploadedFile(
 
   const value = {
     files: arrayRemove({
-      fileName: fileName,
-      fileIds: fileIds
+      fileIds: fileIds,
+      fileName: fileName
     }),
   };
 
@@ -226,10 +226,10 @@ export async function createNewChat(userId: string, documentId: string, chatId: 
 
   try {
     const value = {
+      chatName: 'Untitled',
       documentIds: [documentId],
       messages: [],
-      userId: userId,
-      chatName: 'Untitled'
+      userId: userId
     };
 
     await setDoc(doc(chatsRef, chatId), value);
@@ -261,9 +261,9 @@ export async function getUserChats(userId: string) {
 }
 
 export async function storeMessage(chatId: string, message: {
-  content: string,
-  role: "user" | "assistant",
   id: number,
+  content: string,
+  role: "assistant" | "user",
   fileNames?: string[]
 }) {
   const chatsRef = collection(db, 'chats');

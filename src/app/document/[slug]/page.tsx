@@ -1,21 +1,21 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { useSearchParams, useParams, redirect, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { toast } from 'sonner';
+import { useEffect, useRef, useState } from 'react';
+
 import { AssistantStatus } from 'ai';
-import {cn} from "@udecode/cn";
+import { useSession } from 'next-auth/react';
+import { redirect, useParams, useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 import ChatContent from "@/components/chat/chat-content";
 import {PlateEditor} from "@/components/editor/plate-editor";
 import {useCreateEditor} from "@/components/editor/use-create-editor";
 import DocumentHeader from "@/components/site/document-header";
-import {createNewChat, deleteDocument, getChatMessages, saveCurrentDocumentState, deleteChat} from '@/firebase/firestore-dao';
+import {createNewChat, saveCurrentDocumentState} from '@/firebase/firestore-dao';
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
-import { Message, Document, Template } from '@/types';
+import { Document, Message, Template } from '@/types';
 
 export default function DocumentPage() {
   const params = useParams();
@@ -25,8 +25,8 @@ export default function DocumentPage() {
   const editor = useCreateEditor();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
-  const { setActiveUserDocument, activeUserDocument } = useDocument();
-  const { setUserOwnedDocuments, userOwnedDocuments, userChats, setUserChats, userTemplates } = useUserDataContext();
+  const { activeUserDocument, setActiveUserDocument } = useDocument();
+  const { setUserChats, setUserOwnedDocuments, userChats, userOwnedDocuments, userTemplates } = useUserDataContext();
   const { providedTemplates } = useDocument();
   const initialized = useRef(false);
 
@@ -106,15 +106,15 @@ export default function DocumentPage() {
     setActiveChatMessages([]);
     const chatId = uuidv4();
     const item: Document = {
+      id: "",
+      chatId: chatId,
       document: initialContent || [{
         id: '1',
         children: [{ text: '' }],
         type: 'h1',
       }],
       documentName: 'Untitled document',
-      chatId: chatId,
-      documentOwnerId: session!.user!.email!,
-      id: ""
+      documentOwnerId: session!.user!.email!
     };
 
     const res = await saveCurrentDocumentState(
@@ -137,10 +137,10 @@ export default function DocumentPage() {
     
     const newChat = {
       id: chatId,
-      documentIds: [res.result.id],
       chatName: 'Untitled',
-      userId: session!.user!.email!,
-      messages: []
+      documentIds: [res.result.id],
+      messages: [],
+      userId: session!.user!.email!
     };
     
     setUserChats(prev => prev ? [newChat, ...prev] : [newChat]);
@@ -161,9 +161,9 @@ export default function DocumentPage() {
       <div className='relative flex flex-1 overflow-hidden'>
         <ChatContent
           activeChatMessages={activeChatMessages}
+          changeEditorContent={changeEditorContent}
           editor={editor}
           setActiveChatMessages={setActiveChatMessages}
-          changeEditorContent={changeEditorContent}
           setStatus={setStatus}
           status={status}
         />

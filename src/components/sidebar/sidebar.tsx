@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import {ChatSidebarItems} from "@/components/chat/chat-sidebar-items";
 import {SettingsSidebarItems} from "@/components/settings/settings-sidebar-items";
 import Popover from "@/components/sidebar/popover";
-import { TemplatesDropdown } from '@/components/sidebar/templates-dropdown';
 import { PopoverPosition } from '@/types';
 
 import FolderIcon from '../../assets/icons/folder.svg';
@@ -37,23 +36,23 @@ interface SidebarProps {
   activeTab: 'chat' | 'settings';
   isOpen: boolean;
   items: any[] | null | undefined;
+  changeEditorContent: (content: any) => void;
   onDeleteChat: (chatId: string) => void;
   setActiveItem: (id: any, documentRefreshOnly: boolean) => void;
   toggleSidebar: () => void;
   activeSetting?: string;
   setActiveSetting?: (id: string) => void;
-  changeEditorContent: (content: any) => void;
 }
 
 const Sidebar = ({
   activeSetting,
   activeTab,
+  changeEditorContent,
   isOpen,
   items,
   setActiveItem,
   setActiveSetting,
-  onDeleteChat,
-  changeEditorContent
+  onDeleteChat
 }: SidebarProps) => {
   const sidebarWidth = 220;
   const popoverOffset = 12;

@@ -1,8 +1,10 @@
+import { useEffect, useRef, useState } from 'react';
+
 import { HomeIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
-import TemplateGalleryModal from '../gallery/template-gallery-modal';
+
 import DocumentGalleryModal from '../gallery/document-gallery-modal';
+import TemplateGalleryModal from '../gallery/template-gallery-modal';
 
 const DocumentHeader = () => {
   const router = useRouter();
@@ -42,11 +44,11 @@ const DocumentHeader = () => {
     <>
       <header className="flex h-16 items-center border-b bg-white px-4 justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex gap-2" ref={dropdownRef}>
+          <div ref={dropdownRef} className="flex gap-2">
             <div className="relative">
               <button
-                onClick={() => handleDropdownClick('file')}
                 className="px-3 py-1 hover:bg-[#ECECEC] rounded cursor-pointer"
+                onClick={() => handleDropdownClick('file')}
               >
                 File
               </button>
@@ -73,14 +75,14 @@ const DocumentHeader = () => {
 
             <div className="relative">
               <button
-                onClick={() => handleDropdownClick('help')}
                 className="px-3 py-1 hover:bg-[#ECECEC] rounded cursor-pointer"
+                onClick={() => handleDropdownClick('help')}
               >
                 Help
               </button>
               {activeDropdown === 'help' && (
                 <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg py-1 z-50">
-                  <a href="mailto:hello@docgpt.work" className="block px-4 py-2 text-left hover:bg-[#ECECEC]">
+                  <a className="block px-4 py-2 text-left hover:bg-[#ECECEC]" href="mailto:hello@docgpt.work">
                     Email: hello@docgpt.work
                   </a>
                 </div>
@@ -98,13 +100,13 @@ const DocumentHeader = () => {
       </header>
 
       <TemplateGalleryModal
-        isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
+        isOpen={isTemplateModalOpen}
       />
 
       <DocumentGalleryModal
-        isOpen={isDocumentModalOpen}
         onClose={() => setIsDocumentModalOpen(false)}
+        isOpen={isDocumentModalOpen}
       />
     </>
   );

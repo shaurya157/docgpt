@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import TemplateGallery from './template-gallery';
-import { Template } from '@/types';
-import { useUserDataContext } from '@/providers/user-data-provider';
+
 import { useDocument } from '@/providers/document-provider';
+import { useUserDataContext } from '@/providers/user-data-provider';
+
+import TemplateGallery from './template-gallery';
 interface TemplateGalleryModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -49,8 +50,8 @@ export default function TemplateGalleryModal({
                     <div className="flex items-center justify-between p-4 border-b">
                         <h2 className="text-xl font-semibold">Choose a Template</h2>
                         <button
-                            onClick={onClose}
                             className="p-2 hover:bg-gray-100 rounded-full"
+                            onClick={onClose}
                         >
                             ✕
                         </button>
@@ -61,8 +62,8 @@ export default function TemplateGalleryModal({
                         {
                             userTemplates && providedTemplates ? (
                                 <TemplateGallery 
-                                    userTemplates={userTemplates}
                                     providedTemplates={providedTemplates}
+                                    userTemplates={userTemplates}
                                 />
                             ) : null
                         }

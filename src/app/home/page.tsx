@@ -1,19 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import HomeHeader from "@/components/site/home-header";
-import DocumentGallery from "@/components/gallery/document-gallery";
-import TemplateGallery from "@/components/gallery/template-gallery";
-import { useUserDataContext } from "@/providers/user-data-provider";
-import { useDocument } from "@/providers/document-provider";
-import { useSession } from "next-auth/react"; 
+
+import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 
+import DocumentGallery from "@/components/gallery/document-gallery";
+import TemplateGallery from "@/components/gallery/template-gallery";
+import HomeHeader from "@/components/site/home-header";
+import { useDocument } from "@/providers/document-provider"; 
+import { useUserDataContext } from "@/providers/user-data-provider";
+
 interface Template {
+    id: string;
     template: any[];
     templateName: string;
     templateOwnerId: string;
-    id: string;
 }
 
 export default function Home() {
@@ -44,8 +46,8 @@ export default function Home() {
       <HomeHeader onSearch={setSearchQuery} />
       <div>
         <TemplateGallery 
-            userTemplates={filteredUserTemplates}
             providedTemplates={filteredProvidedTemplates}
+            userTemplates={filteredUserTemplates}
           />
         <DocumentGallery documents={filteredDocuments} />
         

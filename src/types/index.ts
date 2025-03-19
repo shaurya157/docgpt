@@ -1,3 +1,18 @@
+export interface Document {
+  id: string;
+  chatId: string;
+  document: any[];
+  documentName: string;
+  documentOwnerId: string;
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  fileNames: string[];
+  role: 'assistant' | 'user';
+}
+
 export interface NavItem {
   title: string;
   disabled?: boolean;
@@ -11,23 +26,8 @@ export interface PopoverPosition {
 }
 
 export interface Template {
+  id: string;
   template: any[];
   templateName: string;
   templateOwnerId: string;
-  id: string;
-}
-
-export interface Message {
-  content: string;
-  id: string;
-  role: 'user' | 'assistant';
-  fileNames: string[];
-}
-
-export interface Document {
-  document: any[];
-  documentName: string;
-  documentOwnerId: string;
-  id: string;
-  chatId: string;
 }

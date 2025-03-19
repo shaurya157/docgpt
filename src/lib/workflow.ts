@@ -1,37 +1,34 @@
-import { START, END, StateGraph } from "@langchain/langgraph";
-import { TAgentState } from "./schema";
-import { ModelRouter } from "./models";
+import { END, START, StateGraph } from "@langchain/langgraph";
 import { Pinecone } from "@pinecone-database/pinecone";
+
+import { ModelRouter } from "./models";
+import { TAgentState } from "./schema";
 
 export class DocumentWorkflow {
   private model = new ModelRouter();
   private pinecone = new Pinecone();
 
-  async buildGraph() {
-    console.log("Building graph");
-    const graph = new StateGraph<TAgentState>({
-      channels: {
-        userId: { value: (x) => x },
-        chatId: { value: (x) => x },
-        query: { value: (x) => x },
-        context: { value: (x, y) => [...(x || []), ...(y || [])], default: () => [] },
-        draft: { value: (x, y) => y || x, default: () => "" },
-        feedback: { value: (x, y) => [...(x || []), ...(y || [])], default: () => [] }
-      }
-    });
+  private createGenerationPrompt(state: TAgentState) {
+    return `
+      Context:
+      ${state.context.map(c => `- ${c.content}`).join("\n")}
 
-    // Nodes
-    graph.addNode("retrieve", this.retrieveNode.bind(this));
-    graph.addNode("generate", this.generateNode.bind(this));
-    // graph.addNode("review", this.reviewNode.bind(this));
+      User Query:
+      ${state.query}
 
-    // Edges
-    graph.addEdge(START, "retrieve" as any);
-    graph.addEdge("retrieve" as any, "generate" as any);
-    graph.addEdge("generate" as any, END);
-    // graph.addConditionalEdges("review" as any, this.shouldRevise.bind(this));
+      Rules:
+      - Always respond in markdown format.
+      - When the user specifically asks to create a document or make edits to the existing document, prepend the document created with <Document> and append the end of the document with </Document>.
+    `;
+  }
 
-    return graph.compile();
+  private async generateNode(state: TAgentState) {
+    const prompt = this.createGenerationPrompt(state);
+    const output = await this.model.generate("openai", prompt, state.query, true)
+    return {
+      ...state,
+      draft: output
+    };
   }
 
   private async retrieveNode(state: TAgentState) {
@@ -40,12 +37,12 @@ export class DocumentWorkflow {
 
     try {
       results = await index.searchRecords({
-          query: {
-              topK: 2,
+          fields: ["text", "userId", "fileName"],
+        query: {
+              filter: { userId: state.userId },
             inputs: { text: state.query },
-            filter: { userId: state.userId },
-        },
-        fields: ["text", "userId", "fileName"]
+            topK: 2,
+        }
       })
     } catch (error) {
       console.error("Error retrieving context:", error);
@@ -64,15 +61,6 @@ export class DocumentWorkflow {
     };
   }
 
-  private async generateNode(state: TAgentState) {
-    const prompt = this.createGenerationPrompt(state);
-    const output = await this.model.generate("openai", prompt, state.query, true)
-    return {
-      ...state,
-      draft: output
-    };
-  }
-
   private async reviewNode(state: TAgentState) {
     const reviewPrompt = `Review this document draft: ${state.draft}`;
     return {
@@ -85,17 +73,30 @@ export class DocumentWorkflow {
     return state.feedback.length > 0 ? "generate" : "end";
   }
 
-  private createGenerationPrompt(state: TAgentState) {
-    return `
-      Context:
-      ${state.context.map(c => `- ${c.content}`).join("\n")}
+  async buildGraph() {
+    console.log("Building graph");
+    const graph = new StateGraph<TAgentState>({
+      channels: {
+        chatId: { value: (x) => x },
+        context: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
+        draft: { default: () => "", value: (x, y) => y || x },
+        feedback: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
+        query: { value: (x) => x },
+        userId: { value: (x) => x }
+      }
+    });
 
-      User Query:
-      ${state.query}
+    // Nodes
+    graph.addNode("retrieve", this.retrieveNode.bind(this));
+    graph.addNode("generate", this.generateNode.bind(this));
+    // graph.addNode("review", this.reviewNode.bind(this));
 
-      Rules:
-      - Always respond in markdown format.
-      - When the user specifically asks to create a document or make edits to the existing document, prepend the document created with <Document> and append the end of the document with </Document>.
-    `;
+    // Edges
+    graph.addEdge(START, "retrieve" as any);
+    graph.addEdge("retrieve" as any, "generate" as any);
+    graph.addEdge("generate" as any, END);
+    // graph.addConditionalEdges("review" as any, this.shouldRevise.bind(this));
+
+    return graph.compile();
   }
 }

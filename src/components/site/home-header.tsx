@@ -10,10 +10,10 @@ export default function HomeHeader({ onSearch }: HomeHeaderProps) {
             </div>
             <div className="w-1/3">
                 <input
-                    type="text"
-                    placeholder="Search documents and templates..."
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
                     onChange={(e) => onSearch(e.target.value)}
+                    placeholder="Search documents and templates..."
+                    type="text"
                 />
             </div>
             <div className="w-48" /> {/* Spacer for centering */}

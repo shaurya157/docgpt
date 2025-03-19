@@ -1,16 +1,16 @@
 import { z } from "zod";
 
 export const AgentState = z.object({
-  userId: z.string(),
   chatId: z.string(),
-  query: z.string(),
   context: z.array(z.object({
     content: z.string(),
-    source: z.string(),
-    score: z.number()
+    score: z.number(),
+    source: z.string()
   })).default([]),
   draft: z.string().default(""),
-  feedback: z.array(z.string()).default([])
+  feedback: z.array(z.string()).default([]),
+  query: z.string(),
+  userId: z.string()
 });
 
 export type TAgentState = z.infer<typeof AgentState>;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
+
 import { Document, Template } from '@/types';
 type DocumentSettings = {
   setActiveTemplate: React.Dispatch<React.SetStateAction<any | null>>

@@ -1,12 +1,13 @@
-import GalleryItem from './gallery-item';
 import { Template } from '@/types';
 
+import GalleryItem from './gallery-item';
+
 interface TemplateGalleryProps {
-    userTemplates?: Template[] | null;
     providedTemplates?: Template[] | null;
+    userTemplates?: Template[] | null;
 }
 
-export default function TemplateGallery({ userTemplates, providedTemplates }: TemplateGalleryProps) {
+export default function TemplateGallery({ providedTemplates, userTemplates }: TemplateGalleryProps) {
     return (
         <div className="p-8">
             <h2 className="text-2xl font-semibold mb-6">Start a new document</h2>
@@ -17,10 +18,10 @@ export default function TemplateGallery({ userTemplates, providedTemplates }: Te
                     <GalleryItem 
                         key={`user-${index}`}
                         title={template.templateName}
-                        template={template.template}
+                        isOwner={true}
                         itemId={template.id}
                         itemType="template"
-                        isOwner={true}
+                        template={template.template}
                     />
                 ))}
                 
@@ -28,10 +29,10 @@ export default function TemplateGallery({ userTemplates, providedTemplates }: Te
                     <GalleryItem 
                         key={`provided-${index}`}
                         title={template.templateName}
-                        template={template.template}
+                        isOwner={false}
                         itemId={template.id}
                         itemType="template"
-                        isOwner={false}
+                        template={template.template}
                     />
                 ))}
                 

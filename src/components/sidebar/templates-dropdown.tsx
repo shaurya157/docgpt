@@ -12,7 +12,6 @@ import {
   useOpenState,
 } from '@/components/plate-ui/dropdown-menu';
 import { TemplatesDialog } from '@/components/sidebar/templates-dialog';
-import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface TemplatesDropdownProps {

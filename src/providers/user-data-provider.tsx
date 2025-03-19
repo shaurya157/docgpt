@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
+
 import { Document, Template } from '@/types';
 type UserDataContext = {
   files: FileInfo[] | null;
@@ -15,10 +16,10 @@ type UserDataContext = {
 export const UserDataContext = createContext<UserDataContext | null>(null);
 
 export interface FileInfo {
-  fileName: string;
   fileIds: string[];
-  status?: string;
+  fileName: string;
   error?: string;
+  status?: string;
 }
 
 interface UserDataProviderProps {

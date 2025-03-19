@@ -1,6 +1,6 @@
+import { Pinecone } from '@pinecone-database/pinecone';
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { Pinecone } from '@pinecone-database/pinecone';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function DELETE(req: NextRequest) {
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result: { fileName: string; fileIds: string[]; status: string; error?: string }[] = [];
+    const result: { fileIds: string[]; fileName: string; status: string; error?: string }[] = [];
     
     // Process each file
     for (const file of files) {
@@ -63,11 +63,11 @@ export async function POST(req: NextRequest) {
         
         // Call LlamaParse API to extract text
         const parseResponse = await fetch('https://api.cloud.llamaindex.ai/api/parsing/upload', {
-          method: 'POST',
+          body: llamaParseFormData,
           headers: {
             'Authorization': `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`
           },
-          body: llamaParseFormData
+          method: 'POST'
         });
 
         if (!parseResponse.ok) {
@@ -82,10 +82,10 @@ export async function POST(req: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
 
           const statusResponse = await fetch(`https://api.cloud.llamaindex.ai/api/parsing/job/${parseData.id}`, {
-            method: 'GET',
             headers: {
               'Authorization': `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`
-            }
+            },
+            method: 'GET'
           });
 
           if (!statusResponse.ok) {
@@ -104,10 +104,10 @@ export async function POST(req: NextRequest) {
         const markdownResponse = await fetch(
           `https://api.cloud.llamaindex.ai/api/parsing/job/${parseData.id}/result/markdown`,
           {
-            method: 'GET',
             headers: {
               'Authorization': `Bearer ${process.env.LLAMA_CLOUD_API_KEY}`
-            }
+            },
+            method: 'GET'
           }
         );
 
@@ -140,21 +140,21 @@ export async function POST(req: NextRequest) {
           chunkIds.push(chunkId);
           return {
             id: chunkId,
-            values: embeddings.data[index]["values"],
             metadata: {
-              userId: userId?.toString() || '',
               fileName: file.name,
               text: chunk,
+              userId: userId?.toString() || '',
               ...(chatId && { chatId })
-            }
+            },
+            values: embeddings.data[index]["values"]
           };
         });
 
         await index.upsert(vectors);
 
         result.push({
-          fileName: file.name,
           fileIds: chunkIds,
+          fileName: file.name,
           status: 'success'
         });
 
@@ -162,10 +162,10 @@ export async function POST(req: NextRequest) {
         console.error(`Error processing file ${file.name}:`, fileError);
         console.error("File error message:", fileError.message)
         result.push({
-          fileName: file.name,
+          error: fileError.message,
           fileIds: [],
-          status: 'error',
-          error: fileError.message
+          fileName: file.name,
+          status: 'error'
         });
       }
     }

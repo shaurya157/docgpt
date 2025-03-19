@@ -1,29 +1,30 @@
 import { Dispatch, SetStateAction } from 'react';
+
 import Image from 'next/image';
 
 import UploadIcon from '../../assets/icons/arrowUp.svg';
 import AttachmentIcon from '../../assets/icons/attachment.svg';
 
 interface ChatInputProps {
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   inputValue: string;
   setInputValue: Dispatch<SetStateAction<string>>;
   status: 'awaiting_message' | 'in_progress';
-  handleSendMessage: (input?: string) => () => Promise<void>;
-  handleKeyPress: (e: React.KeyboardEvent) => void;
-  updateAttachments: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  handleKeyPress: (e: React.KeyboardEvent) => void;
+  handleSendMessage: (input?: string) => () => Promise<void>;
+  updateAttachments: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const ChatInput = ({
+  fileInputRef,
   inputValue,
   setInputValue,
   status,
-  handleSendMessage,
-  handleKeyPress,
+  textareaRef,
   updateAttachments,
-  fileInputRef,
-  textareaRef
+  handleKeyPress,
+  handleSendMessage
 }: ChatInputProps) => {
   return (
     <div className="flex w-full items-center gap-1">
