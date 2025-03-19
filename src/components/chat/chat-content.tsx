@@ -9,8 +9,6 @@ import { FileText, MessageCircleOffIcon, MessageCirclePlusIcon } from 'lucide-re
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { toast } from 'sonner';
-
-import { ChatSettings } from '@/components/chat/chat-settings';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
 import { appendChatSpecificFileIds, updateDocumentTitle, storeMessage} from '@/firebase/firestore-dao';
@@ -22,8 +20,8 @@ import { ChatInput } from '@/components/chat/chat-input';
 import { Message } from '@/types';
 
 import CloseIcon from '../../assets/icons/x.svg';
-import { cn } from '@/lib/utils';
 import { useDocument } from '@/providers/document-provider';
+import { Document } from '@/types';
 
 interface ContentProps {
   activeChatMessages: Message[];
@@ -31,7 +29,6 @@ interface ContentProps {
   setActiveChatMessages: Dispatch<SetStateAction<Message[]>>;
   setStatus: Dispatch<SetStateAction<string>>;
   status: 'awaiting_message' | 'in_progress';
-  onNewChat: () => {};
   changeEditorContent: (content: any) => void;
 }
 
@@ -41,9 +38,9 @@ const ChatContent = ({
   setActiveChatMessages,
   changeEditorContent,
   setStatus,
-  status,
-  onNewChat
+  status
 }: ContentProps) => {
+  const { activeUserDocument } = useDocument();
   const { data: session } = useSession();
   const userDataContext = useUserDataContext();
   const { setUserChats } = userDataContext;
@@ -68,7 +65,6 @@ const ChatContent = ({
     fileNames: []
   });
   const [streamingDocument, setStreamingDocument] = useState(false);
-  const { activeUserDocument } = useDocument();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -96,13 +92,8 @@ const ChatContent = ({
   const handleSendMessage =  (input?: string) => {
     return async () => {
       setStatus('in_progress');
-      let item = activeUserDocument;
+      let item = activeUserDocument
       const usedInput = input === undefined ? inputValue : input
-
-      // handles cases where the template is set in the new document but a new thread isn't spawned just yet
-      if (!item || !item['id']) {
-        item = await onNewChat();
-      }
 
       if (usedInput.trim() || attachments.length > 0) {
         const timestamp = Date.now();
@@ -114,7 +105,7 @@ const ChatContent = ({
         };
 
         // Store the message in Firestore
-        await storeMessage(item.chatId, {
+        await storeMessage(item!.chatId, {
           content: usedInput.trim(),
           role: 'user',
           id: timestamp,
@@ -125,7 +116,7 @@ const ChatContent = ({
         setActiveChatMessages((prev) => [...prev, newMessage]);
 
         if (attachments.length > 0) {
-          await uploadFiles(item.chatId)
+          await uploadFiles(item!.chatId)
         }
 
         await sendMessage(item, newMessage)
@@ -395,7 +386,7 @@ const ChatContent = ({
       currActiveDoc['document'] = result;
       if (currActiveDoc["documentName"] === "Untitled") {
         currActiveDoc["documentName"] = documentTitle
-        const {error, result} = await updateDocumentTitle(currActiveDoc["id"], documentTitle);
+        const {error, result} = await updateDocumentTitle(currActiveDoc!.id!, documentTitle);
         if (error) {
           console.error(`Error saving title to db. Error: ${error}`)
         }
@@ -578,7 +569,6 @@ const ChatContent = ({
           fileInputRef={fileInputRef}
           textareaRef={textareaRef}
         />
-        <ChatSettings />
       </div>
       )}
     </motion.div>

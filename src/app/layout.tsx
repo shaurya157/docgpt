@@ -8,7 +8,6 @@ import { SessionProvider } from 'next-auth/react';
 import {Toaster} from "sonner";
 
 import PreLoginHeader from '@/components/landing/pre-login-header';
-import ChatSettingsProvider from '@/providers/chat-settings-provider';
 import DocumentProvider from '@/providers/document-provider';
 import {ThemeProvider} from "@/providers/theme-provider";
 import UserDataContextProvider from '@/providers/user-data-provider';
@@ -80,11 +79,8 @@ export default async function RootLayout({
                     session?.user ? await getTemplates('docgpt') : null
                   }
               >
-                <ChatSettingsProvider>
-                    {!session?.user ? <PreLoginHeader /> : <div></div>}
-                    <div className="flex-1">{children}</div>
-                    {/* {!session?.user ? <PreLoginFooter /> : <div></div>} */}
-                  </ChatSettingsProvider>
+                {!session?.user ? <PreLoginHeader /> : <div></div>}
+                <div className="flex-1">{children}</div>
               </DocumentProvider>
             </UserDataContextProvider>
           </SessionProvider>

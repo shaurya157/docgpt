@@ -1,18 +1,16 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
-
+import { Document, Template } from '@/types';
 type UserDataContext = {
   files: FileInfo[] | null;
   setFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
   setUserChats: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
-  setUserOwnedDocuments: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
-  setUserTemplates: React.Dispatch<
-    React.SetStateAction<Map<string, any>[] | null | undefined>
-  >;
+  setUserOwnedDocuments: React.Dispatch<React.SetStateAction<Document[] | null | undefined>>;
+  setUserTemplates: React.Dispatch<React.SetStateAction<Template[] | null | undefined>>;
   userChats?: any[] | null;
-  userOwnedDocuments?: any[] | null;
-  userTemplates?: Map<string, any | string>[] | null;
+  userOwnedDocuments?: Document[] | null;
+  userTemplates?: Template[] | null;
 };
 export const UserDataContext = createContext<UserDataContext | null>(null);
 
@@ -27,8 +25,8 @@ interface UserDataProviderProps {
   children: React.ReactNode;
   filesData: FileInfo[] | null;
   userChats?: any[] | null;
-  userDefinedTemplates?: Map<string, any | string>[] | null;
-  userDocuments?: any[] | null;
+  userDefinedTemplates?: Template[] | null;
+  userDocuments?: Document[] | null;
 }
 
 export default function UserDataContextProvider({
