@@ -35,8 +35,6 @@ export default function TemplateGallery({ providedTemplates, userTemplates }: Te
                         template={template.template}
                     />
                 ))}
-                
-                <GalleryItem title="Explore more templates" />
             </div>
         </div>
     )

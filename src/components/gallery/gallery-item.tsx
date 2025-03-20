@@ -1,9 +1,20 @@
-import { Trash2 } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 import { deleteChat, deleteDocument, deleteTemplate } from '@/firebase/firestore-dao';
 import { useUserDataContext } from '@/providers/user-data-provider';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/plate-ui/alert-dialog';
 
 interface GalleryItemProps {
     title: string;
@@ -22,6 +33,7 @@ interface TemplateNode {
 
 export default function GalleryItem({ isBlank, isOwner, itemId, itemType, template, title }: GalleryItemProps) {
     const router = useRouter();
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const { setUserChats, setUserOwnedDocuments, setUserTemplates, userChats, userOwnedDocuments, userTemplates } = useUserDataContext();
 
     const deleteUserData = async (chat: any) => {
@@ -67,7 +79,11 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
     
     const handleDelete = async (e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
+        setShowDeleteDialog(true);
+    };
 
+    const handleConfirmDelete = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent event from bubbling up
         if (!itemId) {
             toast.error('Item ID not found');
             return;
@@ -99,6 +115,7 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
                 toast.success('Document deleted successfully');
             }
         }
+        setShowDeleteDialog(false);
     };
 
     const handleClick = () => {
@@ -134,31 +151,58 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
     };
 
     return (
-        <div className="relative group cursor-pointer" onClick={handleClick}>
-            <div className="w-48 h-64 border rounded-lg bg-white hover:border-gray-400 transition-colors p-3 overflow-hidden relative">
-                {isBlank ? (
-                    <div className="flex items-center justify-center h-full">
-                        <span className="text-4xl text-gray-400">+</span>
-                    </div>
-                ) : (
-                    <div className="w-full h-full bg-white">
-                        {renderPreview()}
-                        {isOwner && (
-                            <Trash2 
-                                className="absolute bottom-2 right-2 w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all cursor-pointer" 
-                                onClick={handleDelete}
-                            />
-                        )}
+        <>
+            <div className="relative group cursor-pointer w-fit" onClick={handleClick}>
+                <div className="w-48 h-64 border rounded-t-lg bg-white hover:border-gray-400 transition-colors p-3 overflow-hidden relative">
+                    {isBlank ? (
+                        <div className="flex items-center justify-center h-full">
+                            <span className="text-4xl text-gray-400">+</span>
+                        </div>
+                    ) : (
+                        <div className="w-full h-full bg-white">
+                            {renderPreview()}
+                            {isOwner && (
+                                <Trash2 
+                                    className="absolute bottom-2 right-2 w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all cursor-pointer" 
+                                    onClick={handleDelete}
+                                />
+                            )}
+                        </div>
+                    )}
+                </div>
+                {isOwner && itemType === 'template' && (
+                    <div className="absolute -top-2 left-2 bg-gray-100 px-2 py-0.5 text-xs rounded">
+                        Saved template
                     </div>
                 )}
-            </div>
-            {isOwner && itemType === 'template' && (
-                <div className="absolute -top-2 left-2 bg-gray-100 px-2 py-0.5 text-xs rounded">
-                    Saved template
+                <div className="bg-gray-100 p-2">
+                    <p className="text-sm text-center text-gray-600 truncate">{title}</p>
                 </div>
-            )}
-            <p className="mt-2 text-sm text-center text-gray-600">{title}</p>
-        </div>
+            </div>
+
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <div className="flex items-center justify-between">
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <X 
+                                className="h-4 w-4 cursor-pointer hover:text-gray-500" 
+                                onClick={() => setShowDeleteDialog(false)}
+                            />
+                        </div>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your {itemType}.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="cursor-pointer bg-gray-200 hover:bg-gray-300">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 cursor-pointer">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     )
 }
 

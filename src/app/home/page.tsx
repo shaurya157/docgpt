@@ -44,13 +44,12 @@ export default function Home() {
   return (
     <>
       <HomeHeader onSearch={setSearchQuery} />
-      <div>
+      <div className="max-w-7xl mx-auto px-4">
         <TemplateGallery 
             providedTemplates={filteredProvidedTemplates}
             userTemplates={filteredUserTemplates}
           />
         <DocumentGallery documents={filteredDocuments} />
-        
       </div>
     </>
   );

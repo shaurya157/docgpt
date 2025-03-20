@@ -1,16 +1,92 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { type PlateEditor } from '@udecode/plate/react';
-import { HomeIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import DocGPTIcon from '../../assets/icons/docgpt.svg';
+import Image from 'next/image';
 
-import { saveCurrentDocumentState, saveUserTemplate } from '@/firebase/firestore-dao';
+import { saveCurrentDocumentState, saveUserTemplate, updateDocumentTitle } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import DocumentGalleryModal from '../gallery/document-gallery-modal';
 import TemplateGalleryModal from '../gallery/template-gallery-modal';
+import { PenIcon } from 'lucide-react';
+
+const EditableDocumentName = () => {
+  const { activeUserDocument, setActiveUserDocument } = useDocument();
+  const { setUserOwnedDocuments } = useUserDataContext();
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(activeUserDocument?.documentName || 'Untitled');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (activeUserDocument?.documentName) {
+      setName(activeUserDocument.documentName);
+    }
+  }, [activeUserDocument]);
+
+  const handleNameChange = async () => {
+    if (!activeUserDocument || name === activeUserDocument.documentName) {
+      setIsEditing(false);
+      return;
+    }
+
+    const res = await updateDocumentTitle(activeUserDocument.id, name);
+    if (res.error) {
+      toast.error('Failed to update document name');
+      setName(activeUserDocument.documentName);
+    } else {
+      const updatedDoc = { ...activeUserDocument, documentName: name };
+      setActiveUserDocument(updatedDoc);
+      setUserOwnedDocuments(prev => 
+        prev?.map(doc => doc.id === activeUserDocument.id ? updatedDoc : doc)
+      );
+      toast.success('Document name updated');
+    }
+    setIsEditing(false);
+  };
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
+
+  return (
+    <div>
+      {isEditing ? (
+        <input
+          ref={inputRef}
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={handleNameChange}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleNameChange();
+            } else if (e.key === 'Escape') {
+              setName(activeUserDocument?.documentName || 'Untitled');
+              setIsEditing(false);
+            }
+          }}
+          className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none px-2 py-1 w-48 text-xl"
+        />
+      ) : (
+        <div className="flex items-center">
+          <h1 
+            onClick={() => setIsEditing(true)}
+            className="text-xl px-3 font-medium cursor-pointer hover:border-b-2 hover:border-black"
+          >
+              {name}
+          </h1>
+          <PenIcon className="w-4 h-4 ml-2" />
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface DocumentHeaderProps {
   editor: PlateEditor;
@@ -106,71 +182,68 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
 
   return (
     <>
-      <header className="flex h-16 items-center border-b bg-white px-4 justify-between">
-        <div className="flex items-center gap-4">
-          <div ref={dropdownRef} className="flex gap-2">
-            <div className="relative">
-              <button
-                className="px-3 py-1 hover:bg-[#ECECEC] rounded cursor-pointer"
-                onClick={() => handleDropdownClick('file')}
-              >
-                File
-              </button>
-              {activeDropdown === 'file' && (
-                <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg py-1 z-50">
-                  <button className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer">New</button>
-                  <button 
-                    className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
-                    onClick={handleNewDocFromTemplate}
-                  >
-                    New from template
-                  </button>
-                  <button 
-                    className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
-                    onClick={handleOpenDocument}
-                  >
-                    Open
-                  </button>
-                  <button 
-                    className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
-                    onClick={handleSaveDocument}
-                  >
-                    Save
-                  </button>
-                  <button 
-                    className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
-                    onClick={handleSaveAsTemplate}
-                  >
-                    Save as new template
-                  </button>
-                </div>
-              )}
-            </div>
+      <header className="flex h-18 items-center border-b bg-white px-4 justify-between">
+        <div className="flex items-center">
+          <Image alt="Home" src={DocGPTIcon} className="cursor-pointer w-10 h-10" onClick={() => router.push("/home")} />
+          <div className="flex flex-col ml-4">
+            <EditableDocumentName />
+            <div ref={dropdownRef} className="flex gap-2 mt-1">
+              <div className="relative">
+                <button
+                  className="text-sm px-3 hover:bg-[#ECECEC] rounded cursor-pointer text-gray-600"
+                  onClick={() => handleDropdownClick('file')}
+                >
+                  File
+                </button>
+                {activeDropdown === 'file' && (
+                  <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg py-1 z-50">
+                    <button className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer" onClick={() => router.push("/document/new")}>New</button>
+                    <button 
+                      className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
+                      onClick={handleNewDocFromTemplate}
+                    >
+                      New from template
+                    </button>
+                    <button 
+                      className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
+                      onClick={handleOpenDocument}
+                    >
+                      Open
+                    </button>
+                    <button 
+                      className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
+                      onClick={handleSaveDocument}
+                    >
+                      Save
+                    </button>
+                    <button 
+                      className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
+                      onClick={handleSaveAsTemplate}
+                    >
+                      Save as new template
+                    </button>
+                  </div>
+                )}
+              </div>
 
-            <div className="relative">
-              <button
-                className="px-3 py-1 hover:bg-[#ECECEC] rounded cursor-pointer"
-                onClick={() => handleDropdownClick('help')}
-              >
-                Help
-              </button>
-              {activeDropdown === 'help' && (
-                <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg py-1 z-50">
-                  <a className="block px-4 py-2 text-left hover:bg-[#ECECEC]" href="mailto:hello@docgpt.work">
-                    Email: hello@docgpt.work
-                  </a>
-                </div>
-              )}
+              <div className="relative">
+                <button
+                  className="text-sm px-3 hover:bg-[#ECECEC] rounded cursor-pointer text-gray-600"
+                  onClick={() => handleDropdownClick('help')}
+                >
+                  Help
+                </button>
+                {activeDropdown === 'help' && (
+                  <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg py-1 z-50">
+                    <a className="block px-4 py-2 text-left hover:bg-[#ECECEC]" href="mailto:hello@docgpt.work">
+                      Email: hello@docgpt.work
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-
-        <button 
-          className="rounded-lg p-2 hover:bg-[#ECECEC] cursor-pointer" 
-          onClick={() => { router.push("/home") }}
-        >
-          <HomeIcon/>
-        </button>
       </header>
 
       <TemplateGalleryModal

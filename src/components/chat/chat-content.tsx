@@ -158,13 +158,6 @@ const ChatContent = ({
         type: 'spring',
       }}
     >
-      {status != "in_progress"  && activeChatMessages.length === 0 && (
-        <div className={editor.children.length <= 2 ? "" : "hidden"}>
-          <h1 className="mb-4 font-bold leading-none tracking-tight text-gray-900 dark:text-white md:text-4xl">
-            What can I help you write?
-          </h1>
-        </div>
-      )}
       <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">
         <div className="mx-auto w-full space-y-6">
           <ChatMessageList

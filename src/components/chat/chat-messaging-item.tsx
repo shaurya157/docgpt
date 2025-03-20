@@ -47,7 +47,7 @@ export const ChatMessageItem = ({ message, onDocumentUpdate }: ChatMessageItemPr
 
   return (
     <div
-      className={`flex ${
+      className={`flex text-sm ${
         message.role === 'user' ? 'justify-end' : 'justify-start'
       }`}
     >

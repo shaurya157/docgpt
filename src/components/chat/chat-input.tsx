@@ -48,7 +48,7 @@ export const ChatInput = ({
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyPress}
-        placeholder="Help me write about..."
+        placeholder="Write a document about..."
       />
       <button
         className={`rounded-full p-2 ${
