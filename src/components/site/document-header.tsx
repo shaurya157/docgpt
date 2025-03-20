@@ -197,7 +197,7 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
                 </button>
                 {activeDropdown === 'file' && (
                   <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg py-1 z-50">
-                    <button className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer" onClick={() => router.push("/document/new")}>New</button>
+                    <button className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer" onClick={() => window.open("/document/new", "_blank")}>New</button>
                     <button 
                       className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
                       onClick={handleNewDocFromTemplate}
