@@ -158,7 +158,7 @@ const ChatContent = ({
         type: 'spring',
       }}
     >
-      <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">
+      <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap mt-12">
         <div className="mx-auto w-full space-y-6">
           <ChatMessageList
             messages={messages}
