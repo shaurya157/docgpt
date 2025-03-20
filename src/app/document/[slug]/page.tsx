@@ -156,6 +156,10 @@ export default function DocumentPage() {
       <div className="flex h-screen flex-col">
         <DocumentHeader editor={editor} />
         <div className='relative flex flex-1 overflow-hidden'>
+          
+          <div className='z-10 overflow-y-scroll border bg-background shadow h-full w-2/3'>
+            <PlateEditor plateEditor={editor} />
+          </div>
           <ChatContent
             activeChatMessages={activeChatMessages}
             changeEditorContent={changeEditorContent}
@@ -163,9 +167,6 @@ export default function DocumentPage() {
             setStatus={setStatus}
             status={status}
           />
-          <div className='z-10 overflow-y-scroll border bg-background shadow h-full w-2/3'>
-            <PlateEditor plateEditor={editor} />
-          </div>
         </div>
       </div>
     </ChatSettingsProvider>
