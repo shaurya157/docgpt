@@ -25,7 +25,6 @@ const eslintConfig = [
       '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'import/no-anonymous-default-export': 'off',
-      'linebreak-style': ['error', 'unix'],
       'no-case-declarations': 'off',
       'no-duplicate-imports': 'off',
       'no-empty-function': 'off',
