@@ -26,6 +26,7 @@ export class DocumentWorkflow {
 
       Rules:
       - Always respond in markdown format.
+      - Never add triple backticks to the beginning or end of your response unless the user asks for code.
       - When the user specifically asks to create a document or make edits to the existing document, prepend the document created with <Document> and append the end of the document with </Document>.
     `;
   }
