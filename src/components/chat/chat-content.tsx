@@ -16,6 +16,7 @@ import { useFileAttachments } from '@/hooks/use-file-attachments';
 import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
+import { ContextMentionsProvider } from '@/providers/context-mentions-provider';
 import { Message } from '@/types';
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
 
@@ -177,16 +178,18 @@ const ChatContent = ({
           onRemove={removeAttachment}
           attachments={attachments}
         />
-        <ChatInput
-          handleKeyPress={handleKeyPress}
-          handleSendMessage={handleSendMessage}
-          fileInputRef={fileInputRef}
-          inputValue={inputValue}
-          setInputValue={setInputValue}
-          status={status}
-          textareaRef={textareaRef}
-          updateAttachments={handleUpdateAttachments}
-        />
+        <ContextMentionsProvider>
+          <ChatInput
+            handleKeyPress={handleKeyPress}
+            handleSendMessage={handleSendMessage}
+            fileInputRef={fileInputRef}
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+            status={status}
+            textareaRef={textareaRef}
+            updateAttachments={handleUpdateAttachments}
+          />
+        </ContextMentionsProvider>
         <ChatSettings />
       </div>
       )}

@@ -45,3 +45,21 @@ export interface Template {
   templateName: string;
   templateOwnerId: string;
 }
+
+export interface ContextMentionProvider {
+  id: string;
+  name: string;
+  icon?: string;
+  matcher: (query: string) => boolean;
+  getOptions: (query: string) => ContextMentionOption[];
+  handleSelection: (option: ContextMentionOption) => void;
+}
+
+export interface ContextMentionOption {
+  id: string;
+  type: string;
+  label: string;
+  value: string;
+  icon?: string;
+  data?: any;
+}
