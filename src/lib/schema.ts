@@ -7,6 +7,11 @@ export const AgentState = z.object({
     score: z.number(),
     source: z.string()
   })).default([]),
+  chatHistory: z.array(z.object({
+    content: z.string(),
+    role: z.enum(['user', 'assistant']),
+    fileNames: z.array(z.string()).default([])
+  })).default([]),
   draft: z.string().default(""),
   feedback: z.array(z.string()).default([]),
   query: z.string(),

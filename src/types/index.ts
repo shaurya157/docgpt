@@ -31,3 +31,17 @@ export interface Template {
   templateName: string;
   templateOwnerId: string;
 }
+
+export interface File {
+  fileIds: string[];
+  fileName: string;
+}
+
+export interface Chat {
+  id: string;
+  messages: Message[];
+  userId: string;
+  chatName: string;
+  documentIds: string[];
+  files: File[];
+}
