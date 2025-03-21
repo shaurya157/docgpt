@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-export type ModelType = 'Open AI 4o' | 'Open AI O1' | 'DeepSeek Chat' | 'DeepSeek R1';
+export type ModelType = 'DeepSeek Chat' | 'DeepSeek R1' | 'Open AI 4o' | 'Open AI O1';
 
 interface ChatSettingsContextType {
   selectedModel: ModelType;

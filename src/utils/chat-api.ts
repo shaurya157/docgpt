@@ -2,9 +2,9 @@ import { toast } from 'sonner';
 
 interface StreamCallbacks {
   onChunkReceived: (content: string) => void;
-  onStreamStart: () => void;
-  onStreamEnd: (finalContent: string) => void;
   onError: (error: Error) => void;
+  onStreamEnd: (finalContent: string) => void;
+  onStreamStart: () => void;
 }
 
 export const sendChatMessage = async (
@@ -19,8 +19,8 @@ export const sendChatMessage = async (
       body: JSON.stringify({
         chatId,
         messages,
-        userId,
-        model
+        model,
+        userId
       }),
       headers: {
         'Content-Type': 'application/json',

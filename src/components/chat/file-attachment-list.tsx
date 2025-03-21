@@ -1,6 +1,7 @@
-import { Icons } from '@/components/icons';
 import Image from 'next/image';
+
 import CloseIcon from '@/assets/icons/x.svg';
+import { Icons } from '@/components/icons';
 
 interface FileAttachment {
   fileName: string;

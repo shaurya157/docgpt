@@ -1,24 +1,26 @@
-import { useRef, useEffect } from 'react';
-import { Message } from '@/types';
+import { useEffect, useRef } from 'react';
+
 import { Icons } from '@/components/icons';
-import { DotAnimation } from '@/utils/animations';
 import { Button } from '@/components/plate-ui/button';
+import { Message } from '@/types';
+import { DotAnimation } from '@/utils/animations';
+
 import { ChatMessageItem } from './chat-messaging-item';
 
 interface ChatMessageListProps {
   messages: Message[];
-  streamingMessage: Message;
-  streamingDocument: boolean;
   status: 'awaiting_message' | 'in_progress';
+  streamingDocument: boolean;
+  streamingMessage: Message;
   uploadInProgress: boolean;
   onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
 }
 
 export const ChatMessageList = ({
   messages,
-  streamingMessage,
-  streamingDocument,
   status,
+  streamingDocument,
+  streamingMessage,
   uploadInProgress,
   onDocumentUpdate
 }: ChatMessageListProps) => {
@@ -38,8 +40,8 @@ export const ChatMessageList = ({
         {messages.map((message) => (
           <ChatMessageItem
             key={message.id}
-            message={message}
             onDocumentUpdate={onDocumentUpdate}
+            message={message}
           />
         ))}
 
@@ -54,8 +56,8 @@ export const ChatMessageList = ({
 
         {streamingMessage.content !== '' && (
           <ChatMessageItem
-            message={streamingMessage}
             onDocumentUpdate={onDocumentUpdate}
+            message={streamingMessage}
           />
         )}
 

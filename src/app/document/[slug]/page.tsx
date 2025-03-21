@@ -13,10 +13,10 @@ import {PlateEditor} from "@/components/editor/plate-editor";
 import {useCreateEditor} from "@/components/editor/use-create-editor";
 import DocumentHeader from "@/components/site/document-header";
 import {createNewChat, saveCurrentDocumentState} from '@/firebase/firestore-dao';
+import { ChatSettingsProvider } from '@/providers/chat-settings-provider';
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Document, Message, Template } from '@/types';
-import { ChatSettingsProvider } from '@/providers/chat-settings-provider';
 
 export default function DocumentPage() {
   const params = useParams();

@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { type PlateEditor } from '@udecode/plate/react';
+import { PenIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import DocGPTIcon from '../../assets/icons/docgpt.svg';
-import Image from 'next/image';
 
 import { saveCurrentDocumentState, saveUserTemplate, updateDocumentTitle } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
+
+import DocGPTIcon from '../../assets/icons/docgpt.svg';
 import DocumentGalleryModal from '../gallery/document-gallery-modal';
 import TemplateGalleryModal from '../gallery/template-gallery-modal';
-import { PenIcon } from 'lucide-react';
 
 const EditableDocumentName = () => {
   const { activeUserDocument, setActiveUserDocument } = useDocument();
@@ -59,10 +60,10 @@ const EditableDocumentName = () => {
       {isEditing ? (
         <input
           ref={inputRef}
-          type="text"
+          className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none px-2 py-1 w-48 text-xl"
           value={name}
-          onChange={(e) => setName(e.target.value)}
           onBlur={handleNameChange}
+          onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               handleNameChange();
@@ -71,13 +72,13 @@ const EditableDocumentName = () => {
               setIsEditing(false);
             }
           }}
-          className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none px-2 py-1 w-48 text-xl"
+          type="text"
         />
       ) : (
         <div className="flex items-center">
           <h1 
-            onClick={() => setIsEditing(true)}
             className="text-xl px-3 font-medium cursor-pointer hover:border-b-2 hover:border-black"
+            onClick={() => setIsEditing(true)}
           >
               {name}
           </h1>
@@ -184,7 +185,7 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
     <>
       <header className="flex h-18 items-center border-b bg-white px-4 justify-between">
         <div className="flex items-center">
-          <Image alt="Home" src={DocGPTIcon} className="cursor-pointer w-10 h-10" onClick={() => router.push("/home")} />
+          <Image className="cursor-pointer w-10 h-10" onClick={() => router.push("/home")} alt="Home" src={DocGPTIcon} />
           <div className="flex flex-col ml-4">
             <EditableDocumentName />
             <div ref={dropdownRef} className="flex gap-2 mt-1">

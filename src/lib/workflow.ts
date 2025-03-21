@@ -1,9 +1,9 @@
 import { END, START, StateGraph } from "@langchain/langgraph";
 import { Pinecone } from "@pinecone-database/pinecone";
 
+import { getChatHistory } from "./firebase-admin";
 import { ModelRouter } from "./models";
 import { TAgentState } from "./schema";
-import { getChatHistory } from "./firebase-admin";
 
 export class DocumentWorkflow {
   private model = new ModelRouter();
@@ -39,6 +39,24 @@ export class DocumentWorkflow {
     };
   }
 
+  private async retrieveChatHistoryNode(state: TAgentState) {
+    console.log("Retrieving chat history for chat ID:", state.chatId);
+    try {
+      const messages = await getChatHistory(state.chatId);
+      console.log("Messages from chat history:", messages);
+      return {
+        ...state,
+        chatHistory: messages
+      };
+    } catch (error) {
+      console.error("Error retrieving chat history:", error);
+      return {
+        ...state,
+        chatHistory: []
+      };
+    }
+  }
+
   private async retrieveNode(state: TAgentState) {
     const index = this.pinecone.Index(process.env.PINECONE_INDEX || "");
     let results;
@@ -69,24 +87,6 @@ export class DocumentWorkflow {
     };
   }
 
-  private async retrieveChatHistoryNode(state: TAgentState) {
-    console.log("Retrieving chat history for chat ID:", state.chatId);
-    try {
-      const messages = await getChatHistory(state.chatId);
-      console.log("Messages from chat history:", messages);
-      return {
-        ...state,
-        chatHistory: messages
-      };
-    } catch (error) {
-      console.error("Error retrieving chat history:", error);
-      return {
-        ...state,
-        chatHistory: []
-      };
-    }
-  }
-
   private async reviewNode(state: TAgentState) {
     const reviewPrompt = `Review this document draft: ${state.draft}`;
     return {
@@ -102,14 +102,14 @@ export class DocumentWorkflow {
   async buildGraph() {
     const graph = new StateGraph<TAgentState>({
       channels: {
+        chatHistory: { default: () => [], value: (x, y) => y || x },
         chatId: { value: (x) => x },
         context: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
-        chatHistory: { default: () => [], value: (x, y) => y || x },
         draft: { default: () => "", value: (x, y) => y || x },
         feedback: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
+        model: { value: (x) => x },
         query: { value: (x) => x },
-        userId: { value: (x) => x },
-        model: { value: (x) => x }
+        userId: { value: (x) => x }
       }
     });
 

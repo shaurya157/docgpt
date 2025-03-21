@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { toast } from 'sonner';
 
 interface FileAttachment {
@@ -95,9 +96,9 @@ export const useFileAttachments = (userId: string) => {
 
   return {
     attachments,
-    uploadInProgress,
-    updateAttachments,
     removeAttachment,
+    updateAttachments,
     uploadFiles,
+    uploadInProgress,
   };
 }; 

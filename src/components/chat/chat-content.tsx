@@ -6,18 +6,18 @@ import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 
 import { ChatInput } from '@/components/chat/chat-input';
+import { ChatMessageList } from '@/components/chat/chat-messaging-list';
 import { ChatSettings } from '@/components/chat/chat-settings';
+import { FileAttachmentList } from '@/components/chat/file-attachment-list';
 import { appendChatSpecificFileIds } from '@/firebase/firestore-dao';
-import { useDocument } from '@/providers/document-provider';
+import { useChatMessaging } from '@/hooks/use-chat-messaging';
+import { useDocumentIntegration } from '@/hooks/use-document-integration';
+import { useFileAttachments } from '@/hooks/use-file-attachments';
 import { useChatSettings } from '@/providers/chat-settings-provider';
+import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message } from '@/types';
 import { editorPromptTemplate } from '@/utils/editor-prompt-util';
-import { ChatMessageList } from '@/components/chat/chat-messaging-list';
-import { FileAttachmentList } from '@/components/chat/file-attachment-list';
-import { useFileAttachments } from '@/hooks/use-file-attachments';
-import { useChatMessaging } from '@/hooks/use-chat-messaging';
-import { useDocumentIntegration } from '@/hooks/use-document-integration';
 
 interface ContentProps {
   activeChatMessages: Message[];
@@ -44,20 +44,20 @@ const ChatContent = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { attachments, uploadInProgress, updateAttachments, removeAttachment, uploadFiles } = 
+  const { attachments, removeAttachment, updateAttachments, uploadFiles, uploadInProgress } = 
     useFileAttachments(session?.user?.email || '');
 
-  const { messages, streamingMessage, sendMessage, addMessage } = useChatMessaging({
+  const { addMessage, messages, sendMessage, streamingMessage } = useChatMessaging({
     chatId: activeUserDocument?.chatId || '',
-    userId: session?.user?.email || '',
+    initialMessages: activeChatMessages,
     model: selectedModel,
-    initialMessages: activeChatMessages
+    userId: session?.user?.email || ''
   });
 
   const { updateEditorWithNewDocument } = useDocumentIntegration({
-    editor,
+    changeEditorContent,
     documentId: activeUserDocument?.id || '',
-    changeEditorContent
+    editor
   });
 
   const scrollToBottom = () => {
@@ -161,12 +161,12 @@ const ChatContent = ({
       <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap mt-12">
         <div className="mx-auto w-full space-y-6">
           <ChatMessageList
-            messages={messages}
-            streamingMessage={streamingMessage}
-            streamingDocument={streamingDocument}
-            status={status}
-            uploadInProgress={uploadInProgress}
             onDocumentUpdate={updateEditorWithNewDocument}
+            messages={messages}
+            status={status}
+            streamingDocument={streamingDocument}
+            streamingMessage={streamingMessage}
+            uploadInProgress={uploadInProgress}
           />
           <div ref={messagesEndRef} />
         </div>
@@ -174,8 +174,8 @@ const ChatContent = ({
       {(status === "awaiting_message" || activeChatMessages.length > 0) && (
       <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
         <FileAttachmentList
-          attachments={attachments}
           onRemove={removeAttachment}
+          attachments={attachments}
         />
         <ChatInput
           handleKeyPress={handleKeyPress}

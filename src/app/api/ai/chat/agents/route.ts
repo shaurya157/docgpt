@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { DocumentWorkflow } from "@/lib/workflow";
 
 export async function POST(req: NextRequest) {
-  const { chatId, messages, userId, model } = await req.json();
+  const { chatId, messages, model, userId } = await req.json();
   const selectedModel = model || 'Open AI 4o';
   const message = typeof messages === 'string' ? messages : messages[0].content;
 
@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
     context: [],
     draft: "",
     feedback: [],
+    model: selectedModel,
     query: message,
-    userId,
-    model: selectedModel
+    userId
   });
 
   return new Response(result.draft);

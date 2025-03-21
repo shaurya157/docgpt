@@ -1,10 +1,9 @@
+import { useState } from 'react';
+
 import { Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useState } from 'react';
 
-import { deleteChat, deleteDocument, deleteTemplate } from '@/firebase/firestore-dao';
-import { useUserDataContext } from '@/providers/user-data-provider';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -15,6 +14,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/plate-ui/alert-dialog';
+import { deleteChat, deleteDocument, deleteTemplate } from '@/firebase/firestore-dao';
+import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface GalleryItemProps {
     title: string;
@@ -196,7 +197,7 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel className="cursor-pointer bg-gray-200 hover:bg-gray-300">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 cursor-pointer">
+                        <AlertDialogAction className="bg-red-500 hover:bg-red-600 cursor-pointer" onClick={handleConfirmDelete}>
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>

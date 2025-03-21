@@ -1,3 +1,12 @@
+export interface Chat {
+  id: string;
+  chatName: string;
+  documentIds: string[];
+  files: File[];
+  messages: Message[];
+  userId: string;
+}
+
 export interface Document {
   id: string;
   chatId: string;
@@ -6,11 +15,16 @@ export interface Document {
   documentOwnerId: string;
 }
 
+export interface File {
+  fileIds: string[];
+  fileName: string;
+}
+
 export interface Message {
   id: string;
   content: string;
   fileNames: string[];
-  role: 'user' | 'assistant';
+  role: 'assistant' | 'user';
 }
 
 export interface NavItem {
@@ -30,18 +44,4 @@ export interface Template {
   template: any[];
   templateName: string;
   templateOwnerId: string;
-}
-
-export interface File {
-  fileIds: string[];
-  fileName: string;
-}
-
-export interface Chat {
-  id: string;
-  messages: Message[];
-  userId: string;
-  chatName: string;
-  documentIds: string[];
-  files: File[];
 }

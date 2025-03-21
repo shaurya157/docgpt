@@ -1,17 +1,19 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
+import { toast } from 'sonner';
+
+import { storeMessage } from '@/firebase/firestore-dao';
 import { Message } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
-import { storeMessage } from '@/firebase/firestore-dao';
-import { toast } from 'sonner';
 
 interface UseChatMessagingProps {
   chatId: string;
-  userId: string;
   model: string;
+  userId: string;
   initialMessages?: Message[];
 }
 
-export const useChatMessaging = ({ chatId, userId, model, initialMessages }: UseChatMessagingProps) => {
+export const useChatMessaging = ({ chatId, initialMessages, model, userId }: UseChatMessagingProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [status, setStatus] = useState<'awaiting_message' | 'in_progress'>('awaiting_message');
   const [streamingMessage, setStreamingMessage] = useState<Message>({
@@ -57,19 +59,15 @@ export const useChatMessaging = ({ chatId, userId, model, initialMessages }: Use
       userId,
       model,
       {
-        onStreamStart: () => {
-          setStreamingMessage({
-            id: "Thinking...",
-            content: "",
-            fileNames: [],
-            role: "assistant"
-          });
-        },
         onChunkReceived: (content: string) => {
           setStreamingMessage(prev => ({
             ...prev,
             content
           }));
+        },
+        onError: (error: Error) => {
+          toast.error(error.message);
+          setStatus('awaiting_message');
         },
         onStreamEnd: async (finalContent: string) => {
           const timestamp = Date.now();
@@ -97,20 +95,24 @@ export const useChatMessaging = ({ chatId, userId, model, initialMessages }: Use
           });
           setStatus('awaiting_message');
         },
-        onError: (error: Error) => {
-          toast.error(error.message);
-          setStatus('awaiting_message');
+        onStreamStart: () => {
+          setStreamingMessage({
+            id: "Thinking...",
+            content: "",
+            fileNames: [],
+            role: "assistant"
+          });
         }
       }
     );
   }, [chatId, userId, model]);
 
   return {
-    messages,
-    status,
-    streamingMessage,
     addMessage,
+    messages,
     sendMessage,
-    setStatus
+    setStatus,
+    status,
+    streamingMessage
   };
 }; 

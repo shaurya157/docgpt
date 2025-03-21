@@ -1,7 +1,10 @@
-import { FileText } from 'lucide-react';
 import Markdown from 'react-markdown';
+
+import { FileText } from 'lucide-react';
+
 import { Button } from '@/components/plate-ui/button';
 import { Message } from '@/types';
+
 import { parseAssistantResponse } from './document-parser';
 
 export const formatMessageContent = (

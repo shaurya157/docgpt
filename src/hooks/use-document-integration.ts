@@ -1,19 +1,21 @@
 import { useCallback } from 'react';
+
 import { deserializeMd } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
+
 import { updateDocumentTitle } from '@/firebase/firestore-dao';
 import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
 
 interface UseDocumentIntegrationProps {
-  editor: PlateEditor;
   documentId: string;
+  editor: PlateEditor;
   changeEditorContent: (content: any) => void;
 }
 
 export const useDocumentIntegration = ({
-  editor,
-  documentId,
   changeEditorContent,
+  documentId,
+  editor,
 }: UseDocumentIntegrationProps) => {
   const updateEditorWithNewDocument = useCallback(
     (document: string, documentTitle: string) => {
