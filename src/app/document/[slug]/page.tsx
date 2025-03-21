@@ -96,7 +96,7 @@ export default function DocumentPage() {
     };
 
     initializePage();
-  }, [params.slug, searchParams, userOwnedDocuments, userChats, userTemplates, providedTemplates, router]);
+  }, []);
 
   const handleNewChat = async (initialContent?: any[]): Promise<Document> => {
     setActiveChatMessages([]);
