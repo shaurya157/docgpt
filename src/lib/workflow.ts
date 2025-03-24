@@ -55,7 +55,7 @@ export class DocumentWorkflow {
     }
   }
 
-  private async retrieveNode(state: TAgentState) {
+  private async retrievePineconeContextNode(state: TAgentState) {
     const index = this.pinecone.Index(process.env.PINECONE_INDEX || "");
     let results;
 
@@ -112,7 +112,7 @@ export class DocumentWorkflow {
     });
 
     // Nodes
-    graph.addNode("retrieve", this.retrieveNode.bind(this));
+    graph.addNode("retrieve", this.retrievePineconeContextNode.bind(this));
     graph.addNode("retrieveChatHistory", this.retrieveChatHistoryNode.bind(this));
     graph.addNode("generate", this.generateNode.bind(this));
     // graph.addNode("review", this.reviewNode.bind(this));

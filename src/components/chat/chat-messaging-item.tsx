@@ -21,12 +21,12 @@ export const ChatMessageItem = ({ message, onDocumentUpdate }: ChatMessageItemPr
           <div className="whitespace-normal">{prepending}</div>
           <Button
             variant="roundedClear"
-            className="inline-block w-auto cursor-pointer rounded-lg bg-black bg-opacity-50 p-2"
+            className="h-auto w-auto cursor-pointer rounded-lg bg-black bg-opacity-50 p-2"
             onClick={onDocumentUpdate(document, documentTitle)}
           >
-            <div className="flex height-20">
-              <FileText style={{ height: '100%' }}/>
-              <div className="mx-1">{documentTitle}</div>
+            <div className="flex items-center">
+              <FileText className='h-full w-auto'/>
+              <div className="mx-1 text-wrap">{documentTitle}</div>
             </div>
           </Button>
           <div className="whitespace-normal">{appending}</div>

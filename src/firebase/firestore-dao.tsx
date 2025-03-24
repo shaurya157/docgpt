@@ -43,7 +43,6 @@ export async function appendChatSpecificFileIds(
   chatId: string,
   files: { fileIds: string[]; fileName: string; status: string }[]
 ) {
-  console.log("chatId", chatId);
   const result: any[] = [];
   const error: Error[] = [];
   const chatsRef = collection(db, 'chats');
@@ -282,8 +281,6 @@ export async function storeMessage(chatId: string, message: {
 }
 
 export async function getChatMessages(chatId: string) {
-
-  console.log("chatId", chatId);
   const chatsRef = collection(db, 'chats');
   const docRef = doc(chatsRef, chatId);
   let error, result;
