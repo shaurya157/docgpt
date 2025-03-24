@@ -87,7 +87,6 @@ export class ModelRouter {
     stream: boolean = false
   ): Promise<ReadableStream<any> | string> {
     const { model, provider } = this.getProviderAndModel(selectedModel);
-    console.log("Generating with provider:", provider, "and model:", model);
     
     switch(provider) {
       case "deepseek":

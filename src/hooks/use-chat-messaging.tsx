@@ -16,6 +16,7 @@ interface UseChatMessagingProps {
 export const useChatMessaging = ({ chatId, initialMessages, model, userId }: UseChatMessagingProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [status, setStatus] = useState<'awaiting_message' | 'in_progress'>('awaiting_message');
+  const [streamingDocument, setStreamingDocument] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<Message>({
     id: "Thinking...",
     content: "",
@@ -60,20 +61,50 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       model,
       {
         onChunkReceived: (content: string) => {
-          setStreamingMessage(prev => ({
-            ...prev,
-            content
-          }));
+          // Check if we're starting to receive a document
+          if (content.includes('<Document>') && !streamingDocument) {
+            setStreamingDocument(true);
+            // Extract any content before the document tag
+            const prependContent = content.split('<Document>')[0];
+            setStreamingMessage(prev => ({
+              ...prev,
+              content: prependContent
+            }));
+            return;
+          }
+
+          // Check if we've finished receiving a document
+          if (content.includes('</Document>') && streamingDocument) {
+            setStreamingDocument(false);
+            // Extract any content after the document tag
+            const parts = content.split('</Document>');
+            if (parts[1]) {
+              setStreamingMessage(prev => ({
+                ...prev,
+                content: prev.content + parts[1]
+              }));
+            }
+            return;
+          }
+
+          // If we're not in document streaming mode, update message normally
+          if (!streamingDocument) {
+            setStreamingMessage(prev => ({
+              ...prev,
+              content
+            }));
+          }
         },
         onError: (error: Error) => {
           toast.error(error.message);
           setStatus('awaiting_message');
+          setStreamingDocument(false);
         },
         onStreamEnd: async (finalContent: string) => {
           const timestamp = Date.now();
           const finalMessage: Message = {
             id: timestamp.toString(),
-            content: finalContent,
+            content: finalContent, // Remove document content from chat
             fileNames: [],
             role: "assistant"
           };
@@ -81,7 +112,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
           // Store the assistant's message in Firestore
           await storeMessage(chatId, {
             id: timestamp,
-            content: finalContent,
+            content: finalMessage.content,
             fileNames: [],
             role: "assistant"
           });
@@ -94,6 +125,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             role: "assistant"
           });
           setStatus('awaiting_message');
+          setStreamingDocument(false);
         },
         onStreamStart: () => {
           setStreamingMessage({
@@ -102,10 +134,11 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             fileNames: [],
             role: "assistant"
           });
+          setStreamingDocument(false);
         }
       }
     );
-  }, [chatId, userId, model]);
+  }, [chatId, userId, model, streamingDocument]);
 
   return {
     addMessage,
@@ -113,6 +146,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
     sendMessage,
     setStatus,
     status,
-    streamingMessage
+    streamingMessage,
+    streamingDocument
   };
 }; 

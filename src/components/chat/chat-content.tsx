@@ -40,14 +40,13 @@ const ChatContent = ({
   const { setUserChats } = userDataContext;
   const [inputValue, setInputValue] = useState('');
   const { selectedModel } = useChatSettings();
-  const [streamingDocument, setStreamingDocument] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { attachments, removeAttachment, updateAttachments, uploadFiles, uploadInProgress } = 
     useFileAttachments(session?.user?.email || '');
 
-  const { addMessage, messages, sendMessage, streamingMessage } = useChatMessaging({
+  const { addMessage, messages, sendMessage, streamingMessage, streamingDocument } = useChatMessaging({
     chatId: activeUserDocument?.chatId || '',
     initialMessages: activeChatMessages,
     model: selectedModel,

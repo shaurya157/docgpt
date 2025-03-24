@@ -17,7 +17,6 @@ export class DocumentWorkflow {
     const chatHistorySection = state.chatHistory.length > 0
       ? `Previous conversation:\n${state.chatHistory.map(m => `${m.role}: ${m.content}`).join("\n")}\n\n`
       : '';
-    console.log("Chat history:", chatHistorySection);
     return `
       ${contextSection}
       ${chatHistorySection}
@@ -41,10 +40,8 @@ export class DocumentWorkflow {
   }
 
   private async retrieveChatHistoryNode(state: TAgentState) {
-    console.log("Retrieving chat history for chat ID:", state.chatId);
     try {
       const messages = await getChatHistory(state.chatId);
-      console.log("Messages from chat history:", messages);
       return {
         ...state,
         chatHistory: messages
