@@ -17,17 +17,63 @@ export class DocumentWorkflow {
     const chatHistorySection = state.chatHistory.length > 0
       ? `Previous conversation:\n${state.chatHistory.map(m => `${m.role}: ${m.content}`).join("\n")}\n\n`
       : '';
-    return `
-      ${contextSection}
-      ${chatHistorySection}
-      User Query:
-      ${state.query}
 
-      Rules:
+    const activeDocumentSection = state.activeDocument ? `Active Document:\n${state.activeDocument}\n\n` : '';
+    const activeBlockSection = state.activeBlock ? `Active Block:\n${state.activeBlock}\n\n` : '';
+    const activeSelectionSection = state.activeSelection ? `Active Selection:\n${state.activeSelection}\n\n` : '';
+    const reminderSection = state.reminder ? `Reminder:\n${state.reminder}\n\n` : '';
+      
+    return `
+    Rules:
+      - ActiveDocument is the document that the user is currently working on. This is the document that the user will be editing. This may be a template, a blank document, or a document that the user has already started editing.  
+      - ActiveBlock is the block of text that the user is currently working on. Consider the context of the active block and the active selection to determine the best way to edit the document.
+      - ActiveSelection is the selection of text that the user is currently working on. The user may refer to this <Selection> tag in their query.
+      - Previous Conversation is the conversation history between the user and the AI. Consider the conversation history when responding to the user.
+      - User Query is the query that the user has entered.
       - Always respond in markdown format.
       - Never add triple backticks to the beginning or end of your response unless the user asks for code.
       - When the user specifically asks to create a document or make edits to the existing document, prepend the document created with <Document> and append the end of the document with </Document>.
+
+      ${contextSection}
+      ${chatHistorySection}
+      ${activeDocumentSection}
+      ${activeBlockSection}
+      ${activeSelectionSection}
+
+      User Query:
+      ${state.query}
+
+      ${reminderSection}
     `;
+  }
+
+  private async sanitizeQueryNode(state: TAgentState) {
+    const query = state.query;
+    const tagRegex = /<(Document|Block|Selection|Reminder)>([\s\S]*?)<\/\1>/g;
+    const result: Record<string, string> = {};
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tagRegex.exec(query)) !== null) {
+        const [tagName, content] = match;
+        result[tagName] = content.trim();
+        lastIndex = tagRegex.lastIndex;
+    }
+
+    // Extract the remaining query part after the last recognized tag
+    let queryPart = query.slice(lastIndex).trim();
+    if (queryPart) {
+        result["Query"] = queryPart;
+    }
+
+    return {
+      ...state,
+      query: result["Query"],
+      reminder: result["Reminder"],
+      activeDocument: result["Document"],
+      activeBlock: result["Block"],
+      activeSelection: result["Selection"]
+    };
   }
 
   private async generateNode(state: TAgentState) {
@@ -61,11 +107,11 @@ export class DocumentWorkflow {
 
     try {
       results = await index.searchRecords({
-          fields: ["text", "userId", "fileName"],
+        fields: ["text", "userId", "fileName"],
         query: {
-              filter: { userId: state.userId },
+            filter: { userId: state.userId },
             inputs: { text: state.query },
-            topK: 2,
+            topK: 10,
         }
       })
     } catch (error) {
@@ -107,19 +153,25 @@ export class DocumentWorkflow {
         feedback: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
         model: { value: (x) => x },
         query: { value: (x) => x },
-        userId: { value: (x) => x }
+        userId: { value: (x) => x },
+        activeDocument: { default: () => "", value: (x, y) => y || x },
+        activeBlock: { default: () => "", value: (x, y) => y || x },
+        activeSelection: { default: () => "", value: (x, y) => y || x },
+        reminder: { default: () => "", value: (x, y) => y || x }
       }
     });
 
     // Nodes
-    graph.addNode("retrieve", this.retrievePineconeContextNode.bind(this));
+    graph.addNode("sanitizeQuery", this.sanitizeQueryNode.bind(this));
+    graph.addNode("retrievePineconeContext", this.retrievePineconeContextNode.bind(this));
     graph.addNode("retrieveChatHistory", this.retrieveChatHistoryNode.bind(this));
     graph.addNode("generate", this.generateNode.bind(this));
     // graph.addNode("review", this.reviewNode.bind(this));
 
     // Edges
-    graph.addEdge(START, "retrieve" as any);
-    graph.addEdge("retrieve" as any, "retrieveChatHistory" as any);
+    graph.addEdge(START, "sanitizeQuery" as any);
+    graph.addEdge("sanitizeQuery" as any, "retrievePineconeContext" as any);
+    graph.addEdge("retrievePineconeContext" as any, "retrieveChatHistory" as any);
     graph.addEdge("retrieveChatHistory" as any, "generate" as any);
     graph.addEdge("generate" as any, END);
     // graph.addConditionalEdges("review" as any, this.shouldRevise.bind(this));

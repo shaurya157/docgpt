@@ -16,7 +16,11 @@ export const AgentState = z.object({
   feedback: z.array(z.string()).default([]),
   model: z.string(),
   query: z.string(),
-  userId: z.string()
+  userId: z.string(),
+  activeDocument: z.string().default(""),
+  activeBlock: z.string().default(""),
+  activeSelection: z.string().default(""),
+  reminder: z.string().default("")
 });
 
 export type TAgentState = z.infer<typeof AgentState>;
