@@ -35,6 +35,7 @@ export class DocumentWorkflow {
 
     Critical Instructions:
       - Try and understand the user's intent: are they asking to create a document, make edits to the existing document, or something else? When the user intent is to create a document or make edits to the existing document, prepend the document created with <Document> and append the end of the document with </Document>.
+      - If you are creating a document and adding the <Document> tag, make sure to end the document with </Document>.
       - If the user query refers to "this"/"that", they could be referring to the Active Document, to an uploaded file or something else. Read the previous conversation history to determine what they mean, giving a higher priority to the last few messages sent and the files uploaded with those messages. If it is unclear, ask the user to specify which document they mean.
 
       ${contextSection}
