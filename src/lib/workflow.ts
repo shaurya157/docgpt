@@ -24,30 +24,31 @@ export class DocumentWorkflow {
     const reminderSection = state.reminder ? `Reminder:\n${state.reminder}\n\n` : '';
       
     return `
-    Rules:
-      - ActiveDocument is the document that the user is currently working on. This is the document that the user will be editing. This may be a template, a blank document, or a document that the user has already started editing.  
-      - ActiveBlock is the block of text that the user is currently working on. Consider the context of the active block and the active selection to determine the best way to edit the document.
-      - ActiveSelection is the selection of text that the user is currently working on. The user may refer to this <Selection> tag in their query.
+    Definitions:
+      - Active Document is the document that the user is currently working on. This is the document that the user will be editing. This may be a template, a blank document, or a document that the user has already started editing.  
+      - Active Block is the block of text that the user is currently working on. Consider the context of the active block and the active selection to determine the best way to edit the document.
+      - Active Selection is the selection of text that the user is currently working on. The user may refer to this <Selection> tag in their query.
       - Previous Conversation is the conversation history between the user and the AI. Consider the conversation history when responding to the user.
       - User Query is the query that the user has entered.
+      - Context from similar documents is a list of documents that are similar to the user's query. This is a list of documents that the user has uploaded and the AI has found to be similar to the user's query.
+
+    Critical Instructions to ALWAYS follow:
+      - Try and understand the user's intent: are they asking to create a document, make edits to the existing document, or something else? When the user intent is to create a document or make edits to the existing document, prepend the document created with <Document> and append the end of the document with </Document>.
+      - If you are creating a document and adding the <Document> tag, make sure to end the document with the </Document> tag.
+      - If the user query refers to "this"/"that", they could be referring to the Active Document, to an uploaded file or something else. Read the previous conversation history to determine what they mean, giving a higher priority to the last few messages sent and the files uploaded with those messages. If it is unclear, ask the user to specify which document they mean.
       - Always respond in markdown format.
       - Never add triple backticks to the beginning or end of your response unless the user asks for code.
 
-    Critical Instructions:
-      - Try and understand the user's intent: are they asking to create a document, make edits to the existing document, or something else? When the user intent is to create a document or make edits to the existing document, prepend the document created with <Document> and append the end of the document with </Document>.
-      - If you are creating a document and adding the <Document> tag, make sure to end the document with </Document>.
-      - If the user query refers to "this"/"that", they could be referring to the Active Document, to an uploaded file or something else. Read the previous conversation history to determine what they mean, giving a higher priority to the last few messages sent and the files uploaded with those messages. If it is unclear, ask the user to specify which document they mean.
 
       ${contextSection}
       ${chatHistorySection}
       ${activeDocumentSection}
       ${activeBlockSection}
       ${activeSelectionSection}
+      ${reminderSection}
 
       User Query:
       ${state.query}
-
-      ${reminderSection}
     `;
   }
    
