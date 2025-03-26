@@ -26,7 +26,7 @@ export const ChatMessageItem = ({ message, onDocumentUpdate }: ChatMessageItemPr
           >
             <div className="flex items-center">
               <FileText className='h-full w-auto'/>
-              <div className="mx-1 text-wrap">{documentTitle}</div>
+              <div className="mx-1 truncate max-w-[200px]">{documentTitle}</div>
             </div>
           </Button>
           <div className="whitespace-normal">{appending}</div>

@@ -61,7 +61,7 @@ export const ChatMessageList = ({
           />
         )}
 
-        {status === 'in_progress' && streamingMessage.content === "" && (
+        {status === 'in_progress' && streamingMessage.content === "" && !streamingDocument && (
           <span className="flex gap-x-2 text-white">
             <Icons.spinner className="size-5 animate-spin text-black" />
             <p className="text-black">

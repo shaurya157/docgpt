@@ -64,7 +64,7 @@ export class DocumentWorkflow {
     }
 
     // Extract the remaining query part after the last recognized tag
-    let queryPart = query.slice(lastIndex).trim();
+    const queryPart = query.slice(lastIndex).trim();
     if (queryPart) {
         result["Query"] = queryPart;
     }

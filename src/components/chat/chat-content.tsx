@@ -149,7 +149,7 @@ const ChatContent = ({
 
   return (
     <motion.div
-      className='flex flex-col items-start p-4 h-full w-1/3'
+      className='flex flex-col items-start p-4 h-full w-1/4 bg-white'
       transition={{
         damping: 20,
         duration: 0.2,
@@ -170,7 +170,6 @@ const ChatContent = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
-      {(status === "awaiting_message" || activeChatMessages.length > 0) && (
       <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
         <FileAttachmentList
           onRemove={removeAttachment}
@@ -188,7 +187,6 @@ const ChatContent = ({
         />
         <ChatSettings />
       </div>
-      )}
     </motion.div>
   );
 };
