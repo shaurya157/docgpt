@@ -14,7 +14,7 @@ import { Minus, Plus } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { ToolbarButton } from './toolbar';
 
-const DEFAULT_FONT_SIZE = '14';
+const DEFAULT_FONT_SIZE = '13';
 
 const FONT_SIZE_MAP = {
   [HEADING_KEYS.h1]: '36',

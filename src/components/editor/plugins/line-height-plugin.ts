@@ -7,7 +7,7 @@ import { ParagraphPlugin } from '@udecode/plate/react';
 export const lineHeightPlugin = LineHeightPlugin.configure({
   inject: {
     nodeProps: {
-      defaultNodeValue: 1.5,
+      defaultNodeValue: 1,
       validNodeValues: [1, 1.2, 1.5, 2, 3],
     },
     targetPlugins: [ParagraphPlugin.key, ...HEADING_LEVELS],
