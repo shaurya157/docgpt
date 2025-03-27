@@ -1,11 +1,13 @@
 import { toast } from 'sonner';
-import { StreamMessage } from './custom-stream';
-import { StreamParser } from './parse-stream';
+
 import { StreamingState } from '@/types';
 
+import { StreamMessage } from './custom-stream';
+import { StreamParser } from './parse-stream';
+
 interface StreamCallbacks {
-  onStateUpdate: (state: StreamingState) => void;
   onError: (error: Error) => void;
+  onStateUpdate: (state: StreamingState) => void;
   onStreamEnd: (finalContent: string) => void;
   onStreamStart: () => void;
 }
@@ -45,17 +47,17 @@ export const sendChatMessage = async (
     const streamParser = new StreamParser();
     let accumulatedContent = '';
     const newState: StreamingState = {
+      document: {
+        content: '',
+        isStreaming: false
+      },
       message: {
         id: 'streaming',
         content: '',
         fileNames: [],
         role: 'assistant'
       },
-      reasoning: '',
-      document: {
-        isStreaming: false,
-        content: ''
-      }
+      reasoning: ''
     };
 
     callbacks.onStreamStart();
@@ -109,19 +111,15 @@ function processMessages(
   for (const message of messages) {
     try {
       switch (message.type) {
-        case 'reasoning':
-          newState.reasoning = newState.reasoning + message.content;
+        case 'final_result':
+          newState.message.content = message.content;
           hasUpdates = true;
-          break;
-
-        case 'system':
-          newState.reasoning = newState.reasoning + `[System] ${message.content}\n`;
-          hasUpdates = true;
+          onContentUpdate?.(newState.message.content);
           break;
 
         case 'partial_result':
           // Accumulate content first
-          let currentContent = message.content;
+          const currentContent = message.content;
           
           // Check if we're already streaming a document
           if (newState.document.isStreaming) {
@@ -159,10 +157,14 @@ function processMessages(
           onContentUpdate?.(newState.message.content);
           break;
 
-        case 'final_result':
-          newState.message.content = message.content;
+        case 'reasoning':
+          newState.reasoning = newState.reasoning + message.content;
           hasUpdates = true;
-          onContentUpdate?.(newState.message.content);
+          break;
+
+        case 'system':
+          newState.reasoning = newState.reasoning + `[System] ${message.content}\n`;
+          hasUpdates = true;
           break;
       }
     } catch (error) {

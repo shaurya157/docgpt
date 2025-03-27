@@ -1,6 +1,7 @@
+import { ServiceAccount } from 'firebase-admin';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { ServiceAccount } from 'firebase-admin';
+
 import FirebaseConfig from './firebase-creds.json';
 
 // Initialize Firebase Admin

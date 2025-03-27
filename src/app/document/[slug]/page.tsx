@@ -95,7 +95,7 @@ export default function DocumentPage() {
     };
 
     initializePage();
-  }, []);
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNewChat = async (initialContent?: any[]): Promise<Document> => {
     setActiveChatMessages([]);

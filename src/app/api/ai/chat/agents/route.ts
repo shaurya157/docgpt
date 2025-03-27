@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
       feedback: [],
       model: selectedModel,
       query: message,
-      userId,
-      streamController
+      streamController,
+      userId
     }).catch(error => {
       console.error('Workflow error:', error);
       streamController.writeSystemMessage(`Error: ${error.message}`);
@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
     // Return the stream
     return new Response(streamController.getStream(), {
       headers: {
-        'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        'Content-Type': 'text/event-stream',
       },
     });
   } catch (error) {
@@ -46,10 +46,10 @@ export async function POST(req: NextRequest) {
     return new Response(
       JSON.stringify({ error: 'Failed to process request' }),
       {
-        status: 500,
         headers: {
           'Content-Type': 'application/json',
         },
+        status: 500,
       }
     );
   }

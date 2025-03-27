@@ -1,11 +1,12 @@
 'use client';
 
-import { ArrowRight, CheckCircle2, ChevronRight, Clock, Lock, Sparkles, Star, Users,Quote } from "lucide-react";
+import { useState } from 'react';
+
+import { ArrowRight, CheckCircle2, ChevronRight, Clock, Lock, Quote, Sparkles, Star,Users } from "lucide-react";
 import { useSession } from 'next-auth/react';
 import Image from "next/image";
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { useState } from 'react';
 
 import { Button } from "@/components/plate-ui/button";
 
@@ -29,11 +30,11 @@ export default function Landing() {
           <div className="text-sm text-gray-700 font-medium">Start creating better documents today:</div>
           <div className="flex items-center">
             <input 
-              type="email" 
-              placeholder="Enter your email" 
-              className="w-64 px-4 py-2 rounded-l-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={email}
+              className="w-64 px-4 py-2 rounded-l-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+              value={email} 
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              type="email"
             />
             <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-r-full flex items-center font-medium transition-colors">
               Get Started <ArrowRight className="ml-2 h-4 w-4" />
@@ -86,18 +87,18 @@ export default function Landing() {
               <div className="space-y-4 lg:space-y-0 lg:flex lg:items-center lg:space-x-4 mb-8">
                 <div className="relative lg:max-w-md">
                   <input
-                    type="email"
-                    placeholder="Enter your work email"
                     className="w-full px-4 py-4 rounded-lg text-gray-900 border border-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your work email"
+                    type="email"
                   />
                   <button className="mt-2 lg:mt-0 w-full lg:absolute lg:right-1 lg:top-1 lg:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 lg:py-2 px-6 rounded-lg lg:rounded transition-colors">
                     Get Started Free
                   </button>
                 </div>
                 <div className="lg:block flex justify-center">
-                  <Link href="/demo" className="text-indigo-200 flex items-center hover:text-white transition-colors font-medium">
+                  <Link className="text-indigo-200 flex items-center hover:text-white transition-colors font-medium" href="/demo">
                     See live demo <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
                 </div>
@@ -125,10 +126,10 @@ export default function Landing() {
               {/* Main Product Screenshot with Gradient Border */}
               <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl border border-indigo-500/30 transform lg:rotate-1 hover:rotate-0 transition-transform duration-500">
                 <Image 
-                  src={Site} 
+                  className="w-full h-auto" 
                   alt="DocGPT document editor interface" 
                   quality={100}
-                  className="w-full h-auto"
+                  src={Site}
                 />
                 
                 {/* Floating UI Indicators */}
@@ -158,8 +159,8 @@ export default function Landing() {
         
         {/* Bottom Wave Pattern */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 160">
-            <path fill="#ffffff" fillOpacity="1" d="M0,128L60,117.3C120,107,240,85,360,90.7C480,96,600,128,720,133.3C840,139,960,117,1080,101.3C1200,85,1320,75,1380,69.3L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+          <svg viewBox="0 0 1440 160" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,128L60,117.3C120,107,240,85,360,90.7C480,96,600,128,720,133.3C840,139,960,117,1080,101.3C1200,85,1320,75,1380,69.3L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z" fill="#ffffff" fillOpacity="1"></path>
           </svg>
         </div>
       </section>
@@ -219,8 +220,8 @@ export default function Landing() {
               </p>
               <div className="mt-2 pt-4 border-t border-gray-100">
                 <Link 
-                  href="/features" 
-                  className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center text-sm"
+                  className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center text-sm" 
+                  href="/features"
                 >
                   Learn how it works
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -240,8 +241,8 @@ export default function Landing() {
               </p>
               <div className="mt-2 pt-4 border-t border-gray-100">
                 <Link 
-                  href="/quality" 
-                  className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center text-sm"
+                  className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center text-sm" 
+                  href="/quality"
                 >
                   See quality comparison
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -261,8 +262,8 @@ export default function Landing() {
               </p>
               <div className="mt-2 pt-4 border-t border-gray-100">
                 <Link 
-                  href="/collaboration" 
-                  className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center text-sm"
+                  className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center text-sm" 
+                  href="/collaboration"
                 >
                   Explore collaboration tools
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -337,7 +338,7 @@ export default function Landing() {
                 </li>
               </ul>
               
-              <a href="#" className="text-indigo-600 font-medium flex items-center">
+              <a className="text-indigo-600 font-medium flex items-center" href="#">
                 See how contextual AI works
                 <ArrowRight className="ml-2 h-4 w-4" />
               </a>
@@ -347,16 +348,16 @@ export default function Landing() {
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-3xl transform rotate-3"></div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-indigo-100">
                 <Image 
-                  src={Chatbox} 
+                  className="w-full h-auto" 
                   alt="DocGPT AI Writing Assistant" 
-                  className="w-full h-auto"
+                  src={Chatbox}
                 />
                 
                 {/* Interactive Demo Overlay */}
                 <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-3 flex items-center">
-                  <a href="#" className="text-indigo-600 text-sm font-medium flex items-center">
+                  <a className="text-indigo-600 text-sm font-medium flex items-center" href="#">
                     <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center mr-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                      <svg className="text-white" fill="none" height="12" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                     </div>
                     Watch demo
                   </a>
@@ -371,9 +372,9 @@ export default function Landing() {
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-3xl transform -rotate-2"></div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-indigo-100">
                 <Image 
-                  src={Templates} 
+                  className="w-full h-auto" 
                   alt="DocGPT Templates" 
-                  className="w-full h-auto"
+                  src={Templates}
                 />
                 
                 {/* Live Template Counter */}
@@ -426,7 +427,7 @@ export default function Landing() {
                 </li>
               </ul>
               
-              <a href="#" className="text-indigo-600 font-medium flex items-center">
+              <a className="text-indigo-600 font-medium flex items-center" href="#">
                 Browse template gallery
                 <ArrowRight className="ml-2 h-4 w-4" />
               </a>
@@ -604,7 +605,7 @@ export default function Landing() {
               </ul>
               
               <Button className="w-full bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 py-2 rounded-lg">
-                <Link href="/signup" className="block py-1">Get Started Free</Link>
+                <Link className="block py-1" href="/signup">Get Started Free</Link>
               </Button>
             </div>
             
@@ -647,7 +648,7 @@ export default function Landing() {
               </ul>
               
               <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg">
-                <Link href="/signup?plan=pro" className="block py-1">Start 14-Day Free Trial</Link>
+                <Link className="block py-1" href="/signup?plan=pro">Start 14-Day Free Trial</Link>
               </Button>
             </div>
             
@@ -686,13 +687,13 @@ export default function Landing() {
               </ul>
               
               <Button className="w-full bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 py-2 rounded-lg">
-                <Link href="/signup?plan=team" className="block py-1">Contact Sales</Link>
+                <Link className="block py-1" href="/signup?plan=team">Contact Sales</Link>
               </Button>
             </div>
           </div>
           
           <div className="text-center mt-8 text-gray-600">
-            Need a custom plan? <a href="#" className="text-indigo-600 font-medium">Contact our sales team</a>
+            Need a custom plan? <a className="text-indigo-600 font-medium" href="#">Contact our sales team</a>
           </div>
         </div>
       </section>
@@ -784,7 +785,7 @@ export default function Landing() {
           
           <div className="text-center mt-12">
             <p className="text-gray-600 mb-4">Still have questions?</p>
-            <a href="#" className="text-indigo-600 font-medium">Visit our help center &rarr;</a>
+            <a className="text-indigo-600 font-medium" href="#">Visit our help center &rarr;</a>
           </div>
         </div>
       </section>

@@ -1,8 +1,9 @@
 'use client';
 
-import { Button } from '@/components/plate-ui/button';
 import { signIn } from 'next-auth/react';
 import { signOut as nextAuthSignOut } from 'next-auth/react';
+
+import { Button } from '@/components/plate-ui/button';
 
 interface SignInButtonProps {
     displayText: string;

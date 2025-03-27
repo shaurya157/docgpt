@@ -1,28 +1,39 @@
-export type StreamMessageType = 'reasoning' | 'partial_result' | 'system' | 'final_result';
-
 export interface StreamMessage {
-  type: StreamMessageType;
   content: string;
-  agent?: string;
   timestamp: number;
+  type: StreamMessageType;
+  agent?: string;
 }
 
+export type StreamMessageType = 'final_result' | 'partial_result' | 'reasoning' | 'system';
+
 export class CustomStreamController {
-  private encoder = new TextEncoder();
   private controller: ReadableStreamDefaultController<Uint8Array>;
-  private stream: ReadableStream<Uint8Array>;
+  private encoder = new TextEncoder();
   private isClosed = false;
+  private stream: ReadableStream<Uint8Array>;
 
   constructor() {
     this.stream = new ReadableStream({
-      start: (controller) => {
-        this.controller = controller;
-      },
       cancel: () => {
         // Only close if not already closed
         this.closeStream();
       },
+      start: (controller) => {
+        this.controller = controller;
+      },
     });
+  }
+
+  private closeStream() {
+    if (!this.isClosed) {
+      try {
+        this.controller.close();
+        this.isClosed = true;
+      } catch (error) {
+        console.error('Error closing stream:', error);
+      }
+    }
   }
 
   private writeToStream(message: StreamMessage) {
@@ -39,50 +50,6 @@ export class CustomStreamController {
       console.error('Error writing to stream:', error);
       this.closeStream();
     }
-  }
-
-  private closeStream() {
-    if (!this.isClosed) {
-      try {
-        this.controller.close();
-        this.isClosed = true;
-      } catch (error) {
-        console.error('Error closing stream:', error);
-      }
-    }
-  }
-
-  public writeReasoning(content: string, agent: string) {
-    this.writeToStream({
-      type: 'reasoning',
-      content,
-      agent,
-      timestamp: Date.now(),
-    });
-  }
-
-  public writeSystemMessage(content: string) {
-    this.writeToStream({
-      type: 'system',
-      content,
-      timestamp: Date.now(),
-    });
-  }
-
-  public writePartialResult(content: string) {
-    this.writeToStream({
-      type: 'partial_result',
-      content,
-      timestamp: Date.now(),
-    });
-  }
-
-  public writeFinalResult(content: string) {
-    this.writeToStream({
-      type: 'final_result',
-      content,
-      timestamp: Date.now(),
-    });
   }
 
   public close() {
@@ -108,9 +75,9 @@ export class CustomStreamController {
 
         const text = decoder.decode(value);
         const message: StreamMessage = {
-          type,
           content: text,
           timestamp: Date.now(),
+          type,
         };
 
         yield this.encoder.encode(JSON.stringify(message) + '\n');
@@ -118,13 +85,46 @@ export class CustomStreamController {
     } catch (error) {
       console.error('Error in external stream:', error);
       const errorMessage: StreamMessage = {
-        type: 'system',
         content: 'Error processing external stream',
         timestamp: Date.now(),
+        type: 'system',
       };
       yield this.encoder.encode(JSON.stringify(errorMessage) + '\n');
     } finally {
       reader.releaseLock();
     }
+  }
+
+  public writeFinalResult(content: string) {
+    this.writeToStream({
+      content,
+      timestamp: Date.now(),
+      type: 'final_result',
+    });
+  }
+
+  public writePartialResult(content: string) {
+    this.writeToStream({
+      content,
+      timestamp: Date.now(),
+      type: 'partial_result',
+    });
+  }
+
+  public writeReasoning(content: string, agent: string) {
+    this.writeToStream({
+      agent,
+      content,
+      timestamp: Date.now(),
+      type: 'reasoning',
+    });
+  }
+
+  public writeSystemMessage(content: string) {
+    this.writeToStream({
+      content,
+      timestamp: Date.now(),
+      type: 'system',
+    });
   }
 } 

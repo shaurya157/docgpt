@@ -4,7 +4,6 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { getChatHistory } from "./firebase-admin";
 import { ModelRouter } from "./models";
 import { TAgentState } from "./schema";
-import { CustomStreamController } from "@/utils/custom-stream";
 
 export class DocumentWorkflow {
   private model = new ModelRouter();
@@ -53,37 +52,6 @@ export class DocumentWorkflow {
     `;
   }
    
-  private async sanitizeQueryNode(state: TAgentState) {
-    state.streamController.writeSystemMessage("Processing query...\n");
-    const query = state.query;
-    const tagRegex = /<(Document|Block|Selection|Reminder)>([\s\S]*?)<\/\1>/g;
-    const result: Record<string, string> = {};
-    let lastIndex = 0;
-    let match;
-
-    while ((match = tagRegex.exec(query)) !== null) {
-        const [tagName, content] = match;
-        result[tagName] = content.trim();
-        lastIndex = tagRegex.lastIndex;
-    }
-
-    // Extract the remaining query part after the last recognized tag
-    const queryPart = query.slice(lastIndex).trim();
-    if (queryPart) {
-        result["Query"] = queryPart;
-    }
-
-    state.streamController.writeReasoning("Query processed and sanitized\n", "sanitizer");
-    return {
-      ...state,
-      query: result["Query"],
-      reminder: result["Reminder"],
-      activeDocument: result["Document"],
-      activeBlock: result["Block"],
-      activeSelection: result["Selection"]
-    };
-  }
-
   private async generateNode(state: TAgentState) {
     state.streamController.writeReasoning("Generating response...\n", "generator");
     const prompt = this.createGenerationPrompt(state);
@@ -180,6 +148,37 @@ export class DocumentWorkflow {
     };
   }
 
+  private async sanitizeQueryNode(state: TAgentState) {
+    state.streamController.writeSystemMessage("Processing query...\n");
+    const query = state.query;
+    const tagRegex = /<(Document|Block|Selection|Reminder)>([\s\S]*?)<\/\1>/g;
+    const result: Record<string, string> = {};
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tagRegex.exec(query)) !== null) {
+        const [tagName, content] = match;
+        result[tagName] = content.trim();
+        lastIndex = tagRegex.lastIndex;
+    }
+
+    // Extract the remaining query part after the last recognized tag
+    const queryPart = query.slice(lastIndex).trim();
+    if (queryPart) {
+        result["Query"] = queryPart;
+    }
+
+    state.streamController.writeReasoning("Query processed and sanitized\n", "sanitizer");
+    return {
+      ...state,
+      activeBlock: result["Block"],
+      activeDocument: result["Document"],
+      activeSelection: result["Selection"],
+      query: result["Query"],
+      reminder: result["Reminder"]
+    };
+  }
+
   private async shouldRevise(state: TAgentState) {
     return state.feedback.length > 0 ? "generate" : "end";
   }
@@ -187,6 +186,9 @@ export class DocumentWorkflow {
   async buildGraph() {
     const graph = new StateGraph<TAgentState>({
       channels: {
+        activeBlock: { default: () => "", value: (x, y) => y || x },
+        activeDocument: { default: () => "", value: (x, y) => y || x },
+        activeSelection: { default: () => "", value: (x, y) => y || x },
         chatHistory: { default: () => [], value: (x, y) => y || x },
         chatId: { value: (x) => x },
         context: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
@@ -194,12 +196,9 @@ export class DocumentWorkflow {
         feedback: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
         model: { value: (x) => x },
         query: { value: (x) => x },
-        userId: { value: (x) => x },
-        activeDocument: { default: () => "", value: (x, y) => y || x },
-        activeBlock: { default: () => "", value: (x, y) => y || x },
-        activeSelection: { default: () => "", value: (x, y) => y || x },
         reminder: { default: () => "", value: (x, y) => y || x },
-        streamController: { value: (x) => x }
+        streamController: { value: (x) => x },
+        userId: { value: (x) => x }
       }
     });
 

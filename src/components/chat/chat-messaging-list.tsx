@@ -9,18 +9,18 @@ import { ChatMessageItem } from './chat-messaging-item';
 
 interface ChatMessageListProps {
   messages: Message[];
-  onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
   status: 'awaiting_message' | 'in_progress';
   streamingState: StreamingState;
+  onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
   uploadInProgress?: boolean;
 }
 
 export const ChatMessageList = ({
   messages,
-  onDocumentUpdate,
   status,
   streamingState,
-  uploadInProgress = false
+  uploadInProgress = false,
+  onDocumentUpdate
 }: ChatMessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
@@ -45,8 +45,8 @@ export const ChatMessageList = ({
         {messages.map((message) => (
           <ChatMessageItem
             key={message.id}
-            message={message}
             onDocumentUpdate={onDocumentUpdate}
+            message={message}
             streamingState={message.id === 'streaming' ? streamingState : undefined}
           />
         ))}

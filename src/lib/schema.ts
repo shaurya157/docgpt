@@ -1,7 +1,11 @@
 import { z } from "zod";
+
 import { CustomStreamController } from "@/utils/custom-stream";
 
 export const AgentState = z.object({
+  activeBlock: z.string().default(""),
+  activeDocument: z.string().default(""),
+  activeSelection: z.string().default(""),
   chatHistory: z.array(z.object({
     content: z.string(),
     fileNames: z.array(z.string()).default([]),
@@ -17,12 +21,9 @@ export const AgentState = z.object({
   feedback: z.array(z.string()).default([]),
   model: z.string(),
   query: z.string(),
-  userId: z.string(),
-  activeDocument: z.string().default(""),
-  activeBlock: z.string().default(""),
-  activeSelection: z.string().default(""),
   reminder: z.string().default(""),
-  streamController: z.custom<CustomStreamController>()
+  streamController: z.custom<CustomStreamController>(),
+  userId: z.string()
 });
 
 export type TAgentState = z.infer<typeof AgentState>;

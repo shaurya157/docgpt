@@ -24,7 +24,7 @@ export interface Message {
   id: string;
   content: string;
   fileNames: string[];
-  role: 'user' | 'assistant';
+  role: 'assistant' | 'user';
   reasoning?: string;
 }
 
@@ -40,18 +40,18 @@ export interface PopoverPosition {
   top: number;
 }
 
+export interface StreamingState {
+  document: {
+    content: string;
+    isStreaming: boolean;
+  };
+  message: Message;
+  reasoning: string;
+}
+
 export interface Template {
   id: string;
   template: any[];
   templateName: string;
   templateOwnerId: string;
-}
-
-export interface StreamingState {
-  message: Message;
-  reasoning: string;
-  document: {
-    isStreaming: boolean;
-    content: string;
-  };
 }

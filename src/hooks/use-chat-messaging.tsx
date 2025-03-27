@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toast } from 'sonner';
 
@@ -17,17 +17,17 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [status, setStatus] = useState<'awaiting_message' | 'in_progress'>('awaiting_message');
   const [streamingState, setStreamingState] = useState<StreamingState>({
+    document: {
+      content: '',
+      isStreaming: false
+    },
     message: {
       id: 'streaming',
       content: '',
       fileNames: [],
       role: 'assistant'
     },
-    reasoning: '',
-    document: {
-      isStreaming: false,
-      content: ''
-    }
+    reasoning: ''
   });
   
   // Add ref to track current streaming state
@@ -78,17 +78,17 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
     
     // Reset streaming state
     setStreamingState({
+      document: {
+        content: '',
+        isStreaming: false
+      },
       message: {
         id: 'streaming',
         content: '',
         fileNames: [],
         role: 'assistant'
       },
-      reasoning: '',
-      document: {
-        isStreaming: false,
-        content: ''
-      }
+      reasoning: ''
     });
 
     try {
@@ -98,21 +98,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
         userId,
         model,
         {
-          onStateUpdate: (newState: StreamingState) => {
-            setStreamingState(prevState => {
-              const nextState = {
-                message: {
-                  ...prevState.message,
-                  content: newState.message.content || prevState.message.content
-                },
-                reasoning: prevState.reasoning 
-                  ? prevState.reasoning + (newState.reasoning || '')
-                  : newState.reasoning || '',
-                document: newState.document
-              };
-              return nextState;
-            });
-          },
           onError: (error: Error) => {
             toast.error(error.message);
             setStatus('awaiting_message');
@@ -120,8 +105,23 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             setMessages(prev => prev.filter(m => m.id !== 'streaming'));
             setStreamingState(prev => ({
               ...prev,
-              document: { isStreaming: false, content: '' }
+              document: { content: '', isStreaming: false }
             }));
+          },
+          onStateUpdate: (newState: StreamingState) => {
+            setStreamingState(prevState => {
+              const nextState = {
+                document: newState.document,
+                message: {
+                  ...prevState.message,
+                  content: newState.message.content || prevState.message.content
+                },
+                reasoning: prevState.reasoning 
+                  ? prevState.reasoning + (newState.reasoning || '')
+                  : newState.reasoning || ''
+              };
+              return nextState;
+            });
           },
           onStreamEnd: async (finalContent: string) => {
             const currentState = streamingStateRef.current;
@@ -130,8 +130,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               id: timestamp.toString(),
               content: finalContent,
               fileNames: [],
-              role: "assistant",
-              reasoning: currentState.reasoning
+              reasoning: currentState.reasoning,
+              role: "assistant"
             };
             
             // Store the assistant's message in Firestore
@@ -139,8 +139,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               id: timestamp,
               content: finalMessage.content,
               fileNames: [],
-              role: "assistant",
-              reasoning: currentState.reasoning
+              reasoning: currentState.reasoning,
+              role: "assistant"
             });
 
             // Replace the streaming message with the final message
@@ -150,33 +150,33 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             
             // Reset streaming state
             setStreamingState({
+              document: {
+                content: '',
+                isStreaming: false
+              },
               message: {
                 id: 'streaming',
                 content: '',
                 fileNames: [],
                 role: 'assistant'
               },
-              reasoning: '',
-              document: {
-                isStreaming: false,
-                content: ''
-              }
+              reasoning: ''
             });
             setStatus('awaiting_message');
           },
           onStreamStart: () => {
             setStreamingState({
+              document: {
+                content: '',
+                isStreaming: false
+              },
               message: {
                 id: 'streaming',
                 content: '',
                 fileNames: [],
                 role: 'assistant'
               },
-              reasoning: '',
-              document: {
-                isStreaming: false,
-                content: ''
-              }
+              reasoning: ''
             });
           }
         }

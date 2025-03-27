@@ -3,15 +3,15 @@ import Markdown from 'react-markdown';
 
 import { FileText } from 'lucide-react';
 
-import { Button } from '@/components/plate-ui/button';
 import { Icons } from '@/components/icons';
+import { Button } from '@/components/plate-ui/button';
 import { Message, StreamingState } from '@/types';
 import { parseAssistantResponse } from '@/utils/document-parser';
 
 interface ChatMessageItemProps {
   message: Message;
-  streamingState?: StreamingState;
   onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
+  streamingState?: StreamingState;
 }
 
 export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: ChatMessageItemProps) => {
