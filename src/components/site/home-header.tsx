@@ -2,6 +2,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 import DocGPTIcon from '../../assets/icons/docgpt.svg';
+import { SignOut } from '../landing/auth';
+
 interface HomeHeaderProps {
     onSearch: (query: string) => void;
 }
@@ -19,7 +21,7 @@ export default function HomeHeader({ onSearch }: HomeHeaderProps) {
                     type="text"
                 />
             </div>
-            <div className="w-48" /> {/* Spacer for centering */}
+            <SignOut className="w-24" />
         </header>
     )
 }

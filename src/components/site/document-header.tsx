@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { saveCurrentDocumentState, saveUserTemplate, updateDocumentTitle } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
+import { SignOut } from '../landing/auth';
 
 import DocGPTIcon from '../../assets/icons/docgpt.svg';
 import DocumentGalleryModal from '../gallery/document-gallery-modal';
@@ -245,6 +246,7 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
             </div>
           </div>
         </div>
+        <SignOut className="w-24" />
       </header>
 
       <TemplateGalleryModal
