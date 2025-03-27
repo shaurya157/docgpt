@@ -1,7 +1,10 @@
 import { toast } from 'sonner';
+import { StreamMessage, StreamMessageType } from './custom-stream';
+import { StreamParser } from './parse-stream';
+import { StreamingState } from '@/types';
 
 interface StreamCallbacks {
-  onChunkReceived: (content: string) => void;
+  onStateUpdate: (state: StreamingState) => void;
   onError: (error: Error) => void;
   onStreamEnd: (finalContent: string) => void;
   onStreamStart: () => void;
@@ -14,6 +17,8 @@ export const sendChatMessage = async (
   model: string,
   callbacks: StreamCallbacks
 ) => {
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  
   try {
     const result = await fetch('/api/ai/chat/agents', {
       body: JSON.stringify({
@@ -28,13 +33,30 @@ export const sendChatMessage = async (
       method: 'POST',
     });
 
+    if (!result.ok) {
+      throw new Error(`HTTP error! status: ${result.status}`);
+    }
+
     if (result.body == null) {
       throw new Error('The response body is empty.');
     }
 
-    const reader = result.body.getReader();
-    const decoder = new TextDecoder();
+    reader = result.body.getReader();
+    const streamParser = new StreamParser();
     let accumulatedContent = '';
+    let currentState: StreamingState = {
+      message: {
+        id: 'streaming',
+        content: '',
+        fileNames: [],
+        role: 'assistant'
+      },
+      reasoning: '',
+      document: {
+        isStreaming: false,
+        content: ''
+      }
+    };
 
     callbacks.onStreamStart();
 
@@ -42,32 +64,99 @@ export const sendChatMessage = async (
       const { done, value } = await reader.read();
 
       if (done) {
+        // Process any remaining buffered content
+        const remainingMessages = streamParser.flush();
+        processMessages(remainingMessages, currentState, callbacks, (content) => {
+          accumulatedContent = content;
+        });
         callbacks.onStreamEnd(accumulatedContent);
         break;
       }
 
-      // Decode the chunk and update the streaming message
-      const chunk = decoder.decode(value, { stream: true });
-
-      // Split by newlines to handle multiple JSON objects in a single chunk
-      const jsonStrings = chunk.split('\n').filter(str => str.trim() !== '');
-
-      for (const jsonStr of jsonStrings) {
-        try {
-          const jsonChunk = JSON.parse(jsonStr);
-          // Extract only the content from the delta field if it exists
-          if (jsonChunk.choices && jsonChunk.choices[0]?.delta?.content) {
-            accumulatedContent += jsonChunk.choices[0].delta.content;
-            callbacks.onChunkReceived(accumulatedContent);
-          }
-        } catch (e) {
-          // If not valid JSON, skip this part
-          console.warn("Failed to parse JSON chunk:", e);
-        }
-      }
+      const messages = streamParser.parseChunk(value);
+      processMessages(messages, currentState, callbacks, (content) => {
+        accumulatedContent = content;
+      });
     }
   } catch (error) {
-    callbacks.onError(error);
-    toast.error(error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    callbacks.onError(new Error(`Stream error: ${errorMessage}`));
+    toast.error(`Error: ${errorMessage}`);
+  } finally {
+    // Clean up the reader if it exists
+    if (reader) {
+      try {
+        await reader.cancel();
+      } catch (error) {
+        console.error('Error canceling reader:', error);
+      }
+    }
   }
-}; 
+};
+
+function processMessages(
+  messages: StreamMessage[],
+  state: StreamingState,
+  callbacks: StreamCallbacks,
+  onContentUpdate?: (content: string) => void
+) {
+  let hasUpdates = false;
+  const newState = { ...state };
+
+  for (const message of messages) {
+    try {
+      switch (message.type) {
+        case 'reasoning':
+          newState.reasoning = newState.reasoning + message.content;
+          hasUpdates = true;
+          break;
+
+        case 'system':
+          newState.reasoning = newState.reasoning + `[System] ${message.content}\n`;
+          hasUpdates = true;
+          break;
+
+        case 'partial_result':
+          // Check for document tags
+          if (message.content.includes('<Document>') && !newState.document.isStreaming) {
+            newState.document.isStreaming = true;
+            const [prependContent, documentContent] = message.content.split('<Document>');
+            newState.message.content += prependContent;
+            if (documentContent) {
+              newState.document.content = documentContent;
+            }
+          } else if (message.content.includes('</Document>') && newState.document.isStreaming) {
+            newState.document.isStreaming = false;
+            const [documentContent, appendContent] = message.content.split('</Document>');
+            if (documentContent) {
+              newState.document.content += documentContent;
+            }
+            if (appendContent) {
+              newState.message.content += appendContent;
+            }
+          } else if (newState.document.isStreaming) {
+            newState.document.content += message.content;
+          } else {
+            newState.message.content += message.content;
+          }
+          hasUpdates = true;
+          onContentUpdate?.(newState.message.content);
+          break;
+
+        case 'final_result':
+          newState.message.content = message.content;
+          hasUpdates = true;
+          onContentUpdate?.(newState.message.content);
+          break;
+      }
+    } catch (error) {
+      console.error('Error processing message:', error);
+      callbacks.onError(new Error('Error processing stream message'));
+    }
+  }
+
+  // Only trigger state update if there were actual changes
+  if (hasUpdates) {
+    callbacks.onStateUpdate({ ...newState });
+  }
+} 

@@ -75,15 +75,12 @@ const ContextDocsContent = ({ onClose }: ContextDocsContentProps) => {
     });
 
     try {
-      console.log("Sending request to /api/ai/files");
       const response = await fetch('/api/ai/files', {
         body: formData,
         method: 'POST',
       });
 
       const responseJson = await response.json();
-      console.log("responseJson", responseJson);
-
       const successfulFiles = responseJson.files.filter((file: FileInfo) => file.status === 'success');
       if (successfulFiles.length > 0) {
         await appendFileDataToUser(session!.user!.email!, successfulFiles);

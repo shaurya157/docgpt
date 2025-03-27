@@ -263,7 +263,8 @@ export async function storeMessage(chatId: string, message: {
   id: number,
   content: string,
   role: "assistant" | "user",
-  fileNames?: string[]
+  fileNames?: string[],
+  reasoning?: string
 }) {
   const chatsRef = collection(db, 'chats');
   const docRef = doc(chatsRef, chatId);

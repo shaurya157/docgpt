@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { CustomStreamController } from "@/utils/custom-stream";
 
 export class ModelRouter {
   private deepseek = new OpenAI({
@@ -7,17 +8,35 @@ export class ModelRouter {
   })
   private openai = new OpenAI();
 
-  private async generateDeepSeek(system: string, input: string, stream: boolean = false) {
-    if (stream) {
+  private async generateDeepSeek(
+    system: string,
+    input: string,
+    streamController?: CustomStreamController
+  ) {
+    if (streamController) {
       const response = await this.deepseek.chat.completions.create({
         messages: [
           { content: system, role: "system" },
           { content: input, role: "user" }
         ],
         model: "deepseek-reasoner",
-        stream: stream
+        stream: true
       });
-      return response.toReadableStream();
+
+      let accumulatedContent = '';
+      for await (const chunk of response) {
+        const reasoning = chunk.choices[0]?.delta?.["reasoning_content"] || '';
+        const content = chunk.choices[0]?.delta?.content || '';
+        
+        if (reasoning) {
+          streamController.writeReasoning(reasoning, "deepseek");
+        }
+        if (content) {
+          accumulatedContent += content;
+          streamController.writePartialResult(content);
+        }
+      }
+      return accumulatedContent;
     } else {
       const response = await this.deepseek.chat.completions.create({
         messages: [
@@ -31,18 +50,31 @@ export class ModelRouter {
     }
   }
   
-  private async generateOpenAI(system: string, input: string, model: string, stream: boolean = false) {
-    if (stream) {
+  private async generateOpenAI(
+    system: string,
+    input: string,
+    model: string,
+    streamController?: CustomStreamController
+  ) {
+    if (streamController) {
       const response = await this.openai.chat.completions.create({
         messages: [
           { content: system, role: "system" },
           { content: input, role: "user" }
         ],
         model: model,
-        stream: stream
+        stream: true
       });
 
-      return response.toReadableStream();
+      let accumulatedContent = '';
+      for await (const chunk of response) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) {
+          accumulatedContent += content;
+          streamController.writePartialResult(content);
+        }
+      }
+      return accumulatedContent;
     } else {
       const response = await this.openai.chat.completions.create({
         messages: [
@@ -84,17 +116,29 @@ export class ModelRouter {
     selectedModel: string,
     systemPrompt: string,
     userInput: string,
-    stream: boolean = false
-  ): Promise<ReadableStream<any> | string> {
+    stream: boolean = false,
+    streamController?: CustomStreamController
+  ): Promise<string> {
     const { model, provider } = this.getProviderAndModel(selectedModel);
     
-    switch(provider) {
-      case "deepseek":
-        return this.generateDeepSeek(systemPrompt, userInput, stream);
-      case "openai":
-        return this.generateOpenAI(systemPrompt, userInput, model, stream);
-      default:
-        return this.generateOpenAI(systemPrompt, userInput, "gpt-4o", stream);
+    try {
+      streamController?.writeReasoning("Starting model generation...", provider);
+      
+      const result = await (provider === "deepseek" 
+        ? this.generateDeepSeek(systemPrompt, userInput, stream ? streamController : undefined)
+        : this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined));
+      
+      if (stream && streamController) {
+        streamController.writeFinalResult(result);
+      }
+      
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      if (streamController) {
+        streamController.writeSystemMessage(`Error during generation: ${errorMessage}`);
+      }
+      throw error;
     }
   }
 }

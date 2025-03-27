@@ -64,8 +64,6 @@ export const useChat = () => {
     },
     streamProtocol: 'data',
     fetch: async (input, init) => {
-      console.log("Input: ", input)
-      console.log("init: ", init)
       const res = await fetch(input, init);  
       // if (!res.ok) {
       //   // Mock the API response. Remove it when you implement the route /api/ai/command

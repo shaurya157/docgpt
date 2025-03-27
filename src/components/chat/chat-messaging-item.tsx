@@ -1,20 +1,45 @@
+import { useState } from 'react';
 import Markdown from 'react-markdown';
 
 import { FileText } from 'lucide-react';
 
 import { Button } from '@/components/plate-ui/button';
-import { Message } from '@/types';
+import { Icons } from '@/components/icons';
+import { Message, StreamingState } from '@/types';
 import { parseAssistantResponse } from '@/utils/document-parser';
 
 interface ChatMessageItemProps {
   message: Message;
+  streamingState?: StreamingState;
   onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
 }
 
-export const ChatMessageItem = ({ message, onDocumentUpdate }: ChatMessageItemProps) => {
+export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: ChatMessageItemProps) => {
+  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
+  const content = streamingState ? streamingState.message.content : message.content;
+  const reasoning = streamingState ? streamingState.reasoning : message.reasoning;
+
   const renderMessageContent = () => {
-    if (message.role !== 'user' && message.content.includes('<Document>')) {
-      const { appending, document, documentTitle, prepending } = parseAssistantResponse(message);
+    if (message.id === 'streaming' && streamingState?.document.isStreaming) {
+      return (
+        <Button
+          variant="roundedClear"
+          className="h-auto w-auto cursor-not-allowed rounded-lg bg-black bg-opacity-50 p-2"
+          disabled
+        >
+          <div className="flex items-center">
+            <FileText className='h-full w-auto'/>
+            <div className="mx-1">Creating Document...</div>
+          </div>
+        </Button>
+      );
+    }
+
+    if (message.role === 'assistant' && content.includes('<Document>')) {
+      const { appending, document, documentTitle, prepending } = parseAssistantResponse({
+        ...message,
+        content
+      });
 
       return (
         <div className="space-y-4">
@@ -36,7 +61,7 @@ export const ChatMessageItem = ({ message, onDocumentUpdate }: ChatMessageItemPr
 
     return (
       <div className="whitespace-pre-wrap">
-        <Markdown className="react-markdown">{message.content}</Markdown>
+        <Markdown className="react-markdown">{content}</Markdown>
         {message.fileNames && message.fileNames.map((fileName) => (
           <div key={fileName} className="flex items-center gap-2">
             <FileText className="size-5" />
@@ -49,8 +74,8 @@ export const ChatMessageItem = ({ message, onDocumentUpdate }: ChatMessageItemPr
 
   return (
     <div
-      className={`flex text-sm ${
-        message.role === 'user' ? 'justify-end' : 'justify-start'
+      className={`flex flex-col text-sm ${
+        message.role === 'user' ? 'items-end' : 'items-start'
       }`}
     >
       <div
@@ -59,6 +84,23 @@ export const ChatMessageItem = ({ message, onDocumentUpdate }: ChatMessageItemPr
         }`}
       >
         {renderMessageContent()}
+        {reasoning && typeof reasoning === 'string' && reasoning.trim() !== '' && (
+          <div className="mt-2">
+            <Button
+              variant="ghost"
+              className="flex w-full items-center justify-between p-2 text-sm"
+              onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
+            >
+              <span>View Reasoning</span>
+              <Icons.chevronDown className={`size-4 transform transition-transform ${isReasoningExpanded ? 'rotate-180' : ''}`} />
+            </Button>
+            {isReasoningExpanded && (
+              <div className="space-y-2 rounded-md bg-gray-50 p-2 text-sm text-gray-500">
+                {reasoning}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

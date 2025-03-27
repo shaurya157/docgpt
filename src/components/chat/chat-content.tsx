@@ -46,7 +46,7 @@ const ChatContent = ({
   const { attachments, removeAttachment, updateAttachments, uploadFiles, uploadInProgress } = 
     useFileAttachments(session?.user?.email || '');
 
-  const { addMessage, messages, sendMessage, streamingMessage, streamingDocument } = useChatMessaging({
+  const { addMessage, messages, sendMessage, streamingState } = useChatMessaging({
     chatId: activeUserDocument?.chatId || '',
     initialMessages: activeChatMessages,
     model: selectedModel,
@@ -65,7 +65,7 @@ const ChatContent = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, []);
 
   const parseEditorAndGetDocumentAndSelection = (
     newMessage: string
@@ -163,8 +163,7 @@ const ChatContent = ({
             onDocumentUpdate={updateEditorWithNewDocument}
             messages={messages}
             status={status}
-            streamingDocument={streamingDocument}
-            streamingMessage={streamingMessage}
+            streamingState={streamingState}
             uploadInProgress={uploadInProgress}
           />
           <div ref={messagesEndRef} />

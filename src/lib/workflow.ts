@@ -4,6 +4,7 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { getChatHistory } from "./firebase-admin";
 import { ModelRouter } from "./models";
 import { TAgentState } from "./schema";
+import { CustomStreamController } from "@/utils/custom-stream";
 
 export class DocumentWorkflow {
   private model = new ModelRouter();
@@ -53,6 +54,7 @@ export class DocumentWorkflow {
   }
    
   private async sanitizeQueryNode(state: TAgentState) {
+    state.streamController.writeSystemMessage("Processing query...\n");
     const query = state.query;
     const tagRegex = /<(Document|Block|Selection|Reminder)>([\s\S]*?)<\/\1>/g;
     const result: Record<string, string> = {};
@@ -71,6 +73,7 @@ export class DocumentWorkflow {
         result["Query"] = queryPart;
     }
 
+    state.streamController.writeReasoning("Query processed and sanitized\n", "sanitizer");
     return {
       ...state,
       query: result["Query"],
@@ -82,23 +85,48 @@ export class DocumentWorkflow {
   }
 
   private async generateNode(state: TAgentState) {
+    state.streamController.writeReasoning("Generating response...\n", "generator");
     const prompt = this.createGenerationPrompt(state);
-    const output = await this.model.generate(state.model, prompt, state.query, true)
-    return {
-      ...state,
-      draft: output
-    };
+    
+    try {
+      const output = await this.model.generate(
+        state.model,
+        prompt,
+        state.query,
+        true,
+        state.streamController
+      );
+      
+      // Close the stream after generation is complete
+      state.streamController.close();
+      
+      return {
+        ...state,
+        draft: output
+      };
+    } catch (error) {
+      console.error("Error in generate node:", error);
+      state.streamController.writeSystemMessage("Failed to generate response\n");
+      state.streamController.close(); // Close stream on error too
+      return {
+        ...state,
+        draft: "Error: Failed to generate response"
+      };
+    }
   }
 
   private async retrieveChatHistoryNode(state: TAgentState) {
+    state.streamController.writeSystemMessage("Retrieving chat history...\n");
     try {
       const messages = await getChatHistory(state.chatId);
+      state.streamController.writeReasoning(`Found ${messages.length} previous messages\n`, "chat-history");
       return {
         ...state,
         chatHistory: messages
       };
     } catch (error) {
       console.error("Error retrieving chat history:", error);
+      state.streamController.writeSystemMessage("Failed to retrieve chat history\n");
       return {
         ...state,
         chatHistory: []
@@ -107,6 +135,7 @@ export class DocumentWorkflow {
   }
 
   private async retrievePineconeContextNode(state: TAgentState) {
+    state.streamController.writeSystemMessage("Searching for relevant context from uploaded documents...\n");
     const index = this.pinecone.Index(process.env.PINECONE_INDEX || "");
     let results;
 
@@ -118,26 +147,33 @@ export class DocumentWorkflow {
             inputs: { text: state.query },
             topK: 10,
         }
-      })
+      });
+      
+      const hits = results.result.hits;
+      state.streamController.writeReasoning(
+        `Found ${hits.length} relevant documents. ${hits.map(h => h.fields["fileName"]).join(", ")}\n`,
+        "context-retrieval"
+      );
+      
+      return {
+        ...state,
+        context: hits.map(m => ({
+          content: m.fields["text"],
+          score: m._score
+        }))
+      };
     } catch (error) {
       console.error("Error retrieving context:", error);
+      state.streamController.writeSystemMessage("Failed to retrieve context\n");
       return {
         ...state,
         context: []
       };
     }
-    
-    return {
-      ...state,
-      context: results.result.hits.map(m => ({
-        content: m.fields["text"],
-        score: m._score
-      }))
-    };
   }
 
   private async reviewNode(state: TAgentState) {
-    const reviewPrompt = `Review this document draft: ${state.draft}`;
+    const reviewPrompt = `Review this document draft: ${state.draft}\n`;
     return {
       ...state,
       feedback: await this.model.generate("openai", reviewPrompt, "")
@@ -162,7 +198,8 @@ export class DocumentWorkflow {
         activeDocument: { default: () => "", value: (x, y) => y || x },
         activeBlock: { default: () => "", value: (x, y) => y || x },
         activeSelection: { default: () => "", value: (x, y) => y || x },
-        reminder: { default: () => "", value: (x, y) => y || x }
+        reminder: { default: () => "", value: (x, y) => y || x },
+        streamController: { value: (x) => x }
       }
     });
 

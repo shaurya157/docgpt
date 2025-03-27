@@ -1,30 +1,29 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
-import { Message } from '@/types';
+import { Message, StreamingState } from '@/types';
 import { DotAnimation } from '@/utils/animations';
 
 import { ChatMessageItem } from './chat-messaging-item';
 
 interface ChatMessageListProps {
   messages: Message[];
-  status: 'awaiting_message' | 'in_progress';
-  streamingDocument: boolean;
-  streamingMessage: Message;
-  uploadInProgress: boolean;
   onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
+  status: 'awaiting_message' | 'in_progress';
+  streamingState: StreamingState;
+  uploadInProgress?: boolean;
 }
 
 export const ChatMessageList = ({
   messages,
+  onDocumentUpdate,
   status,
-  streamingDocument,
-  streamingMessage,
-  uploadInProgress,
-  onDocumentUpdate
+  streamingState,
+  uploadInProgress = false
 }: ChatMessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -32,7 +31,13 @@ export const ChatMessageList = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, streamingState]);
+
+  const showThinkingIndicator = status === 'in_progress' && 
+    !streamingState.message.content && 
+    !streamingState.document.isStreaming;
+
+  const showDocumentCreationIndicator = streamingState.document.isStreaming;
 
   return (
     <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">
@@ -40,36 +45,41 @@ export const ChatMessageList = ({
         {messages.map((message) => (
           <ChatMessageItem
             key={message.id}
-            onDocumentUpdate={onDocumentUpdate}
             message={message}
+            onDocumentUpdate={onDocumentUpdate}
+            streamingState={message.id === 'streaming' ? streamingState : undefined}
           />
         ))}
 
-        {streamingDocument ? (
+        {showThinkingIndicator && (
+          <div className="flex items-start">
+            <div className="rounded-xl px-4 py-2">
+              <div className="flex items-center gap-2">
+                <Icons.spinner className="size-4 animate-spin" />
+                <span>Thinking<DotAnimation /></span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showDocumentCreationIndicator && (
           <div className="flex justify-start">
             <Button variant="roundedClear" className="ml-2" disabled>
               <Icons.spinner className="size-5 animate-spin text-black" />
               <p>Creating document...</p>
             </Button>
           </div>
-        ) : null}
-
-        {streamingMessage.content !== '' && (
-          <ChatMessageItem
-            onDocumentUpdate={onDocumentUpdate}
-            message={streamingMessage}
-          />
         )}
 
-        {status === 'in_progress' && streamingMessage.content === "" && !streamingDocument && (
-          <span className="flex gap-x-2 text-white">
-            <Icons.spinner className="size-5 animate-spin text-black" />
-            <p className="text-black">
-              {uploadInProgress ? 'Uploading files...' : 'Thinking...'}
-            </p>
-            <DotAnimation />
-          </span>
+        {uploadInProgress && (
+          <div className="flex justify-start">
+            <Button variant="roundedClear" className="ml-2" disabled>
+              <Icons.spinner className="size-5 animate-spin text-black" />
+              <p>Uploading files...</p>
+            </Button>
+          </div>
         )}
+
         <div ref={messagesEndRef} />
       </div>
     </div>

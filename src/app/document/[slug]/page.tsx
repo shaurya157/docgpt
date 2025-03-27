@@ -84,7 +84,6 @@ export default function DocumentPage() {
             redirect('/home');
           }
           changeEditorContent(document.document)
-          console.log(chat)
           setActiveChatMessages(chat.messages)
           setActiveUserDocument(document);
         }

@@ -24,7 +24,8 @@ export interface Message {
   id: string;
   content: string;
   fileNames: string[];
-  role: 'assistant' | 'user';
+  role: 'user' | 'assistant';
+  reasoning?: string;
 }
 
 export interface NavItem {
@@ -44,4 +45,13 @@ export interface Template {
   template: any[];
   templateName: string;
   templateOwnerId: string;
+}
+
+export interface StreamingState {
+  message: Message;
+  reasoning: string;
+  document: {
+    isStreaming: boolean;
+    content: string;
+  };
 }
