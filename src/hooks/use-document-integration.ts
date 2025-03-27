@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { deserializeMd } from '@udecode/plate-markdown';
+import { deserializeMd, MarkdownPlugin } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
 
 import { updateDocumentTitle } from '@/firebase/firestore-dao';
@@ -20,28 +20,7 @@ export const useDocumentIntegration = ({
   const updateEditorWithNewDocument = useCallback(
     (document: string, documentTitle: string) => {
       return async () => {
-        let result: any[] = [];
-        const doubleNewLineSplitArr = document.split('\n\n');
-        
-        doubleNewLineSplitArr.forEach((doubleLineSplitText) => {
-          const singleNewLineSplit = doubleLineSplitText.split('\n');
-
-          singleNewLineSplit.forEach((singleNewLineSplitText) => {
-            const listStyleType = classifyStart(singleNewLineSplitText);
-            if (listStyleType) {
-              const deserializedList = deserializeListMd(
-                singleNewLineSplitText,
-                editor,
-                listStyleType
-              );
-
-              result = result.concat(deserializedList);
-            } else {
-              const resNodes = deserializeMd(editor, singleNewLineSplitText);
-              result = result.concat(resNodes[0]);
-            }
-          });
-        });
+        let deserializedDocument = editor.getApi(MarkdownPlugin).markdown.deserialize(document);
 
         if (documentId) {
           const { error } = await updateDocumentTitle(documentId, documentTitle);
@@ -50,7 +29,7 @@ export const useDocumentIntegration = ({
           }
         }
 
-        changeEditorContent(result);
+        changeEditorContent(deserializedDocument);
       };
     },
     [editor, documentId, changeEditorContent]
