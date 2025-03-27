@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { StreamMessage, StreamMessageType } from './custom-stream';
+import { StreamMessage } from './custom-stream';
 import { StreamParser } from './parse-stream';
 import { StreamingState } from '@/types';
 
@@ -44,7 +44,7 @@ export const sendChatMessage = async (
     reader = result.body.getReader();
     const streamParser = new StreamParser();
     let accumulatedContent = '';
-    let currentState: StreamingState = {
+    const newState: StreamingState = {
       message: {
         id: 'streaming',
         content: '',
@@ -66,7 +66,7 @@ export const sendChatMessage = async (
       if (done) {
         // Process any remaining buffered content
         const remainingMessages = streamParser.flush();
-        processMessages(remainingMessages, currentState, callbacks, (content) => {
+        processMessages(remainingMessages, newState, callbacks, (content) => {
           accumulatedContent = content;
         });
         callbacks.onStreamEnd(accumulatedContent);
@@ -74,7 +74,7 @@ export const sendChatMessage = async (
       }
 
       const messages = streamParser.parseChunk(value);
-      processMessages(messages, currentState, callbacks, (content) => {
+      processMessages(messages, newState, callbacks, (content) => {
         accumulatedContent = content;
       });
     }
