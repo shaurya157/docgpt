@@ -1,10 +1,9 @@
 import { useCallback } from 'react';
 
-import { deserializeMd, MarkdownPlugin } from '@udecode/plate-markdown';
+import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { PlateEditor } from '@udecode/plate/react';
 
 import { updateDocumentTitle } from '@/firebase/firestore-dao';
-import deserializeListMd, { classifyStart } from '@/utils/serialization-util';
 
 interface UseDocumentIntegrationProps {
   documentId: string;
