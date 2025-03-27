@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, CheckCircle2, ChevronRight, CircleCheckBig, Clock, Download, Globe, LightbulbIcon, Lock, MessageSquareCode, MousePointerClick, PenTool, SearchCode, Shield, Sparkles, Star, Users, Zap, Quote } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronRight, Clock, Lock, Sparkles, Star, Users,Quote } from "lucide-react";
 import { useSession } from 'next-auth/react';
 import Image from "next/image";
 import Link from 'next/link';
@@ -10,8 +10,6 @@ import { useState } from 'react';
 import { Button } from "@/components/plate-ui/button";
 
 import Chatbox from '../assets/images/chatbox.png';
-import ContextDocs from '../assets/images/contextdocs.png';
-import QuickEdit from '../assets/images/quickedit.png';
 import Site from '../assets/images/site.png';
 import Templates from '../assets/images/templates.png';
 
