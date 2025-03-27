@@ -20,21 +20,6 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
   const reasoning = streamingState ? streamingState.reasoning : message.reasoning;
 
   const renderMessageContent = () => {
-    if (message.id === 'streaming' && streamingState?.document.isStreaming) {
-      return (
-        <Button
-          variant="roundedClear"
-          className="h-auto w-auto cursor-not-allowed rounded-lg bg-black bg-opacity-50 p-2"
-          disabled
-        >
-          <div className="flex items-center">
-            <FileText className='h-full w-auto'/>
-            <div className="mx-1">Creating Document...</div>
-          </div>
-        </Button>
-      );
-    }
-
     if (message.role === 'assistant' && content.includes('<Document>')) {
       const { appending, document, documentTitle, prepending } = parseAssistantResponse({
         ...message,

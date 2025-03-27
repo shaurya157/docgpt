@@ -102,7 +102,10 @@ function processMessages(
 ) {
   let hasUpdates = false;
   const newState = { ...state };
+  let tempDocumentContent = newState.document.content;  // Store document content temporarily
 
+  console.log("messages", messages);
+  console.log("state", newState);
   for (const message of messages) {
     try {
       switch (message.type) {
@@ -117,27 +120,40 @@ function processMessages(
           break;
 
         case 'partial_result':
-          // Check for document tags
-          if (message.content.includes('<Document>') && !newState.document.isStreaming) {
-            newState.document.isStreaming = true;
-            const [prependContent, documentContent] = message.content.split('<Document>');
-            newState.message.content += prependContent;
-            if (documentContent) {
-              newState.document.content = documentContent;
+          // Accumulate content first
+          let currentContent = message.content;
+          
+          // Check if we're already streaming a document
+          if (newState.document.isStreaming) {
+            // Check if this chunk contains the closing tag
+            if (currentContent.includes('</Document>')) {
+              const [documentContent, appendContent] = currentContent.split('</Document>');
+              if (documentContent) {
+                tempDocumentContent += documentContent;
+              }
+              if (appendContent) {
+                newState.message.content += appendContent;
+              }
+              newState.document.isStreaming = false;
+              // Only set the document content when streaming is complete
+              newState.document.content = tempDocumentContent;
+            } else {
+              // Still in document, append to temporary content
+              tempDocumentContent += currentContent;
             }
-          } else if (message.content.includes('</Document>') && newState.document.isStreaming) {
-            newState.document.isStreaming = false;
-            const [documentContent, appendContent] = message.content.split('</Document>');
-            if (documentContent) {
-              newState.document.content += documentContent;
-            }
-            if (appendContent) {
-              newState.message.content += appendContent;
-            }
-          } else if (newState.document.isStreaming) {
-            newState.document.content += message.content;
           } else {
-            newState.message.content += message.content;
+            // Not currently streaming a document, check for opening tag
+            if (currentContent.includes('<Document')) {
+              const [prependContent] = currentContent.split('<Document');
+              if (prependContent) {
+                newState.message.content += prependContent;
+              }
+              newState.document.isStreaming = true;
+              tempDocumentContent = ''; // Start with empty document content
+            } else {
+              // Regular content
+              newState.message.content += currentContent;
+            }
           }
           hasUpdates = true;
           onContentUpdate?.(newState.message.content);
