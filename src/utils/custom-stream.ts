@@ -26,29 +26,39 @@ export class CustomStreamController {
   }
 
   private closeStream() {
-    if (!this.isClosed) {
-      try {
-        this.controller.close();
-        this.isClosed = true;
-      } catch (error) {
-        console.error('Error closing stream:', error);
-      }
+    if (!this.isClosed && this.controller) {
+        try {
+            this.controller.close();
+        } catch (error) {
+            console.debug('Error while closing stream (may already be closed):', error);
+        } finally {
+            this.isClosed = true;
+        }
     }
   }
 
   private writeToStream(message: StreamMessage) {
     try {
-        if (this.isClosed) {
+        // Check if stream is closed or controller is not available
+        if (this.isClosed || !this.controller) {
             return;
-        } else {
-            // Convert message to NDJSON format
-            const jsonString = JSON.stringify(message) + '\n';
-            const chunk = this.encoder.encode(jsonString);
+        }
+
+        // Convert message to NDJSON format
+        const jsonString = JSON.stringify(message) + '\n';
+        const chunk = this.encoder.encode(jsonString);
+        
+        try {
             this.controller.enqueue(chunk);
+        } catch (enqueueError) {
+            // If enqueue fails, the stream is likely closed
+            console.debug('Failed to enqueue chunk, stream may be closed:', enqueueError);
+            this.closeStream();
+            return;
         }
     } catch (error) {
-      console.error('Error writing to stream:', error);
-      this.closeStream();
+        console.error('Error writing to stream:', error);
+        this.closeStream();
     }
   }
 

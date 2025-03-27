@@ -23,15 +23,6 @@ export const ChatMessageList = ({
   onDocumentUpdate
 }: ChatMessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingState]);
 
   const showThinkingIndicator = status === 'in_progress' && 
     !streamingState.message.content && 

@@ -105,9 +105,6 @@ function processMessages(
   let hasUpdates = false;
   const newState = { ...state };
   let tempDocumentContent = newState.document.content;  // Store document content temporarily
-
-  console.log("messages", messages);
-  console.log("state", newState);
   for (const message of messages) {
     try {
       switch (message.type) {
@@ -141,7 +138,7 @@ function processMessages(
             }
           } else {
             // Not currently streaming a document, check for opening tag
-            if (currentContent.includes('<Document')) {
+            if (currentContent.includes('<')) {
               const [prependContent] = currentContent.split('<Document');
               if (prependContent) {
                 newState.message.content += prependContent;

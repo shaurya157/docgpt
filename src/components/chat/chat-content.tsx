@@ -59,14 +59,6 @@ const ChatContent = ({
     editor
   });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, []);
-
   const parseEditorAndGetDocumentAndSelection = (
     newMessage: string
   ): string => {
