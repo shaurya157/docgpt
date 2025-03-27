@@ -19,7 +19,7 @@ export const useDocumentIntegration = ({
   const updateEditorWithNewDocument = useCallback(
     (document: string, documentTitle: string) => {
       return async () => {
-        let deserializedDocument = editor.getApi(MarkdownPlugin).markdown.deserialize(document);
+        const deserializedDocument = editor.getApi(MarkdownPlugin).markdown.deserialize(document);
 
         if (documentId) {
           const { error } = await updateDocumentTitle(documentId, documentTitle);
