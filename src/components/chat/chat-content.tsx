@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useRef, useState } from 'react';
 
 import { getEditorPrompt } from '@udecode/plate-ai/react';
 import { PlateEditor } from '@udecode/plate/react';
