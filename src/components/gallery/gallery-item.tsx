@@ -176,8 +176,8 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
                         Saved template
                     </div>
                 )}
-                <div className="bg-gray-100 p-2">
-                    <p className="text-sm text-center text-gray-600 truncate">{title}</p>
+                <div className="bg-gray-100 p-2 w-48">
+                    <p className="text-sm text-center text-gray-600 truncate w-full">{title}</p>
                 </div>
             </div>
 

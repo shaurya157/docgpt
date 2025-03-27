@@ -6,33 +6,37 @@ import { Button } from '@/components/plate-ui/button';
 export default function PreLoginHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container flex h-16 items-center justify-between px-4 md:px-8">
-        <div className="flex items-center gap-2">
+      <div className="flex h-16 items-center justify-between px-6 md:px-12 max-w-[1920px] mx-auto">
+        {/* Left: Logo */}
+        <div className="flex-shrink-0">
           <Link className="flex items-center space-x-2" href="/">
             <span className="font-bold text-xl">DocGPT</span>
           </Link>
         </div>
         
-        <nav className="hidden md:flex items-center gap-6">
-          <Link className="text-sm font-medium transition-colors hover:text-primary" href="/">
-            Home
-          </Link>
-          <Link className="text-sm font-medium transition-colors hover:text-primary" href="/features">
-            Features
-          </Link>
-          <Link className="text-sm font-medium transition-colors hover:text-primary" href="/pricing">
-            Pricing
-          </Link>
-          <Link className="text-sm font-medium transition-colors hover:text-primary" href="/contact">
-            Contact
-          </Link>
+        {/* Center: Navigation */}
+        <nav className="hidden md:flex items-center justify-center flex-1 mx-8">
+          <div className="flex items-center gap-8">
+            <Link className="text-sm font-medium transition-colors hover:text-primary" href="/">
+              Home
+            </Link>
+            <Link className="text-sm font-medium transition-colors hover:text-primary" href="/features">
+              Features
+            </Link>
+            <Link className="text-sm font-medium transition-colors hover:text-primary" href="/pricing">
+              Pricing
+            </Link>
+            <Link className="text-sm font-medium transition-colors hover:text-primary" href="/contact">
+              Contact
+            </Link>
+          </div>
         </nav>
         
-        <div className="flex items-center gap-4">
+        {/* Right: Auth buttons */}
+        <div className="flex items-center gap-4 flex-shrink-0">
           <SignIn variant="ghost" className="hidden md:flex" displayText="Sign In" />
           <SignIn className="bg-primary text-primary-foreground hover:bg-primary/90" displayText="Try for free" />
           
-          {/* Mobile menu button */}
           <Button variant="ghost" className="md:hidden p-0 w-10 h-10">
             <svg
               className="h-6 w-6"
