@@ -132,6 +132,7 @@ function processMessages(
               newState.document.isStreaming = false;
               // Only set the document content when streaming is complete
               newState.document.content = tempDocumentContent;
+              newState.message.content = tempDocumentContent; // Also update message content
             } else {
               // Still in document, append to temporary content
               tempDocumentContent += currentContent;
@@ -139,12 +140,23 @@ function processMessages(
           } else {
             // Not currently streaming a document, check for opening tag
             if (currentContent.includes('<')) {
-              const [prependContent] = currentContent.split('<Document');
-              if (prependContent) {
-                newState.message.content += prependContent;
+              let parts;
+              if (currentContent.includes('<Document')) {
+                parts = currentContent.split('<Document');
+              } else {
+                parts = currentContent.split('<');
+              }
+              
+              if (parts[0]) {
+                newState.message.content += parts[0];
+              }
+              if (parts[1]) {
+                tempDocumentContent = parts[1];
+                if (!currentContent.includes('<Document')) {
+                  tempDocumentContent = 'Document' + tempDocumentContent;
+                }
               }
               newState.document.isStreaming = true;
-              tempDocumentContent = ''; // Start with empty document content
             } else {
               // Regular content
               newState.message.content += currentContent;
