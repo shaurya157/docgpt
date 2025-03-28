@@ -7,8 +7,8 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SessionProvider } from 'next-auth/react';
 import {Toaster} from "sonner";
 
-import PreLoginFooter from '@/components/landing/pre-login-footer';
-import PreLoginHeader from '@/components/landing/pre-login-header';
+import ConditionalFooter from '@/components/landing/conditional-footer';
+import ConditionalHeader from '@/components/landing/conditional-header';
 import { getUserChats } from '@/firebase/firestore-dao';
 import DocumentProvider from '@/providers/document-provider';
 import {ThemeProvider} from "@/providers/theme-provider";
@@ -29,7 +29,6 @@ export const metadata: Metadata = {
   description: 'AI-powered document editor that combines the precision of Cursor with the collaborative features of Google Docs',
   title: 'DocGPT - Cursor meets Google Docs',
 };
-
 
 export default async function RootLayout({
   children,
@@ -81,9 +80,9 @@ export default async function RootLayout({
                     session?.user ? await getTemplates('docgpt') : null
                   }
               >
-                {!session?.user ? <PreLoginHeader /> : <div></div>}
+                {!session?.user ? <ConditionalHeader /> : <div></div>}
                 <div className="flex-1">{children}</div>
-                {!session?.user && <PreLoginFooter />}
+                {!session?.user && <ConditionalFooter />}
               </DocumentProvider>
             </UserDataContextProvider>
           </SessionProvider>
