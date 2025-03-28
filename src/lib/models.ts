@@ -123,8 +123,6 @@ export class ModelRouter {
     const { model, provider } = this.getProviderAndModel(selectedModel);
     
     try {
-      streamController?.writeReasoning("Starting model generation...\n", provider);
-      
       const result = await (provider === "deepseek" 
         ? this.generateDeepSeek(systemPrompt, userInput, stream ? streamController : undefined)
         : this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined));

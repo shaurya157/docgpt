@@ -141,7 +141,7 @@ const ChatContent = ({
 
   return (
     <motion.div
-      className='flex flex-col items-start p-4 h-full w-1/4 bg-white'
+      className='flex flex-col items-start p-4 h-full w-[500px] bg-white'
       transition={{
         damping: 20,
         duration: 0.2,

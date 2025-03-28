@@ -39,7 +39,6 @@ export class DocumentWorkflow {
       - Always respond in markdown format.
       - Never add triple backticks to the beginning or end of your response unless the user asks for code.
 
-
       ${contextSection}
       ${chatHistorySection}
       ${activeDocumentSection}
@@ -53,7 +52,6 @@ export class DocumentWorkflow {
   }
    
   private async generateNode(state: TAgentState) {
-    state.streamController.writeReasoning("Generating response...\n", "generator");
     const prompt = this.createGenerationPrompt(state);
     
     try {
@@ -84,10 +82,8 @@ export class DocumentWorkflow {
   }
 
   private async retrieveChatHistoryNode(state: TAgentState) {
-    state.streamController.writeSystemMessage("Retrieving chat history...\n");
     try {
       const messages = await getChatHistory(state.chatId);
-      state.streamController.writeReasoning(`Found ${messages.length} previous messages\n`, "chat-history");
       return {
         ...state,
         chatHistory: messages
@@ -103,7 +99,6 @@ export class DocumentWorkflow {
   }
 
   private async retrievePineconeContextNode(state: TAgentState) {
-    state.streamController.writeSystemMessage("Searching for relevant context from uploaded documents...\n");
     const index = this.pinecone.Index(process.env.PINECONE_INDEX || "");
     let results;
 
@@ -118,10 +113,6 @@ export class DocumentWorkflow {
       });
       
       const hits = results.result.hits;
-      state.streamController.writeReasoning(
-        `Found ${hits.length} relevant documents. ${hits.map(h => h.fields["fileName"]).join(", ")}\n`,
-        "context-retrieval"
-      );
       
       return {
         ...state,
@@ -149,7 +140,6 @@ export class DocumentWorkflow {
   }
 
   private async sanitizeQueryNode(state: TAgentState) {
-    state.streamController.writeSystemMessage("Processing query...\n");
     const query = state.query;
     const tagRegex = /<(Document|Block|Selection|Reminder)>([\s\S]*?)<\/\1>/g;
     const result: Record<string, string> = {};
@@ -168,7 +158,6 @@ export class DocumentWorkflow {
         result["Query"] = queryPart;
     }
 
-    state.streamController.writeReasoning("Query processed and sanitized\n", "sanitizer");
     return {
       ...state,
       activeBlock: result["Block"],

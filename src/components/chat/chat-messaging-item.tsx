@@ -15,7 +15,7 @@ interface ChatMessageItemProps {
 }
 
 export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: ChatMessageItemProps) => {
-  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
+  const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
   const content = streamingState ? streamingState.message.content : message.content;
   const reasoning = streamingState ? streamingState.reasoning : message.reasoning;
 

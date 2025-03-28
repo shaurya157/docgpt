@@ -162,7 +162,7 @@ export default function DocumentPage() {
             setStatus={setStatus}
             status={status}
           />
-          <div className='z-10 overflow-y-scroll border bg-background shadow h-full w-1/2'>
+          <div className='z-10 overflow-y-scroll border bg-background shadow h-full w-[816px]'>
             <PlateEditor plateEditor={editor} />
           </div>
           
