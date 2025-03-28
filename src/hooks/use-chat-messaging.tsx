@@ -136,6 +136,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               role: "assistant"
             };
         
+            console.log('finalMessage', finalMessage);
             // Store the assistant's message in Firestore
             await storeMessage(chatId, {
               id: timestamp,
