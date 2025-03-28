@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { storeMessage } from '@/firebase/firestore-dao';
 import { Message, StreamingState } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
+import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface UseChatMessagingProps {
   chatId: string;
@@ -14,6 +15,7 @@ interface UseChatMessagingProps {
 }
 
 export const useChatMessaging = ({ chatId, initialMessages, model, userId }: UseChatMessagingProps) => {
+  const { userChats, setUserChats } = useUserDataContext();
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [status, setStatus] = useState<'awaiting_message' | 'in_progress'>('awaiting_message');
   const [streamingState, setStreamingState] = useState<StreamingState>({
@@ -133,7 +135,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               reasoning: currentState.reasoning,
               role: "assistant"
             };
-            
+        
             // Store the assistant's message in Firestore
             await storeMessage(chatId, {
               id: timestamp,
@@ -147,6 +149,20 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             setMessages(prev => prev.map(m => 
               m.id === 'streaming' ? finalMessage : m
             ));
+
+            // Update userChats with the new message
+            setUserChats(prevChats => {
+              if (!prevChats) return prevChats;
+              return prevChats.map(chat => {
+                if (chat.id === chatId) {
+                  return {
+                    ...chat,
+                    messages: [...(chat.messages || []), finalMessage]
+                  };
+                }
+                return chat;
+              });
+            });
             
             // Reset streaming state
             setStreamingState({
@@ -197,5 +213,5 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
     setStatus,
     status,
     streamingState
-  };
+ };
 }; 
