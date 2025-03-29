@@ -2,7 +2,6 @@ import { Dispatch, SetStateAction } from 'react';
 
 import Image from 'next/image';
 
-import UploadIcon from '../../assets/icons/arrowUp.svg';
 import AttachmentIcon from '../../assets/icons/attachment.svg';
 
 interface ChatInputProps {

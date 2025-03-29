@@ -3,9 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { storeMessage } from '@/firebase/firestore-dao';
+import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message, StreamingState } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
-import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface UseChatMessagingProps {
   chatId: string;
@@ -15,7 +15,7 @@ interface UseChatMessagingProps {
 }
 
 export const useChatMessaging = ({ chatId, initialMessages, model, userId }: UseChatMessagingProps) => {
-  const { userChats, setUserChats } = useUserDataContext();
+  const { setUserChats, userChats } = useUserDataContext();
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [status, setStatus] = useState<'awaiting_message' | 'in_progress'>('awaiting_message');
   const [streamingState, setStreamingState] = useState<StreamingState>({
@@ -205,7 +205,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       // Remove the streaming message on error
       setMessages(prev => prev.filter(m => m.id !== 'streaming'));
     }
-  }, [chatId, userId, model]);
+  }, [chatId, userId, model, setUserChats]);
 
   return {
     addMessage,

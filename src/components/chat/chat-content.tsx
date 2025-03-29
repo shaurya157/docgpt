@@ -5,7 +5,6 @@ import { PlateEditor } from '@udecode/plate/react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 
-import { ChatInput } from '@/components/chat/chat-input';
 import { ChatMessageList } from '@/components/chat/chat-messaging-list';
 import { ChatSettings } from '@/components/chat/chat-settings';
 import { FileAttachmentList } from '@/components/chat/file-attachment-list';
@@ -300,9 +299,9 @@ const ChatContent = ({
       ref={chatContainerRef}
       className="flex flex-col h-[calc(100vh-85px)] bg-white border-l border-gray-200 overflow-hidden fixed top-[85px] right-0 group"
       style={{
-        width: `${paneWidth}px`,
         minWidth: '280px',
-        transition: isDragging ? 'none' : 'width 0.1s ease-out'
+        transition: isDragging ? 'none' : 'width 0.1s ease-out',
+        width: `${paneWidth}px`
       }}
       onClick={handleChatFocus}
     >
@@ -379,7 +378,7 @@ const ChatContent = ({
                 className="cursor-pointer rounded-lg p-2 hover:bg-gray-200"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                <svg className="text-gray-500" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
                 </svg>
               </button>
