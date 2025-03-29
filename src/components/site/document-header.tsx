@@ -184,7 +184,7 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
 
   return (
     <>
-      <header className="flex h-12 items-center border-b bg-white px-4 justify-between">
+      <header className="flex h-18 items-center border-b bg-white px-4 justify-between">
         <div className="flex items-center">
           <Image 
             className="cursor-pointer w-7 h-7" 

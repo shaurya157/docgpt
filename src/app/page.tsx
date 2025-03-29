@@ -16,10 +16,6 @@ export default function Landing() {
   const [email, setEmail] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
 
-  if (session?.user) {
-    return redirect('/home');
-  }
-
   // Add scroll event listener
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +24,10 @@ export default function Landing() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  if (session?.user) {
+    return redirect('/home');
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-b from-blue-50 to-white font-sans">

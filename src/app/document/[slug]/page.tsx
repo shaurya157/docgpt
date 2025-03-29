@@ -168,7 +168,7 @@ export default function DocumentPage() {
             <div className="flex items-start justify-center">
               <div 
                 id="document-editor"
-                className='z-10 border bg-background shadow h-full 
+                className='z-10 border bg-background shadow h-full mt-8 
                         w-[816px] 
                         sm:w-[90%] 
                         md:w-[700px] 
