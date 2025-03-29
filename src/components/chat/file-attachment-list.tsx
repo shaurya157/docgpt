@@ -26,7 +26,7 @@ export const FileAttachmentList = ({ attachments, onRemove }: FileAttachmentList
           {attachment.status === 'uploading' ? (
             <Icons.spinner className="size-5 animate-spin text-black" />
           ) : null}
-          <span className="text-gray-700">{attachment.fileName}</span>
+          <span className="text-gray-700 text-xs">{attachment.fileName}</span>
           <button
             className="text-gray-500 hover:text-gray-700"
             onClick={() => onRemove(index)}

@@ -36,7 +36,7 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
           >
             <div className="flex items-center">
               <FileText className='h-full w-auto'/>
-              <div className="mx-1 truncate max-w-[200px]">{documentTitle}</div>
+              <div className="mx-1 truncate max-w-[200px] text-sm">{documentTitle}</div>
             </div>
           </Button>
           <div className="whitespace-normal">{appending}</div>
@@ -45,12 +45,12 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
     }
 
     return (
-      <div className="whitespace-pre-wrap">
-        <Markdown className="react-markdown">{content}</Markdown>
+      <div className="whitespace-normal break-words overflow-hidden">
+        <Markdown className="react-markdown text-sm">{content}</Markdown>
         {message.fileNames && message.fileNames.map((fileName) => (
           <div key={fileName} className="flex items-center gap-2">
-            <FileText className="size-5" />
-            <span>{fileName}</span>
+            <FileText className="size-4" />
+            <span className="truncate text-sm">{fileName}</span>
           </div>
         ))}
       </div>
@@ -59,13 +59,13 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
 
   return (
     <div
-      className={`flex flex-col text-sm ${
+      className={`flex flex-col text-sm w-full ${
         message.role === 'user' ? 'items-end' : 'items-start'
       }`}
     >
       <div
-        className={`rounded-xl px-4 py-2 ${
-          message.role === 'user' ? 'bg-gray-200 text-black' : ''
+        className={`px-3 py-1.5 w-full break-words ${
+          message.role === 'user' ? 'bg-gray-200 text-black rounded-[5px]' : 'rounded-xl'
         }`}
       >
         {renderMessageContent()}
@@ -77,7 +77,7 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
               onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
             >
               <span>View Reasoning</span>
-              <Icons.chevronDown className={`size-4 transform transition-transform ${isReasoningExpanded ? 'rotate-180' : ''}`} />
+              <Icons.chevronDown className={`size-3 transform transition-transform ${isReasoningExpanded ? 'rotate-180' : ''}`} />
             </Button>
             {isReasoningExpanded && (
               <div className="space-y-2 rounded-md bg-gray-50 p-2 text-sm text-gray-500">

@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
+import Image from 'next/image';
 import { ChevronRight, Play, ArrowRight, Star, CheckCircle2, Zap } from "lucide-react";
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { Button } from "@/components/plate-ui/button";
+import MainUIImage from '@/assets/images/MainUI1.png';
 
 export default function Landing() {
   const { data: session } = useSession();
@@ -56,14 +57,14 @@ export default function Landing() {
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
             <div className="absolute top-[10%] right-[5%] w-[300px] h-[300px] rounded-full bg-gradient-to-r from-purple-300/20 to-pink-300/20 blur-3xl"></div>
             <div className="absolute bottom-[10%] left-[5%] w-[250px] h-[250px] rounded-full bg-gradient-to-r from-orange-300/20 to-pink-300/20 blur-3xl"></div>
-          </div>
+              </div>
           <div className="relative max-w-[1066px] mx-auto px-4 z-10">
             <div className="flex flex-col items-center">
               {/* Text content */}
               <div className="w-full text-center md:text-left mb-12">
                 <h1 className="text-[36px] md:text-[56px] lg:text-[64px] font-bold tracking-tight text-[#1d1d1f] mb-4 md:mb-6 leading-[1.1]">
                   Specialized AI to write your business documents
-                </h1>
+              </h1>
                 <p className="text-[17px] md:text-[21px] text-[#494949] leading-[1.47] font-normal mb-4 mx-auto md:mx-0 md:max-w-[80%]">
                   DocGPT is a document editor that lets you create polished and contextual business documents by prompting our AI writing agents with content from your everyday business tools. 
                 </p>
@@ -88,20 +89,22 @@ export default function Landing() {
               <div className="w-full max-w-[1200px] mx-auto">
                 <div className="relative w-full h-[400px] md:h-[500px]">
                   <div className="absolute top-0 left-0 right-0 bottom-0 bg-white/60 backdrop-blur-sm rounded-[12px] border border-white/30"></div>
-                  <img 
-                    src="https://placehold.co/1200x675/f5f5f7/e0e0e0?text=Document+Editor+Interface" 
+                  <Image 
+                    src={MainUIImage} 
                     alt="DocGPT document editor interface" 
                     className="w-full h-full object-contain md:object-cover rounded-[12px] border border-white/30 shadow-2xl"
+                    fill
+                    priority
                   />
                   {/* Floating gradient elements for visual interest */}
                   <div className="absolute -top-6 -left-6 w-48 h-48 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 blur-3xl opacity-20"></div>
                   <div className="absolute -bottom-10 right-24 w-64 h-64 rounded-full bg-gradient-to-r from-orange-400 to-pink-400 blur-3xl opacity-20"></div>
                 </div>
-              </div>
             </div>
           </div>
-        </section>
-
+        </div>
+      </section>
+      
         {/* Logos section */}
         <section className="w-full py-10 bg-white/80 backdrop-blur-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
@@ -133,10 +136,10 @@ export default function Landing() {
                   <path d="M60,7.4c-6,0-10.9,4.9-10.9,10.9c0,6,4.9,10.9,10.9,10.9c6,0,10.9-4.9,10.9-10.9C70.9,12.3,66,7.4,60,7.4z M77.9,18.2c0,9.9-8,17.9-17.9,17.9c-9.9,0-17.9-8-17.9-17.9c0-9.9,8-17.9,17.9-17.9C69.9,0.3,77.9,8.3,77.9,18.2z M41.9,25.9c-2.2,0-3.7-1.3-3.7-3.4s1.4-3.4,3.7-3.4c2.3,0,3.8,1.3,3.8,3.4S44.2,25.9,41.9,25.9z M78.2,25.9c-2.2,0-3.7-1.3-3.7-3.4s1.4-3.4,3.7-3.4c2.3,0,3.8,1.3,3.8,3.4S80.5,25.9,78.2,25.9z" fill="#1877F2"/>
                 </svg>
               </div>
-            </div>
           </div>
-        </section>
-
+        </div>
+      </section>
+      
         {/* Feature Cards - Side-by-side layout */}
         <section className="w-full py-[40px] md:py-[60px] bg-gradient-to-b from-white to-blue-50 relative">
           <div className="absolute top-[20%] right-[5%] w-[300px] h-[300px] rounded-full bg-gradient-to-r from-purple-300/10 to-pink-300/10 blur-3xl"></div>
@@ -146,10 +149,10 @@ export default function Landing() {
               <div className="w-full md:w-1/2 md:pr-8">
                 <p className="text-blue-600 font-medium text-sm mb-3">Document creation</p>
                 <h2 className="text-[28px] md:text-[36px] font-bold text-[#1d1d1f] mb-4 leading-[1.1]">
-                  Rapid document creation through prompting
-                </h2>
+                  Use prompts to generate document drafts in seconds
+            </h2>
                 <p className="text-[16px] md:text-[18px] text-[#494949] leading-[1.5] max-w-[550px]">
-                  Create polished business documents in minutes instead of hours. Simply describe what you need, and DocGPT's AI will generate a complete, professionally structured document ready for review and sharing.
+                  Simply describe what you need, and DocGPT's AI writing agents will generate a complete, professionally structured document ready for review.
                 </p>
               </div>
               {/* Image content */}
@@ -174,10 +177,10 @@ export default function Landing() {
               <div className="w-full md:w-1/2 md:pr-8">
                 <p className="text-purple-600 font-medium text-sm mb-3">AI writing</p>
                 <h2 className="text-[28px] md:text-[36px] font-bold text-[#1d1d1f] mb-4 leading-[1.1]">
-                  Human-quality writing with specialized AI agents
+                  Dcuments that read like they were written by a human
                 </h2>
                 <p className="text-[16px] md:text-[18px] text-[#494949] leading-[1.5] max-w-[550px]">
-                  Our AI writing agents ensure your documents always read like they were written by a human. Whether it's formal business proposals or creative content, DocGPT adapts to your desired tone and style seamlessly.
+                  Our writing agents follow a human-like thought process, making sure to avoid excess words, jargon, and hallucinations, so your documents read like they were written by an expert communicator.
                 </p>
               </div>
               {/* Image content */}
@@ -190,10 +193,10 @@ export default function Landing() {
                   />
                 </div>
               </div>
-            </div>
           </div>
-        </section>
-        
+        </div>
+      </section>
+      
         {/* Third feature card */}
         <section className="w-full py-[40px] md:py-[60px] bg-white relative">
           <div className="absolute top-[30%] left-[5%] w-[250px] h-[250px] rounded-full bg-gradient-to-r from-orange-300/10 to-pink-300/10 blur-3xl"></div>
@@ -204,7 +207,7 @@ export default function Landing() {
                 <p className="text-pink-600 font-medium text-sm mb-3">Integrations</p>
                 <h2 className="text-[28px] md:text-[36px] font-bold text-[#1d1d1f] mb-4 leading-[1.1]">
                   Seamless integration with your everyday tools
-                </h2>
+            </h2>
                 <p className="text-[16px] md:text-[18px] text-[#494949] leading-[1.5] max-w-[550px]">
                   DocGPT works with the tools you already use. Simply paste URLs from Google Docs, Slides, Sheets, or Slack conversations to add them as context for your document. No need to switch between multiple applications or platforms.
                 </p>
@@ -246,87 +249,12 @@ export default function Landing() {
                     alt="Professional templates gallery" 
                     className="w-full h-[250px] md:h-[300px] object-cover rounded-xl"
                   />
-                </div>
               </div>
             </div>
           </div>
-        </section>
-
-        {/* Testimonials section */}
-        <section className="w-full py-[50px] md:py-[80px] px-4 bg-gradient-to-b from-blue-50 to-white relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-            <div className="absolute top-[10%] right-[15%] w-[300px] h-[300px] rounded-full bg-gradient-to-r from-blue-300/20 to-purple-300/20 blur-3xl"></div>
-            <div className="absolute bottom-[20%] left-[10%] w-[250px] h-[250px] rounded-full bg-gradient-to-r from-pink-300/20 to-orange-300/20 blur-3xl"></div>
-          </div>
-          <div className="max-w-[1066px] mx-auto relative z-10">
-            <h2 className="text-[28px] md:text-[32px] font-bold text-[#1d1d1f] mb-[20px] text-center">
-              Loved by businesses worldwide
-            </h2>
-            <p className="text-[17px] md:text-[19px] text-[#494949] mb-[40px] text-center max-w-[700px] mx-auto">
-              Join thousands of companies that trust DocGPT to create professional documents in minutes.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-[20px]">
-              {/* Testimonial 1 */}
-              <div className="bg-white/80 backdrop-blur-sm p-[30px] rounded-[18px] shadow-sm border border-white/30">
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-blue-500 text-blue-500" />
-                  ))}
-                </div>
-                <p className="text-[15px] text-[#494949] mb-4 italic">
-                  "DocGPT has transformed how our team creates documents. What used to take hours now takes minutes."
-                </p>
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-[#f2f2f2] mr-3"></div>
-                  <div>
-                    <p className="text-[15px] font-medium">Sarah Johnson</p>
-                    <p className="text-[13px] text-[#86868b]">Marketing Director, Acme Inc.</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Testimonial 2 */}
-              <div className="bg-white/80 backdrop-blur-sm p-[30px] rounded-[18px] shadow-sm border border-white/30">
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-purple-500 text-purple-500" />
-                  ))}
-                </div>
-                <p className="text-[15px] text-[#494949] mb-4 italic">
-                  "The templates are incredible. Professional documents with just a few clicks. Worth every penny."
-                </p>
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-[#f2f2f2] mr-3"></div>
-                  <div>
-                    <p className="text-[15px] font-medium">Michael Chen</p>
-                    <p className="text-[13px] text-[#86868b]">CEO, StartupXYZ</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Testimonial 3 */}
-              <div className="bg-white/80 backdrop-blur-sm p-[30px] rounded-[18px] shadow-sm border border-white/30">
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-pink-500 text-pink-500" />
-                  ))}
-                </div>
-                <p className="text-[15px] text-[#494949] mb-4 italic">
-                  "The AI capabilities have revolutionized our content creation. Now our team can focus on strategy instead of writing."
-                </p>
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-[#f2f2f2] mr-3"></div>
-                  <div>
-                    <p className="text-[15px] font-medium">Alex Rodriguez</p>
-                    <p className="text-[13px] text-[#86868b]">Content Manager, TechCorp</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
+        </div>
+      </section>
+      
         {/* Final CTA section */}
         <section className="w-full py-[60px] md:py-[100px] px-4 bg-gradient-to-b from-white to-blue-50 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
@@ -354,9 +282,9 @@ export default function Landing() {
             {/* Trust signals */}
             <div className="mt-8 text-sm text-[#86868b]">
               <p>No credit card required • 14-day free trial • Cancel anytime</p>
-            </div>
           </div>
-        </section>
+        </div>
+      </section>
       </main>
       
       {/* Apple-style Footer */}

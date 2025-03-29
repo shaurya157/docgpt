@@ -32,7 +32,7 @@ export const ChatMessageList = ({
 
   return (
     <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">
-      <div className="mx-auto w-full space-y-6">
+      <div className="mx-auto w-full space-y-2">
         {messages.map((message) => (
           <ChatMessageItem
             key={message.id}
@@ -47,7 +47,7 @@ export const ChatMessageList = ({
             <div className="rounded-xl px-4 py-2 bg-gray-100">
               <div className="flex items-center space-x-2">
                 <Icons.spinner className="size-4 animate-spin" />
-                <span className="flex items-center">Thinking<DotAnimation /></span>
+                <span className="flex items-center text-xs">Thinking<DotAnimation /></span>
               </div>
             </div>
           </div>
@@ -57,7 +57,7 @@ export const ChatMessageList = ({
           <div className="flex justify-start">
             <Button variant="roundedClear" className="ml-2" disabled>
               <Icons.spinner className="size-5 animate-spin text-black" />
-              <p>Creating document...</p>
+              <p className="text-xs">Creating document...</p>
             </Button>
           </div>
         )}
@@ -66,7 +66,7 @@ export const ChatMessageList = ({
           <div className="flex justify-start">
             <Button variant="roundedClear" className="ml-2" disabled>
               <Icons.spinner className="size-5 animate-spin text-black" />
-              <p>Uploading files...</p>
+              <p className="text-xs">Uploading files...</p>
             </Button>
           </div>
         )}

@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import { getEditorPrompt } from '@udecode/plate-ai/react';
 import { PlateEditor } from '@udecode/plate/react';
@@ -39,9 +39,18 @@ const ChatContent = ({
   const userDataContext = useUserDataContext();
   const { setUserChats } = userDataContext;
   const [inputValue, setInputValue] = useState('');
+  const [isChatActive, setIsChatActive] = useState(false);
   const { selectedModel } = useChatSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Add state and refs for draggable width functionality
+  const [paneWidth, setPaneWidth] = useState(450);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragHandleRef = useRef<HTMLDivElement>(null);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
 
   const { attachments, removeAttachment, updateAttachments, uploadFiles, uploadInProgress } = 
     useFileAttachments(session?.user?.email || '');
@@ -52,6 +61,75 @@ const ChatContent = ({
     model: selectedModel,
     userId: session?.user?.email || ''
   });
+
+  // Add event handlers for draggable width
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = paneWidth;
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleDragMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      // Calculate new width by subtracting the mouse movement from the starting width
+      // Since the chat pane is on the right, we reverse the direction
+      const newWidth = startWidthRef.current - (e.clientX - startXRef.current);
+      
+      // Calculate the document area width
+      const windowWidth = window.innerWidth;
+      const documentAreaWidth = document.querySelector('div[class*="overflow-y-scroll border bg-background shadow"]')?.clientWidth || 816;
+      
+      // Calculate minimum left space needed for document (with some padding)
+      const minDocumentLeftSpace = documentAreaWidth + 50; // 50px extra padding
+      
+      // Max chat width = total window width - document minimum space needed
+      const maxChatWidth = windowWidth - minDocumentLeftSpace;
+      
+      // Apply constraints: min 280px, max based on available space
+      const constrainedWidth = Math.max(280, Math.min(maxChatWidth, newWidth));
+      setPaneWidth(constrainedWidth);
+    };
+
+    const handleDragEnd = () => {
+      setIsDragging(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleDragMove);
+      document.addEventListener('mouseup', handleDragEnd);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleDragMove);
+      document.removeEventListener('mouseup', handleDragEnd);
+    };
+  }, [isDragging]);
+
+  // Window resize handler to adjust pane width if needed
+  useEffect(() => {
+    const handleResize = () => {
+      const windowWidth = window.innerWidth;
+      const documentAreaWidth = document.querySelector('div[class*="overflow-y-scroll border bg-background shadow"]')?.clientWidth || 816;
+      const minDocumentLeftSpace = documentAreaWidth + 50;
+      const maxChatWidth = windowWidth - minDocumentLeftSpace;
+      
+      if (paneWidth > maxChatWidth) {
+        setPaneWidth(maxChatWidth);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [paneWidth]);
 
   const { updateEditorWithNewDocument } = useDocumentIntegration({
     changeEditorContent,
@@ -74,7 +152,7 @@ const ChatContent = ({
     return editorPrompt!;
   };
 
-  const handleSendMessage =  (input?: string) => {
+  const handleSendMessage = (input?: string) => {
     return async () => {
       setStatus('in_progress');
       const item = activeUserDocument
@@ -103,6 +181,11 @@ const ChatContent = ({
 
         const message = await addMessage(usedInput.trim(), attachments.map(att => att.fileName));
         setInputValue('');
+        
+        // Reset textarea height after sending message
+        if (textareaRef.current) {
+          textareaRef.current.style.height = '36px';
+        }
 
         const serializedEditorValue = parseEditorAndGetDocumentAndSelection(message.content);
         await sendMessage(serializedEditorValue);
@@ -111,7 +194,6 @@ const ChatContent = ({
   };
 
   const handleKeyPress = (e) => {
-    adjustTextAreaHeight()
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage()().then(
@@ -128,8 +210,19 @@ const ChatContent = ({
 
   const adjustTextAreaHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+      const minHeight = 36; // Minimum height in pixels
+      const textarea = textareaRef.current;
+      
+      // Reset to default height first
+      textarea.style.height = `${minHeight}px`;
+      
+      // Only adjust if content actually overflows
+      const scrollHeight = textarea.scrollHeight;
+      const isOverflowing = scrollHeight > minHeight;
+      
+      if (isOverflowing) {
+        textarea.style.height = `${scrollHeight}px`;
+      }
     }
   };
 
@@ -139,18 +232,54 @@ const ChatContent = ({
     updateAttachments(e.target.files);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatContainerRef.current && !chatContainerRef.current.contains(event.target as Node)) {
+        setIsChatActive(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleChatFocus = () => {
+    setIsChatActive(true);
+  };
+
   return (
     <motion.div
-      className='flex flex-col items-start p-4 h-full w-[500px] bg-white'
-      transition={{
-        damping: 20,
-        duration: 0.2,
-        stiffness: 100,
-        type: 'spring',
+      ref={chatContainerRef}
+      className="flex flex-col h-[calc(100vh-120px)] bg-white border-l border-gray-200 overflow-hidden fixed top-[120px] right-0 group"
+      style={{
+        width: `${paneWidth}px`,
+        minWidth: '280px',
+        transition: isDragging ? 'none' : 'width 0.1s ease-out'
       }}
+      onClick={handleChatFocus}
     >
-      <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap mt-12">
-        <div className="mx-auto w-full space-y-6">
+      {/* Drag handle */}
+      <div 
+        ref={dragHandleRef}
+        className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-gray-200 hover:opacity-40 z-50 flex items-center justify-center"
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          handleDragStart(e);
+        }}
+      >
+        <div className="h-20 w-[3px] bg-gray-300 rounded-full opacity-0 group-hover:opacity-100" />
+      </div>
+      
+      <div className="w-full py-2 px-3 flex justify-between items-center border-b border-gray-200 bg-gray-50">
+        <h2 className="font-medium text-sm">Chat</h2>
+        <button className="text-gray-500 hover:bg-gray-200 rounded w-6 h-6 flex items-center justify-center">
+          —
+        </button>
+      </div>
+      <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap px-2 py-2">
+        <div className="w-full space-y-2">
           <ChatMessageList
             onDocumentUpdate={updateEditorWithNewDocument}
             messages={messages}
@@ -161,22 +290,67 @@ const ChatContent = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <div className="w-full rounded-2xl border border-gray-300 bg-white p-2">
-        <FileAttachmentList
-          onRemove={removeAttachment}
-          attachments={attachments}
-        />
-        <ChatInput
-          handleKeyPress={handleKeyPress}
-          handleSendMessage={handleSendMessage}
-          fileInputRef={fileInputRef}
-          inputValue={inputValue}
-          setInputValue={setInputValue}
-          status={status}
-          textareaRef={textareaRef}
-          updateAttachments={handleUpdateAttachments}
-        />
-        <ChatSettings />
+      <div className="w-full border-t border-gray-200 bg-white pt-0.5 pb-1 px-2">
+        <div className="flex flex-col gap-0">
+          <div className="mt-0.5 mb-0">
+            <FileAttachmentList
+              onRemove={removeAttachment}
+              attachments={attachments}
+            />
+            <textarea
+              ref={textareaRef}
+              className="resize-none w-full overflow-auto py-2 px-2 text-gray-600 text-sm focus:outline-none rounded-lg"
+              style={{ height: "32px" }}
+              disabled={status !== 'awaiting_message'}
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                // Only check for overflow if enough characters
+                if (e.target.value.length > 70) {
+                  adjustTextAreaHeight();
+                } else if (e.target.value.length < 10) {
+                  // Reset to default height when text is short
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = "32px";
+                  }
+                }
+              }}
+              onKeyDown={handleKeyPress}
+              placeholder="Message DocGPT"
+            />
+            <input
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleUpdateAttachments}
+              type="file"
+              multiple
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <ChatSettings />
+            <div className="flex items-center gap-2">
+              <button
+                className="cursor-pointer rounded-lg p-2 hover:bg-gray-200"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                </svg>
+              </button>
+              <button
+                className={`rounded-md px-3 py-1 ${
+                  inputValue
+                    ? 'cursor-pointer bg-black text-white'
+                    : 'cursor-not-allowed bg-gray-200 text-gray-500'
+                } text-xs`}
+                disabled={!inputValue}
+                onClick={handleSendMessage()}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
