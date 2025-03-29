@@ -106,7 +106,7 @@ export default function DocumentPage() {
       document: initialContent || [{
         id: '1',
         children: [{ text: '' }],
-        type: 'h1',
+        type: 'p',
       }],
       documentName: 'Untitled document',
       documentOwnerId: session!.user!.email!
@@ -154,32 +154,33 @@ export default function DocumentPage() {
     <ChatSettingsProvider>
       <div className="flex h-screen flex-col">
         <DocumentHeader editor={editor} />
-        <div className='relative flex flex-1 overflow-hidden bg-gray-200'
-             style={{ 
-               justifyContent: 'center' 
-             }}>
-          {/* Responsive layout container that controls the gray space and content width */}
-          <div className="flex justify-center w-full max-w-[100vw]">
-            {/* Left gray space - shrinks first on smaller screens */}
-            <div className="hidden sm:block flex-shrink-1 w-[10%] min-w-0 md:min-w-[50px] lg:min-w-[100px]"></div>
-            
-            {/* Content area - maintains width until gray space is minimized */}
-            <div className="flex flex-grow justify-center max-w-full">
-              <div className='z-10 overflow-y-scroll border bg-background shadow h-full 
-                          w-[816px] 
-                          sm:w-[90%] 
-                          md:w-[700px] 
-                          lg:w-[816px]'
-                  style={{
-                      maxWidth: 'min(816px, 65vw)',
-                      minWidth: 'min(500px, 65vw)'
-                  }}>
+        <div className='relative flex flex-1 overflow-hidden bg-gray-200'>
+          {/* Document container with dynamic positioning */}
+          <div 
+            id="document-container"
+            className="flex w-full h-full justify-center"
+            style={{
+              paddingRight: '0px', // Will be dynamically adjusted by chat pane width
+              transition: 'padding-right 0.1s ease-out'
+            }}
+          >
+            {/* Document editor area */}
+            <div className="flex items-start justify-center">
+              <div 
+                id="document-editor"
+                className='z-10 overflow-y-scroll border bg-background shadow h-full 
+                        w-[816px] 
+                        sm:w-[90%] 
+                        md:w-[700px] 
+                        lg:w-[816px]'
+                style={{
+                    maxWidth: 'min(816px, 65vw)',
+                    minWidth: 'min(500px, 65vw)'
+                }}
+              >
                 <PlateEditor plateEditor={editor} />
               </div>
             </div>
-            
-            {/* Right area where chat is positioned (actual chat is fixed) */}
-            <div className="hidden sm:block flex-shrink-1 w-[350px]"></div>
           </div>
           
           <ChatContent

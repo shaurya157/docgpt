@@ -51,6 +51,8 @@ const ChatContent = ({
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
+  const documentContainerRef = useRef<HTMLElement | null>(null);
+  const documentEditorRef = useRef<HTMLElement | null>(null);
 
   const { attachments, removeAttachment, updateAttachments, uploadFiles, uploadInProgress } = 
     useFileAttachments(session?.user?.email || '');
@@ -61,6 +63,33 @@ const ChatContent = ({
     model: selectedModel,
     userId: session?.user?.email || ''
   });
+
+  // Get DOM references on initial render
+  useEffect(() => {
+    documentContainerRef.current = document.getElementById('document-container') as HTMLElement;
+    documentEditorRef.current = document.getElementById('document-editor') as HTMLElement;
+  }, []);
+
+  // Function to calculate maximum chat pane width
+  const calculateMaxChatWidth = (): number => {
+    const windowWidth = window.innerWidth;
+    const documentWidth = documentEditorRef.current?.offsetWidth || 816;
+    
+    // Calculate minimum x-position for document (how far left it can go)
+    // This ensures document doesn't get pushed off screen
+    const minLeftMargin = 20; // Minimum left margin for document
+    
+    // Calculate maximum chat width
+    // Window width - (document width + minimum left margin)
+    return windowWidth - (documentWidth + minLeftMargin);
+  };
+
+  // Calculate padding needed to keep document centered
+  const calculateDocumentPadding = (chatWidth: number): number => {
+    // Only need right padding equal to chat width to keep document centered
+    // This will push document left by half of chat width
+    return chatWidth;
+  };
 
   // Add event handlers for draggable width
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -79,19 +108,17 @@ const ChatContent = ({
       // Since the chat pane is on the right, we reverse the direction
       const newWidth = startWidthRef.current - (e.clientX - startXRef.current);
       
-      // Calculate the document area width
-      const windowWidth = window.innerWidth;
-      const documentAreaWidth = document.querySelector('div[class*="overflow-y-scroll border bg-background shadow"]')?.clientWidth || 816;
-      
-      // Calculate minimum left space needed for document (with some padding)
-      const minDocumentLeftSpace = documentAreaWidth + 50; // 50px extra padding
-      
-      // Max chat width = total window width - document minimum space needed
-      const maxChatWidth = windowWidth - minDocumentLeftSpace;
+      // Calculate maximum allowed width
+      const maxChatWidth = calculateMaxChatWidth();
       
       // Apply constraints: min 280px, max based on available space
       const constrainedWidth = Math.max(280, Math.min(maxChatWidth, newWidth));
       setPaneWidth(constrainedWidth);
+      
+      // Update document container padding to keep document centered
+      if (documentContainerRef.current) {
+        documentContainerRef.current.style.paddingRight = `${calculateDocumentPadding(constrainedWidth)}px`;
+      }
     };
 
     const handleDragEnd = () => {
@@ -114,13 +141,24 @@ const ChatContent = ({
   // Window resize handler to adjust pane width if needed
   useEffect(() => {
     const handleResize = () => {
-      const windowWidth = window.innerWidth;
-      const documentAreaWidth = document.querySelector('div[class*="overflow-y-scroll border bg-background shadow"]')?.clientWidth || 816;
-      const minDocumentLeftSpace = documentAreaWidth + 50;
-      const maxChatWidth = windowWidth - minDocumentLeftSpace;
+      const maxChatWidth = calculateMaxChatWidth();
       
+      // If current pane width exceeds max allowed, reduce it
       if (paneWidth > maxChatWidth) {
         setPaneWidth(maxChatWidth);
+      }
+      
+      // Always update document padding to ensure proper centering
+      if (documentContainerRef.current) {
+        documentContainerRef.current.style.paddingRight = `${calculateDocumentPadding(paneWidth)}px`;
+        documentContainerRef.current.style.transition = 'none'; // Disable transition during resize
+        
+        // Re-enable transition after resize
+        setTimeout(() => {
+          if (documentContainerRef.current) {
+            documentContainerRef.current.style.transition = 'padding-right 0.1s ease-out';
+          }
+        }, 100);
       }
     };
     
@@ -130,6 +168,14 @@ const ChatContent = ({
       window.removeEventListener('resize', handleResize);
     };
   }, [paneWidth]);
+  
+  // Initial setup and changes to pane width
+  useEffect(() => {
+    // Initialize document padding based on chat pane width
+    if (documentContainerRef.current && !isDragging) {
+      documentContainerRef.current.style.paddingRight = `${calculateDocumentPadding(paneWidth)}px`;
+    }
+  }, [paneWidth, isDragging]);
 
   const { updateEditorWithNewDocument } = useDocumentIntegration({
     changeEditorContent,
@@ -252,7 +298,7 @@ const ChatContent = ({
   return (
     <motion.div
       ref={chatContainerRef}
-      className="flex flex-col h-[calc(100vh-120px)] bg-white border-l border-gray-200 overflow-hidden fixed top-[120px] right-0 group"
+      className="flex flex-col h-[calc(100vh-85px)] bg-white border-l border-gray-200 overflow-hidden fixed top-[85px] right-0 group"
       style={{
         width: `${paneWidth}px`,
         minWidth: '280px',

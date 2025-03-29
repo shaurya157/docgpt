@@ -95,7 +95,7 @@ export function SaveButton() {
     return (
       <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
-          <Button variant="roundedClear" className="p-x-10 w-fit mr-4" type="submit">Save Template</Button>
+          <Button variant="roundedClear" className="px-2 w-fit mr-2 text-sm" type="submit">Save Template</Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
@@ -122,7 +122,7 @@ export function SaveButton() {
     return (
       <DropdownMenu modal={false} {...openState}>
         <DropdownMenuTrigger asChild>
-          <Button variant="roundedClear" className=" w-36" type="submit">Save</Button>
+          <Button variant="roundedClear" className="px-2 w-20 text-sm h-7" type="submit">Save</Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent

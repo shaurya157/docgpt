@@ -46,9 +46,9 @@ export const withPlaceholders = (components: any) =>
         maxLevel: 1,
       },
     },
-    {
-      key: HEADING_KEYS.h1,
-      hideOnBlur: false,
-      placeholder: 'Untitled',
-    },
+    // {
+    //   key: HEADING_KEYS.h1,
+    //   hideOnBlur: false,
+    //   placeholder: 'Untitled',
+    // },
   ]);

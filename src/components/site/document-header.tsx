@@ -61,7 +61,7 @@ const EditableDocumentName = () => {
       {isEditing ? (
         <input
           ref={inputRef}
-          className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none px-2 py-1 w-48 text-xl"
+          className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none px-2 py-1 w-48 text-lg"
           value={name}
           onBlur={handleNameChange}
           onChange={(e) => setName(e.target.value)}
@@ -78,12 +78,12 @@ const EditableDocumentName = () => {
       ) : (
         <div className="flex items-center">
           <h1 
-            className="text-xl px-3 font-medium cursor-pointer hover:border-b-2 hover:border-black"
+            className="text-lg font-medium cursor-pointer hover:border-b hover:border-black"
             onClick={() => setIsEditing(true)}
           >
               {name}
           </h1>
-          <PenIcon className="w-4 h-4 ml-2" />
+          <PenIcon className="w-3.5 h-3.5 ml-1.5" />
         </div>
       )}
     </div>
@@ -184,12 +184,19 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
 
   return (
     <>
-      <header className="flex h-18 items-center border-b bg-white px-4 justify-between">
+      <header className="flex h-12 items-center border-b bg-white px-4 justify-between">
         <div className="flex items-center">
-          <Image className="cursor-pointer w-10 h-10" onClick={() => router.push("/home")} alt="Home" src={DocGPTIcon} />
-          <div className="flex flex-col ml-4">
+          <Image 
+            className="cursor-pointer w-7 h-7" 
+            onClick={() => router.push("/home")} 
+            alt="Home" 
+            src={DocGPTIcon} 
+          />
+          
+          <div className="flex items-center ml-3">
             <EditableDocumentName />
-            <div ref={dropdownRef} className="flex gap-2 mt-1">
+          
+            <div ref={dropdownRef} className="flex ml-4">
               <div className="relative">
                 <button
                   className="text-sm px-3 hover:bg-[#ECECEC] rounded cursor-pointer text-gray-600"
