@@ -27,7 +27,7 @@ export class ModelRouter {
       let accumulatedContent = '';
       for await (const chunk of response) {
         const reasoning = chunk.choices[0]?.delta?.["reasoning_content"] || '';
-        const content = chunk.choices[0]?.delta?.["content"] || '';
+        const content = chunk.choices[0]?.delta?.content || '';
         
         if (reasoning) {
           streamController.writeReasoning(reasoning, "deepseek");
@@ -128,7 +128,6 @@ export class ModelRouter {
         : this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined));
       
       if (stream && streamController) {
-        console.log('Final result:', result);
         streamController.writeFinalResult(result);
       }
       
