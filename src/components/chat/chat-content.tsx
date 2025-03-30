@@ -297,7 +297,7 @@ const ChatContent = ({
   return (
     <motion.div
       ref={chatContainerRef}
-      className="flex flex-col h-[calc(100vh-85px)] bg-white border-l border-gray-200 overflow-hidden fixed top-[105px] right-0 group"
+      className="flex flex-col h-[calc(100vh-105px)] bg-white border-l border-gray-200 overflow-hidden fixed top-[105px] right-0 group"
       style={{
         minWidth: '280px',
         transition: isDragging ? 'none' : 'width 0.1s ease-out',

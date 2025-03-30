@@ -13,7 +13,6 @@ import PreLoginHeader from '@/components/landing/pre-login-header';
 
 export default function Landing() {
   const { data: session } = useSession();
-  const [email, setEmail] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Add scroll event listener
