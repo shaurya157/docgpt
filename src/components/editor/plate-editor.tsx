@@ -17,7 +17,7 @@ export function PlateEditor({ plateEditor }: PlateEditorProps) {
     <DndProvider backend={HTML5Backend}>
       <Plate editor={plateEditor}>
         <EditorContainer className='mt-12'>
-          <Editor variant="default" />
+          <Editor variant="demo" />
         </EditorContainer>
       </Plate>
     </DndProvider>
