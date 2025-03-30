@@ -111,6 +111,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             }));
           },
           onStateUpdate: (newState: StreamingState) => {
+            console.log('onStateUpdate received:', JSON.stringify(newState));
             setStreamingState(prevState => {
               const nextState = {
                 document: newState.document,
@@ -122,6 +123,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                   ? prevState.reasoning + (newState.reasoning || '')
                   : newState.reasoning || ''
               };
+              console.log('Updated streaming state:', JSON.stringify(nextState));
               return nextState;
             });
           },
@@ -129,25 +131,31 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             const currentState = streamingStateRef.current;
             const timestamp = Date.now();
             
-            // Add debug logs to understand what's happening
             console.log('finalContent received:', finalContent);
             console.log('currentState:', JSON.stringify(currentState));
             
+            // Try to extract content from document if available
+            let messageContent = finalContent;
+            if (!messageContent && currentState.document && currentState.document.content) {
+              console.log('Using document content as fallback');
+              messageContent = currentState.document.content;
+            }
+            
+            // If still no content, check if there's any in the message
+            if (!messageContent && currentState.message && currentState.message.content) {
+              console.log('Using message content as fallback');
+              messageContent = currentState.message.content;
+            }
+            
             const finalMessage: Message = {
               id: timestamp.toString(),
-              content: finalContent || '', // Ensure finalContent is never undefined
+              content: messageContent,
               fileNames: [],
               reasoning: currentState.reasoning,
               role: "assistant"
             };
         
             console.log('finalMessage', finalMessage);
-            
-            // Additional check to ensure content is populated
-            if (!finalMessage.content && currentState.message.content) {
-              console.log('Using content from streaming state instead');
-              finalMessage.content = currentState.message.content;
-            }
             
             setStatus('awaiting_message');
             // Store the assistant's message in Firestore
