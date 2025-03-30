@@ -26,8 +26,8 @@ import {auth} from "../../auth";
 import './globals.css';
 
 export const metadata: Metadata = {
-  description: 'AI-powered document editor that combines the precision of Cursor with the collaborative features of Google Docs',
-  title: 'DocGPT - Cursor meets Google Docs',
+  description: 'AI-powered document editor',
+  title: 'DocGPT',
 };
 
 export default async function RootLayout({
@@ -48,7 +48,7 @@ export default async function RootLayout({
       <>
         <html lang="en" suppressHydrationWarning>
         <head>
-          <title>DocGPT - Cursor meets Google Docs</title>
+          <title>DocGPT - AI powered document editor</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         </head>
         <body

@@ -193,13 +193,13 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
             src={DocGPTIcon} 
           />
           
-          <div className="flex items-center ml-3">
+          <div className="flex flex-col items-center ml-3">
             <EditableDocumentName />
           
-            <div ref={dropdownRef} className="flex ml-4">
+            <div ref={dropdownRef} className="flex w-full">
               <div className="relative">
                 <button
-                  className="text-sm px-3 hover:bg-[#ECECEC] rounded cursor-pointer text-gray-600"
+                  className="text-sm hover:bg-[#ECECEC] rounded cursor-pointer text-gray-600"
                   onClick={() => handleDropdownClick('file')}
                 >
                   File

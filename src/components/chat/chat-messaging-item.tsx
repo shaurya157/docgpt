@@ -28,7 +28,7 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
 
       return (
         <div className="space-y-4">
-          <div className="whitespace-normal">{prepending}</div>
+          <Markdown className="react-markdown text-sm whitespace-normal">{prepending}</Markdown>
           <Button
             variant="roundedClear"
             className="h-auto w-auto cursor-pointer rounded-lg bg-black bg-opacity-50 p-2"
@@ -39,7 +39,7 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
               <div className="mx-1 truncate max-w-[200px] text-sm">{documentTitle}</div>
             </div>
           </Button>
-          <div className="whitespace-normal">{appending}</div>
+          <Markdown className="react-markdown text-sm whitespace-normal">{appending}</Markdown>
         </div>
       );
     }
@@ -64,7 +64,7 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
       }`}
     >
       <div
-        className={`px-3 py-1.5 w-full break-words ${
+        className={`px-3 py-1.5 break-words w-full ${
           message.role === 'user' ? 'bg-gray-200 text-black rounded-[5px]' : 'rounded-xl'
         }`}
       >

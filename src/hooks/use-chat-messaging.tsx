@@ -137,6 +137,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             };
         
             console.log('finalMessage', finalMessage);
+            
+            setStatus('awaiting_message');
             // Store the assistant's message in Firestore
             await storeMessage(chatId, {
               id: timestamp,
@@ -179,7 +181,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               },
               reasoning: ''
             });
-            setStatus('awaiting_message');
           },
           onStreamStart: () => {
             setStreamingState({
