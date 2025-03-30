@@ -22,7 +22,7 @@ export class DocumentWorkflow {
     const activeBlockSection = state.activeBlock ? `Active Block:\n${state.activeBlock}\n\n` : '';
     const activeSelectionSection = state.activeSelection ? `Active Selection:\n${state.activeSelection}\n\n` : '';
     const reminderSection = state.reminder ? `Reminder:\n${state.reminder}\n\n` : '';
-      
+    
     return `
     Role:
       - You are a helpful assistant that helps the user edit their document, create a new document and that can help the user with their queries.
@@ -76,8 +76,8 @@ export class DocumentWorkflow {
         state.streamController
       );
       
-      // Close the stream after generation is complete
-      state.streamController.close();
+      // Don't close the stream here as we might need it for summarizeChanges
+      // state.streamController.close();
       
       return {
         ...state,
@@ -86,11 +86,73 @@ export class DocumentWorkflow {
     } catch (error) {
       console.error("Error in generate node:", error);
       state.streamController.writeSystemMessage("Failed to generate response\n");
-      state.streamController.close(); // Close stream on error too
+      state.streamController.close(); // Close stream on error
       return {
         ...state,
         draft: "Error: Failed to generate response"
       };
+    }
+  }
+
+  private async summarizeChangesNode(state: TAgentState) {
+    console.log("Summarizing changes");
+    // Check if draft contains a document
+    const documentRegex = /<Document>([\s\S]*?)<\/Document>/;
+    const documentMatch = state.draft.match(documentRegex);
+
+    // If no document in draft or no existing document to compare, return state unchanged
+    if (!documentMatch || !state.activeDocument) {
+      state.streamController.close(); // Close the stream as we're done
+      console.log("No document in draft or no existing document to compare. Active document:", state.activeDocument);
+      console.log("Draft:", state.draft);
+      console.log("Document match:", documentMatch);
+      return state;
+    }
+
+    const newDocument = documentMatch[1].trim();
+    const oldDocument = state.activeDocument.trim();
+
+    // If documents are identical, no need for summary
+    if (newDocument === oldDocument) {
+      state.streamController.close(); // Close the stream as we're done
+      console.log("Documents are identical, no need for summary");
+      return state;
+    }
+
+    try {
+      console.log("Adding summary to stream");
+      // Prepare prompt for summarizing changes
+      const summaryPrompt = `
+        Compare the original document and the new version, then create a concise summary of all changes made:
+
+        Original document:
+        ${oldDocument}
+
+        New document:
+        ${newDocument}
+
+        Provide a bullet-point summary of all modifications, additions, and deletions. Your summary should be written from the perspective of the one making the changes. E.g.: I have made X changes to the document.
+        `;
+
+      // Use Open AI 4o to generate summary
+      const summary = await this.model.generate(
+        "Open AI 4o",
+        summaryPrompt,
+        "Generate a summary of document changes",
+        true,
+        state.streamController
+      );
+
+      // Close the stream when we're done with everything
+      state.streamController.close();
+      
+      // Return state (summary is already streamed to the client)
+      return state;
+    } catch (error) {
+      console.error("Error in summarize changes node:", error);
+      state.streamController.writeSystemMessage("Failed to generate change summary\n");
+      state.streamController.close(); // Close stream on error
+      return state;
     }
   }
 
@@ -160,8 +222,10 @@ export class DocumentWorkflow {
     let match;
 
     while ((match = tagRegex.exec(query)) !== null) {
-        const [tagName, content] = match;
-        result[tagName] = content.trim();
+        const tagType = match[1]; // Document, Block, Selection, or Reminder
+        const content = match[2]; // The content between tags
+        
+        result[tagType] = content.trim();
         lastIndex = tagRegex.lastIndex;
     }
 
@@ -209,6 +273,7 @@ export class DocumentWorkflow {
     graph.addNode("retrievePineconeContext", this.retrievePineconeContextNode.bind(this));
     graph.addNode("retrieveChatHistory", this.retrieveChatHistoryNode.bind(this));
     graph.addNode("generate", this.generateNode.bind(this));
+    graph.addNode("summarizeChanges", this.summarizeChangesNode.bind(this));
     // graph.addNode("review", this.reviewNode.bind(this));
 
     // Edges
@@ -216,7 +281,8 @@ export class DocumentWorkflow {
     graph.addEdge("sanitizeQuery" as any, "retrievePineconeContext" as any);
     graph.addEdge("retrievePineconeContext" as any, "retrieveChatHistory" as any);
     graph.addEdge("retrieveChatHistory" as any, "generate" as any);
-    graph.addEdge("generate" as any, END);
+    graph.addEdge("generate" as any, "summarizeChanges" as any);
+    graph.addEdge("summarizeChanges" as any, END);
     // graph.addConditionalEdges("review" as any, this.shouldRevise.bind(this));
 
     return graph.compile();
