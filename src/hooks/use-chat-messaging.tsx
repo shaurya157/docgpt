@@ -128,15 +128,26 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
           onStreamEnd: async (finalContent: string) => {
             const currentState = streamingStateRef.current;
             const timestamp = Date.now();
+            
+            // Add debug logs to understand what's happening
+            console.log('finalContent received:', finalContent);
+            console.log('currentState:', JSON.stringify(currentState));
+            
             const finalMessage: Message = {
               id: timestamp.toString(),
-              content: finalContent,
+              content: finalContent || '', // Ensure finalContent is never undefined
               fileNames: [],
               reasoning: currentState.reasoning,
               role: "assistant"
             };
         
             console.log('finalMessage', finalMessage);
+            
+            // Additional check to ensure content is populated
+            if (!finalMessage.content && currentState.message.content) {
+              console.log('Using content from streaming state instead');
+              finalMessage.content = currentState.message.content;
+            }
             
             setStatus('awaiting_message');
             // Store the assistant's message in Firestore
