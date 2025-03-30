@@ -66,16 +66,11 @@ export const sendChatMessage = async (
       const { done, value } = await reader.read();
 
       if (done) {
-        console.log('Stream done, processing remaining content');
         // Process any remaining buffered content
         const remainingMessages = streamParser.flush();
-        console.log('Remaining messages:', remainingMessages.length);
         processMessages(remainingMessages, newState, callbacks, (content) => {
           accumulatedContent = content;
         });
-        console.log('Final accumulated content length:', accumulatedContent.length);
-        console.log('Final document content length:', newState.document.content.length);
-        console.log('Final message content length:', newState.message.content.length);
         callbacks.onStreamEnd(accumulatedContent);
         break;
       }
