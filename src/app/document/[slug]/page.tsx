@@ -94,7 +94,6 @@ export default function DocumentPage() {
       }
     };
 
-    console.log('initializing page');
     initializePage();
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 

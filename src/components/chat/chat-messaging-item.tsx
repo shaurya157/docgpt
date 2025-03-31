@@ -26,6 +26,7 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
         content
       });
 
+      onDocumentUpdate(document, documentTitle)();
       return (
         <div className="space-y-4">
           <Markdown className="react-markdown text-sm whitespace-normal">{prepending}</Markdown>
