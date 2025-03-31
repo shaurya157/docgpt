@@ -17,15 +17,6 @@ export default function PreLoginHeader() {
         {/* Center: Navigation */}
         <nav className="hidden md:flex items-center justify-center flex-1 mx-8">
           <div className="flex items-center gap-8">
-            <Link className="text-sm font-medium transition-colors hover:text-primary" href="/">
-              Home
-            </Link>
-            <Link className="text-sm font-medium transition-colors hover:text-primary" href="/features">
-              Features
-            </Link>
-            <Link className="text-sm font-medium transition-colors hover:text-primary" href="/pricing">
-              Pricing
-            </Link>
             <Link className="text-sm font-medium transition-colors hover:text-primary" href="/contact">
               Contact
             </Link>
@@ -34,8 +25,8 @@ export default function PreLoginHeader() {
         
         {/* Right: Auth buttons */}
         <div className="flex items-center gap-4 flex-shrink-0">
+          <SignIn className="bg-[#007AFF] hover:bg-[#0062cc] text-white font-medium rounded-full px-5 py-2 text-[15px] transition-all duration-300 shadow-sm hover:shadow-md" displayText="Try for free" />
           <SignIn variant="ghost" className="hidden md:flex" displayText="Sign In" />
-          <SignIn className="bg-primary text-primary-foreground hover:bg-primary/90" displayText="Try for free" />
           
           <Button variant="ghost" className="md:hidden p-0 w-10 h-10">
             <svg
