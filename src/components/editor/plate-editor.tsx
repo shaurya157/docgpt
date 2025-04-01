@@ -9,7 +9,7 @@ import { Editor, EditorContainer } from '@/components/plate-ui/editor';
 export function PlateEditor() {
   return (
     <DndProvider backend={HTML5Backend}>
-      <EditorContainer className='mt-12'>
+      <EditorContainer>
         <Editor variant="demo" />
       </EditorContainer>
     </DndProvider>
