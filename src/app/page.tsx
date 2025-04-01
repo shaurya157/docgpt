@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-import { ArrowRight } from "lucide-react";
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
