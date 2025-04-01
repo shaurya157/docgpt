@@ -6,6 +6,9 @@ import { storeMessage } from '@/firebase/firestore-dao';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message, StreamingState } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
+import { useEditorRef, usePlateState } from '@udecode/plate/react';
+import { MarkdownPlugin } from '@udecode/plate-markdown';
+import { parseAssistantResponse } from '@/utils/document-parser';
 
 interface UseChatMessagingProps {
   chatId: string;
@@ -18,6 +21,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
   const { setUserChats, userChats } = useUserDataContext();
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [status, setStatus] = useState<'awaiting_message' | 'in_progress'>('awaiting_message');
+  const [readOnly, setReadOnly] = usePlateState('readOnly');
+  const editorRef = useEditorRef();
   const [streamingState, setStreamingState] = useState<StreamingState>({
     document: {
       content: '',
@@ -124,6 +129,11 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               };
               return nextState;
             });
+
+            if (newState.document.isStreaming) {
+              const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(newState.document.content);
+              editorRef.tf.setValue(deserializedNodes);
+            }
           },
           onStreamEnd: async (finalContent: string) => {
             const currentState = streamingStateRef.current;
@@ -136,9 +146,13 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               role: "assistant"
             };
         
-            console.log('finalMessage', finalMessage);
-            
             setStatus('awaiting_message');
+
+            if (finalContent.includes('<Document>')) {
+              const { document } = parseAssistantResponse(finalMessage);
+              const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(document);
+              editorRef.tf.setValue(deserializedNodes);
+            }
             // Store the assistant's message in Firestore
             await storeMessage(chatId, {
               id: timestamp,
@@ -166,7 +180,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                 return chat;
               });
             });
-            
+
             // Reset streaming state
             setStreamingState({
               document: {
@@ -181,8 +195,10 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               },
               reasoning: ''
             });
+            setReadOnly(false);
           },
           onStreamStart: () => {
+            setReadOnly(true);
             setStreamingState({
               document: {
                 content: '',

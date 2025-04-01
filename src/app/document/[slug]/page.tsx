@@ -17,7 +17,7 @@ import { ChatSettingsProvider } from '@/providers/chat-settings-provider';
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Document, Message, Template } from '@/types';
-
+import { Plate } from '@udecode/plate/react';
 export default function DocumentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -152,7 +152,8 @@ export default function DocumentPage() {
   }
 
   return (
-    <ChatSettingsProvider>
+    <Plate editor={editor}>
+      <ChatSettingsProvider>
       <div className="flex h-screen flex-col">
         <DocumentHeader editor={editor} />
         <div className='relative flex flex-1 overflow-hidden bg-gray-200'>
@@ -179,7 +180,7 @@ export default function DocumentPage() {
                     minWidth: 'min(500px, 65vw)'
                 }}
               >
-                <PlateEditor plateEditor={editor} />
+                <PlateEditor />
               </div>
             </div>
           </div>
@@ -194,5 +195,7 @@ export default function DocumentPage() {
         </div>
       </div>
     </ChatSettingsProvider>
+    </Plate>
+    
   );
 }

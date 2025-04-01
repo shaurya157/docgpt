@@ -121,21 +121,21 @@ function processMessages(
           // Check if we're already streaming a document
           if (newState.document.isStreaming) {
             // Check if this chunk contains the closing tag
-            if (currentContent.includes('</Document>')) {
+            if (tempDocumentContent.includes('</Document>')) {
               const [documentContent, appendContent] = currentContent.split('</Document>');
               if (documentContent) {
                 tempDocumentContent += documentContent;
+                newState.document.content = tempDocumentContent;
               }
               if (appendContent) {
                 newState.message.content += appendContent;
               }
               newState.document.isStreaming = false;
-              // Only set the document content when streaming is complete
-              newState.document.content = tempDocumentContent;
               newState.message.content = tempDocumentContent; // Also update message content
             } else {
               // Still in document, append to temporary content
               tempDocumentContent += currentContent;
+              newState.document.content = tempDocumentContent;
             }
           } else {
             // Not currently streaming a document, check for opening tag
@@ -155,6 +155,7 @@ function processMessages(
                 if (!currentContent.includes('<Document')) {
                   tempDocumentContent = 'Document' + tempDocumentContent;
                 }
+                newState.document.content = tempDocumentContent;
               }
               newState.document.isStreaming = true;
             } else {
