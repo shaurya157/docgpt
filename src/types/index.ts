@@ -47,6 +47,7 @@ export interface StreamingState {
   };
   message: Message;
   reasoning: string;
+  isProcessingDocument: boolean;
 }
 
 export interface Template {

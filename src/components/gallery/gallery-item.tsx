@@ -138,13 +138,13 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
             
             switch (node.type) {
                 case 'h1':
-                    return <h1 key={node.id} className="text-[8px] font-bold mb-1">{text}</h1>;
+                    return <h1 key={node.id} className="text-[8px] font-bold mb-1 select-none">{text}</h1>;
                 case 'h2':
-                    return <h2 key={node.id} className="text-[7px] font-semibold mb-0.5 ml-1">{text}</h2>;
+                    return <h2 key={node.id} className="text-[7px] font-semibold mb-0.5 ml-1 select-none">{text}</h2>;
                 case 'h3':
-                    return <h3 key={node.id} className="text-[6px] font-medium mb-0.5 ml-2">{text}</h3>;
+                    return <h3 key={node.id} className="text-[6px] font-medium mb-0.5 ml-2 select-none">{text}</h3>;
                 case 'p':
-                    return <p key={node.id} className="text-[6px] mb-0.5 ml-1">{text}</p>;
+                    return <p key={node.id} className="text-[6px] mb-0.5 ml-1 select-none">{text}</p>;
                 default:
                     return null;
             }
@@ -154,7 +154,7 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
     return (
         <>
             <div className="relative group cursor-pointer w-fit" onClick={handleClick}>
-                <div className="w-48 h-64 border rounded-t-lg bg-white hover:border-gray-400 transition-colors p-3 overflow-hidden relative">
+                <div className="w-48 h-64 border rounded-t-lg bg-white hover:border-gray-400 transition-all duration-200 hover:scale-105 p-3 overflow-hidden relative">
                     {isBlank ? (
                         <div className="flex items-center justify-center h-full">
                             <span className="text-4xl text-gray-400">+</span>

@@ -28,8 +28,6 @@ export const ChatMessageList = ({
     !streamingState.message.content && 
     !streamingState.document.isStreaming;
 
-  const showDocumentCreationIndicator = streamingState.document.isStreaming;
-
   return (
     <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">
       <div className="mx-auto w-full space-y-2">
@@ -39,6 +37,7 @@ export const ChatMessageList = ({
             onDocumentUpdate={onDocumentUpdate}
             message={message}
             streamingState={message.id === 'streaming' ? streamingState : undefined}
+            isStreamingItem={message.id === 'streaming' && status === 'in_progress'}
           />
         ))}
 
@@ -50,15 +49,6 @@ export const ChatMessageList = ({
                 <span className="flex items-center text-xs">Thinking<DotAnimation /></span>
               </div>
             </div>
-          </div>
-        )}
-
-        {showDocumentCreationIndicator && (
-          <div className="flex justify-start">
-            <Button variant="roundedClear" className="ml-2" disabled>
-              <Icons.spinner className="size-5 animate-spin text-black" />
-              <p className="text-xs">Creating document...</p>
-            </Button>
           </div>
         )}
 

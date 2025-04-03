@@ -8,7 +8,6 @@ export class ModelRouter {
     baseURL: "https://api.deepseek.com",
   })
   private openai = new OpenAI();
-  private finalResult = '';
 
   private async generateDeepSeek(
     system: string,
@@ -119,8 +118,7 @@ export class ModelRouter {
     systemPrompt: string,
     userInput: string,
     stream: boolean = false,
-    streamController?: CustomStreamController,
-    shouldWriteFinalResult: boolean = false
+    streamController?: CustomStreamController
   ): Promise<string> {
     const { model, provider } = this.getProviderAndModel(selectedModel);
     
@@ -128,13 +126,7 @@ export class ModelRouter {
       const result = await (provider === "deepseek" 
         ? this.generateDeepSeek(systemPrompt, userInput, stream ? streamController : undefined)
         : this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined));
-      
-      this.finalResult += result;
-      console.log('finalResult', this.finalResult);
-      if (stream && streamController && shouldWriteFinalResult) {
-        streamController.writeFinalResult(result);
-      }
-      
+            
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

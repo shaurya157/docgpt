@@ -7,7 +7,7 @@ import { StreamParser } from './parse-stream';
 
 interface StreamCallbacks {
   onError: (error: Error) => void;
-  onStateUpdate: (state: StreamingState) => void;
+  onStateUpdate: (state: Pick<StreamingState, 'message' | 'reasoning' | 'isProcessingDocument'>) => void;
   onStreamEnd: (finalContent: string) => void;
   onStreamStart: () => void;
 }
@@ -46,18 +46,15 @@ export const sendChatMessage = async (
     reader = result.body.getReader();
     const streamParser = new StreamParser();
     let accumulatedContent = '';
-    const newState: StreamingState = {
-      document: {
-        content: '',
-        isStreaming: false
-      },
+    const internalState: Pick<StreamingState, 'message' | 'reasoning' | 'isProcessingDocument'> = {
       message: {
         id: 'streaming',
         content: '',
         fileNames: [],
         role: 'assistant'
       },
-      reasoning: ''
+      reasoning: '',
+      isProcessingDocument: false
     };
 
     callbacks.onStreamStart();
@@ -66,9 +63,8 @@ export const sendChatMessage = async (
       const { done, value } = await reader.read();
 
       if (done) {
-        // Process any remaining buffered content
         const remainingMessages = streamParser.flush();
-        processMessages(remainingMessages, newState, callbacks, (content) => {
+        processMessages(remainingMessages, internalState, callbacks, (content) => {
           accumulatedContent = content;
         });
         callbacks.onStreamEnd(accumulatedContent);
@@ -76,7 +72,7 @@ export const sendChatMessage = async (
       }
 
       const messages = streamParser.parseChunk(value);
-      processMessages(messages, newState, callbacks, (content) => {
+      processMessages(messages, internalState, callbacks, (content) => {
         accumulatedContent = content;
       });
     }
@@ -85,7 +81,6 @@ export const sendChatMessage = async (
     callbacks.onError(new Error(`Stream error: ${errorMessage}`));
     toast.error(`Error: ${errorMessage}`);
   } finally {
-    // Clean up the reader if it exists
     if (reader) {
       try {
         await reader.cancel();
@@ -98,83 +93,39 @@ export const sendChatMessage = async (
 
 function processMessages(
   messages: StreamMessage[],
-  state: StreamingState,
+  state: Pick<StreamingState, 'message' | 'reasoning' | 'isProcessingDocument'>,
   callbacks: StreamCallbacks,
   onContentUpdate?: (content: string) => void
 ) {
   let hasUpdates = false;
-  const newState = { ...state };
-  let tempDocumentContent = newState.document.content;  // Store document content temporarily
+  let currentReasoning = state.reasoning;
+  let isCurrentlyProcessingDocument = state.isProcessingDocument;
+
   for (const message of messages) {
     try {
       switch (message.type) {
-        case 'final_result':
-          console.log('final_result', message.content);
-          newState.message.content = message.content;
-          hasUpdates = true;
-          onContentUpdate?.(newState.message.content);
-          break;
-
         case 'partial_result':
-          // Accumulate content first
-          const currentContent = message.content;
+          const chunkContent = message.content;
+          state.message.content += chunkContent;
           
-          // Check if we're already streaming a document
-          if (newState.document.isStreaming) {
-            // Check if this chunk contains the closing tag
-            if (newState.document.content.includes('</Document>')) {
-              const [documentContent, appendContent] = currentContent.split('</Document>');
-              if (documentContent) {
-                tempDocumentContent += documentContent;
-                newState.document.content = tempDocumentContent;
-              }
-              if (appendContent) {
-                newState.message.content += appendContent;
-              }
-              newState.document.isStreaming = false;
-              newState.message.content = tempDocumentContent; // Also update message content
-            } else {
-              // Still in document, append to temporary content
-              tempDocumentContent += currentContent;
-              newState.document.content = tempDocumentContent;
-            }
-          } else {
-            // Not currently streaming a document, check for opening tag
-            if (currentContent.includes('<')) {
-              let parts;
-              if (currentContent.includes('<Document')) {
-                parts = currentContent.split('<Document');
-              } else {
-                parts = currentContent.split('<');
-              }
-              
-              if (parts[0]) {
-                newState.message.content += parts[0];
-              }
-              if (parts[1]) {
-                tempDocumentContent = parts[1];
-                if (!currentContent.includes('<Document')) {
-                  tempDocumentContent = 'Document' + tempDocumentContent;
-                }
-                newState.document.content = tempDocumentContent;
-              }
-              newState.document.isStreaming = true;
-            } else {
-              // Regular content
-              newState.message.content += currentContent;
-            }
+          if (chunkContent.includes('<Document')) {
+            isCurrentlyProcessingDocument = true;
           }
+          state.isProcessingDocument = isCurrentlyProcessingDocument;
+
           hasUpdates = true;
-          onContentUpdate?.(newState.message.content);
+          onContentUpdate?.(state.message.content);
           break;
 
         case 'reasoning':
-          newState.reasoning = newState.reasoning + message.content;
+          state.reasoning += message.content;
+          currentReasoning = state.reasoning;
           hasUpdates = true;
           break;
 
         case 'system':
-          newState.reasoning = newState.reasoning + `[System] ${message.content}\n`;
+          state.reasoning += `[System] ${message.content}\n`;
+          currentReasoning = state.reasoning;
           hasUpdates = true;
           break;
       }
@@ -184,8 +135,14 @@ function processMessages(
     }
   }
 
-  // Only trigger state update if there were actual changes
   if (hasUpdates) {
-    callbacks.onStateUpdate({ ...newState });
+    callbacks.onStateUpdate({
+      message: { ...state.message },
+      reasoning: currentReasoning,
+      isProcessingDocument: state.isProcessingDocument
+    });
+    if (state.message.content.includes('</Document>')) {
+        state.isProcessingDocument = false;
+    }
   }
 } 

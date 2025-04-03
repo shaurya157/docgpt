@@ -143,8 +143,7 @@ export class DocumentWorkflow {
         summaryPrompt,
         "Generate a summary of document changes",
         true,
-        state.streamController,
-        true
+        state.streamController
       );
 
       // Close the stream when we're done with everything

@@ -34,13 +34,12 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       fileNames: [],
       role: 'assistant'
     },
-    reasoning: ''
+    reasoning: '',
+    isProcessingDocument: false
   });
   
-  // Add ref to track current streaming state
   const streamingStateRef = useRef<StreamingState>(streamingState);
 
-  // Update ref whenever streamingState changes
   useEffect(() => {
     streamingStateRef.current = streamingState;
   }, [streamingState]);
@@ -75,7 +74,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
   const sendMessage = useCallback(async (serializedContent: string) => {
     setStatus('in_progress');
     
-    // Add a temporary streaming message
     setMessages(prev => [...prev, {
       id: 'streaming',
       content: '',
@@ -83,19 +81,12 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       role: 'assistant'
     }]);
     
-    // Reset streaming state
+    // Reset state, including the new flag
     setStreamingState({
-      document: {
-        content: '',
-        isStreaming: false
-      },
-      message: {
-        id: 'streaming',
-        content: '',
-        fileNames: [],
-        role: 'assistant'
-      },
-      reasoning: ''
+      document: { content: '', isStreaming: true }, // Stream starts
+      message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
+      reasoning: '',
+      isProcessingDocument: false
     });
 
     try {
@@ -110,49 +101,81 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             setStatus('awaiting_message');
             // Remove the streaming message on error
             setMessages(prev => prev.filter(m => m.id !== 'streaming'));
-            setStreamingState(prev => ({
-              ...prev,
-              document: { content: '', isStreaming: false }
-            }));
+            setStreamingState({
+              document: { content: '', isStreaming: false }, // Stream ends
+              message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
+              reasoning: '',
+              isProcessingDocument: false
+            });
           },
-          onStateUpdate: (newState: StreamingState) => {
+          // Use the extended state update type
+          onStateUpdate: (newStateUpdate: Pick<StreamingState, 'message' | 'reasoning' | 'isProcessingDocument'>) => {
             setStreamingState(prevState => {
-              const nextState = {
-                document: newState.document,
-                message: {
-                  ...prevState.message,
-                  content: newState.message.content || prevState.message.content
-                },
-                reasoning: prevState.reasoning 
-                  ? prevState.reasoning + (newState.reasoning || '')
-                  : newState.reasoning || ''
+              const nextState: StreamingState = {
+                // Update all parts based on the incoming update
+                document: prevState.document, // Keep document content until end
+                message: newStateUpdate.message, 
+                reasoning: newStateUpdate.reasoning,
+                isProcessingDocument: newStateUpdate.isProcessingDocument,
               };
+
+              // --- Live Editor Update Logic --- 
+              if (nextState.isProcessingDocument) {
+                // Attempt to parse partial document content
+                const docRegex = /<Document>([\s\S]*)/;
+                const match = nextState.message.content.match(docRegex);
+                if (match && match[1]) {
+                  let partialDocContent = match[1];
+                  // Remove closing tag if present for cleaner parsing
+                  partialDocContent = partialDocContent.replace(/<\/Document>[\s\S]*$/, '');
+                  try {
+                    const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(partialDocContent);
+                    // Check if deserialization produced valid nodes before setting value
+                    if (Array.isArray(deserializedNodes) && deserializedNodes.length > 0) {
+                      editorRef.tf.setValue(deserializedNodes);
+                    }
+                  } catch (e) {
+                    // Log parsing errors but don't crash
+                    console.warn("Error deserializing partial document content:", e); 
+                  }
+                }
+              }
+              // --- End Live Editor Update Logic ---
+
               return nextState;
             });
-
-            if (newState.document.isStreaming) {
-              const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(newState.document.content);
-              editorRef.tf.setValue(deserializedNodes);
-            }
           },
           onStreamEnd: async (finalContent: string) => {
-            const currentState = streamingStateRef.current;
+            const currentState = streamingStateRef.current; // Use ref for final reasoning
             const timestamp = Date.now();
+            let finalDocumentContent = '';
+            let isDocumentPresent = false;
+
+            // Parse the *final* content here
+            if (finalContent.includes('<Document>')) {
+              isDocumentPresent = true;
+              const { document } = parseAssistantResponse({ 
+                id: 'temp', 
+                content: finalContent, 
+                role: 'assistant', 
+                fileNames: []
+              });
+              finalDocumentContent = document;
+              // Update the editor with the final document content
+              const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(document);
+              editorRef.tf.setValue(deserializedNodes);
+            }
+
             const finalMessage: Message = {
               id: timestamp.toString(),
-              content: finalContent,
+              content: finalContent, // Store the raw final content
               fileNames: [],
-              reasoning: currentState.reasoning,
+              reasoning: currentState.reasoning, // Use reasoning from ref
               role: "assistant"
             };
         
             setStatus('awaiting_message');
 
-            if (finalContent.includes('<Document>')) {
-              const { document } = parseAssistantResponse(finalMessage);
-              const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(document);
-              editorRef.tf.setValue(deserializedNodes);
-            }
             // Store the assistant's message in Firestore
             await storeMessage(chatId, {
               id: timestamp,
@@ -181,36 +204,25 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               });
             });
 
-            // Reset streaming state
+            // Final state reset
             setStreamingState({
-              document: {
-                content: '',
-                isStreaming: false
+              document: { 
+                content: finalDocumentContent, 
+                isStreaming: false // Stream ended
               },
-              message: {
-                id: 'streaming',
-                content: '',
-                fileNames: [],
-                role: 'assistant'
-              },
-              reasoning: ''
+              message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
+              reasoning: '',
+              isProcessingDocument: false
             });
             setReadOnly(false);
           },
           onStreamStart: () => {
             setReadOnly(true);
             setStreamingState({
-              document: {
-                content: '',
-                isStreaming: false
-              },
-              message: {
-                id: 'streaming',
-                content: '',
-                fileNames: [],
-                role: 'assistant'
-              },
-              reasoning: ''
+              document: { content: '', isStreaming: true }, // Stream starts
+              message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
+              reasoning: '',
+              isProcessingDocument: false
             });
           }
         }
@@ -221,8 +233,15 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       setStatus('awaiting_message');
       // Remove the streaming message on error
       setMessages(prev => prev.filter(m => m.id !== 'streaming'));
+      // Reset state on catch
+      setStreamingState({
+        document: { content: '', isStreaming: false }, // Stream ends
+        message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
+        reasoning: '',
+        isProcessingDocument: false
+      });
     }
-  }, [chatId, userId, model, setUserChats]);
+  }, [chatId, userId, model, setUserChats, editorRef]); // Added editorRef dependency
 
   return {
     addMessage,
