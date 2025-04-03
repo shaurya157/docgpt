@@ -38,7 +38,7 @@ export function FloatingToolbarButtons() {
           <ToolbarGroup>
             <AIToolbarButton tooltip="AI commands">
               <WandSparklesIcon />
-              Ask AI
+              Quick Edit
             </AIToolbarButton>
           </ToolbarGroup>
 

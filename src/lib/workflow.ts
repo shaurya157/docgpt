@@ -131,7 +131,10 @@ export class DocumentWorkflow {
         New document:
         ${newDocument}
 
-        Provide a bullet-point summary of all modifications, additions, and deletions. Your summary should be written from the perspective of the one making the changes. E.g.: I have made X changes to the document.
+        Provide a concise bullet point list of all modifications, additions, and deletions.
+        Your summary should be written from the perspective of the one making the changes. E.g.: I've made the following changes: 1)In section XYZ I changed \n - A -\n to \n - B -\n.
+        Reply in markdown format. Use ordered lists for the bullet points.
+        Never add triple backticks to the beginning or end of your response unless referring to code.
         `;
 
       // Use Open AI 4o to generate summary
@@ -140,7 +143,8 @@ export class DocumentWorkflow {
         summaryPrompt,
         "Generate a summary of document changes",
         true,
-        state.streamController
+        state.streamController,
+        true
       );
 
       // Close the stream when we're done with everything
@@ -204,14 +208,6 @@ export class DocumentWorkflow {
         context: []
       };
     }
-  }
-
-  private async reviewNode(state: TAgentState) {
-    const reviewPrompt = `Review this document draft: ${state.draft}\n`;
-    return {
-      ...state,
-      feedback: await this.model.generate("openai", reviewPrompt, "")
-    };
   }
 
   private async sanitizeQueryNode(state: TAgentState) {

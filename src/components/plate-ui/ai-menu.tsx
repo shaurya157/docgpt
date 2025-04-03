@@ -143,7 +143,7 @@ export function AIMenu() {
                 }
               }}
               onValueChange={setInput}
-              placeholder="Ask AI anything..."
+              placeholder="Quick Edit with AI"
               data-plate-focus
               autoFocus
             />

@@ -109,6 +109,7 @@ function processMessages(
     try {
       switch (message.type) {
         case 'final_result':
+          console.log('final_result', message.content);
           newState.message.content = message.content;
           hasUpdates = true;
           onContentUpdate?.(newState.message.content);
@@ -121,7 +122,7 @@ function processMessages(
           // Check if we're already streaming a document
           if (newState.document.isStreaming) {
             // Check if this chunk contains the closing tag
-            if (tempDocumentContent.includes('</Document>')) {
+            if (newState.document.content.includes('</Document>')) {
               const [documentContent, appendContent] = currentContent.split('</Document>');
               if (documentContent) {
                 tempDocumentContent += documentContent;

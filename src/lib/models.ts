@@ -8,6 +8,7 @@ export class ModelRouter {
     baseURL: "https://api.deepseek.com",
   })
   private openai = new OpenAI();
+  private finalResult = '';
 
   private async generateDeepSeek(
     system: string,
@@ -118,7 +119,8 @@ export class ModelRouter {
     systemPrompt: string,
     userInput: string,
     stream: boolean = false,
-    streamController?: CustomStreamController
+    streamController?: CustomStreamController,
+    shouldWriteFinalResult: boolean = false
   ): Promise<string> {
     const { model, provider } = this.getProviderAndModel(selectedModel);
     
@@ -127,7 +129,9 @@ export class ModelRouter {
         ? this.generateDeepSeek(systemPrompt, userInput, stream ? streamController : undefined)
         : this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined));
       
-      if (stream && streamController) {
+      this.finalResult += result;
+      console.log('finalResult', this.finalResult);
+      if (stream && streamController && shouldWriteFinalResult) {
         streamController.writeFinalResult(result);
       }
       
