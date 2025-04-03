@@ -99,7 +99,6 @@ function processMessages(
 ) {
   let hasUpdates = false;
   let currentReasoning = state.reasoning;
-  let isCurrentlyProcessingDocument = state.isProcessingDocument;
 
   for (const message of messages) {
     try {
@@ -108,11 +107,10 @@ function processMessages(
           const chunkContent = message.content;
           state.message.content += chunkContent;
           
-          if (chunkContent.includes('<Document')) {
-            isCurrentlyProcessingDocument = true;
+          if (!state.isProcessingDocument && state.message.content.includes('<Document')) {
+            state.isProcessingDocument = true;
           }
-          state.isProcessingDocument = isCurrentlyProcessingDocument;
-
+          
           hasUpdates = true;
           onContentUpdate?.(state.message.content);
           break;
@@ -141,7 +139,7 @@ function processMessages(
       reasoning: currentReasoning,
       isProcessingDocument: state.isProcessingDocument
     });
-    if (state.message.content.includes('</Document>')) {
+    if (state.isProcessingDocument && state.message.content.includes('</Document>')) {
         state.isProcessingDocument = false;
     }
   }

@@ -244,6 +244,63 @@ export class DocumentWorkflow {
     return state.feedback.length > 0 ? "generate" : "end";
   }
 
+  private async userIntentClassificationNode(state: TAgentState) {
+    console.log("Classifying user intent");
+    const { query, chatHistory } = state;
+
+    // Use the last message from chat history if available, otherwise use the query
+    const lastUserMessage = chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
+    const queryToAnalyze = lastUserMessage ? lastUserMessage.content : query;
+    const uploadedFiles = lastUserMessage?.fileNames ?? [];
+
+    const classificationPrompt = `
+      Role:
+        - You are a helpful assistant that is linked to other assistants. Your job is to classify the user's intent in a human friendly, readable format.
+
+      Formatting instructions:
+       - Provide the classification in a concise format. 
+       - Always reply in markdown format. 
+       - NEVER add triple backticks to the beginning or end of your response unless referring to code.
+       - Respond in a human friendly format, not a machine friendly format. E.g.: "The user is asking to create a new document." or "The user is asking to edit the active document."
+       - ALWAYS add a new line at the end of your response.
+
+      Analyze the user's query and classify their intent. Consider the chat history for context.
+
+      User Query:
+      ${queryToAnalyze}
+
+      Uploaded Files with this message: ${uploadedFiles.length > 0 ? uploadedFiles.join(', ') : 'None'}
+
+      Based on the query and any uploaded files, analyze the following questions and answer them in a human friendly format:
+      1.  Is the user asking for information, requesting to create a new document, or asking to edit an existing document?
+      2.  Is the user referring to any specific files uploaded with this message? If yes, list the file names.
+      3.  If the user is referring to something as "this" do they mean the file they uploaded or the active document? (If there is no "this" in the query following ambiguous references, you can ignore this question.)
+    `;
+
+    try {
+      const intentClassification = await this.model.generate(
+        "Open AI 4o",
+        classificationPrompt,
+        "Classify user intent",
+        true, // Stream the response
+        state.streamController
+      );
+
+      return {
+        ...state,
+        userIntent: intentClassification,
+      };
+    } catch (error) {
+      console.error("Error in user intent classification node:", error);
+      state.streamController.writeSystemMessage("Failed to classify user intent\n");
+      // Don't close stream here, let subsequent nodes handle it or the final error handler
+      return {
+        ...state,
+        userIntent: "Error: Failed to classify intent",
+      };
+    }
+  }
+
   async buildGraph() {
     const graph = new StateGraph<TAgentState>({
       channels: {
@@ -259,7 +316,8 @@ export class DocumentWorkflow {
         query: { value: (x) => x },
         reminder: { default: () => "", value: (x, y) => y || x },
         streamController: { value: (x) => x },
-        userId: { value: (x) => x }
+        userId: { value: (x) => x },
+        userIntent: { default: () => "", value: (x, y) => y || x }
       }
     });
 
@@ -267,15 +325,17 @@ export class DocumentWorkflow {
     graph.addNode("sanitizeQuery", this.sanitizeQueryNode.bind(this));
     graph.addNode("retrievePineconeContext", this.retrievePineconeContextNode.bind(this));
     graph.addNode("retrieveChatHistory", this.retrieveChatHistoryNode.bind(this));
+    graph.addNode("userIntentClassification", this.userIntentClassificationNode.bind(this));
     graph.addNode("generate", this.generateNode.bind(this));
     graph.addNode("summarizeChanges", this.summarizeChangesNode.bind(this));
     // graph.addNode("review", this.reviewNode.bind(this));
 
     // Edges
     graph.addEdge(START, "sanitizeQuery" as any);
-    graph.addEdge("sanitizeQuery" as any, "retrievePineconeContext" as any);
-    graph.addEdge("retrievePineconeContext" as any, "retrieveChatHistory" as any);
-    graph.addEdge("retrieveChatHistory" as any, "generate" as any);
+    graph.addEdge("sanitizeQuery" as any, "retrieveChatHistory" as any);
+    graph.addEdge("retrieveChatHistory" as any, "userIntentClassification" as any);
+    graph.addEdge("userIntentClassification" as any, "retrievePineconeContext" as any);
+    graph.addEdge("retrievePineconeContext" as any, "generate" as any);
     graph.addEdge("generate" as any, "summarizeChanges" as any);
     graph.addEdge("summarizeChanges" as any, END);
     // graph.addConditionalEdges("review" as any, this.shouldRevise.bind(this));

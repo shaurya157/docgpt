@@ -23,7 +23,8 @@ export const AgentState = z.object({
   query: z.string(),
   reminder: z.string().default(""),
   streamController: z.custom<CustomStreamController>(),
-  userId: z.string()
+  userId: z.string(),
+  userIntent: z.string().default("")
 });
 
 export type TAgentState = z.infer<typeof AgentState>;
