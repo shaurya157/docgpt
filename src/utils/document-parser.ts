@@ -20,11 +20,18 @@ export const parseAssistantResponse = (message: Message): ParsedDocument => {
   const endIndex = message.content.indexOf(endTag);
 
   const prepending = message.content.slice(0, startIndex);
-  const document = message.content
-    .slice(startIndex + startTag.length, endIndex)
-    .trim();
+  
+  // If no end tag is found, everything after start tag is the document
+  const document = endIndex === -1 
+    ? message.content.slice(startIndex + startTag.length).trim()
+    : message.content.slice(startIndex + startTag.length, endIndex).trim();
+    
   const documentTitle = extractTitleFromDocument(document);
-  const appending = message.content.slice(endIndex + endTag.length);
+  
+  // Only have appending text if end tag was found
+  const appending = endIndex === -1 
+    ? '' 
+    : message.content.slice(endIndex + endTag.length);
 
   return {
     appending,

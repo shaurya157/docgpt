@@ -11,35 +11,29 @@ import { parseAssistantResponse } from '@/utils/document-parser';
 interface ChatMessageItemProps {
   message: Message;
   onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
-  isStreamingItem: boolean;
   streamingState?: StreamingState;
 }
 
-export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate, isStreamingItem }: ChatMessageItemProps) => {
+export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: ChatMessageItemProps) => {
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
   
-  const content = isStreamingItem && streamingState ? streamingState.message.content : message.content;
-  const reasoning = isStreamingItem && streamingState ? streamingState.reasoning : message.reasoning;
-  const isProcessingDocument = isStreamingItem && streamingState ? streamingState.isProcessingDocument : false;
+  const content = streamingState ? streamingState.message.content : message.content;
+  const reasoning = streamingState ? streamingState.reasoning : message.reasoning;
+  const isProcessingDocument = streamingState ? streamingState.isProcessingDocument : false;
   // Check if document tags are fully present in the content
   const hasCompleteDocumentTags = content?.includes('<Document>') && content?.includes('</Document>');
 
-  console.log("Rendering message content");
-
   const renderMessageContent = () => {
-    // --- Streaming Item Logic --- 
-    if (isStreamingItem && streamingState) {
-      // Parse any document-related content that might exist 
-      const { prepending, document, documentTitle, appending } = parseAssistantResponse(streamingState.message);
-
+    if (message.role === 'assistant' && content.includes('<Document>')) {
+      const messageToUse = {
+        ...message,
+        content: content // Use the current content which includes streaming content
+      };
+      const { appending, document, documentTitle, prepending } = parseAssistantResponse(messageToUse);
       return (
-        <div className="space-y-2">
-          {/* Always show prepending content if it exists */}
+        <div className="space-y-4">
           {prepending && <Markdown className="react-markdown text-sm whitespace-normal">{prepending}</Markdown>}
-          
-          {/* Show either the processing indicator or the document button */}
-          {(isProcessingDocument || hasCompleteDocumentTags) && (
-            isProcessingDocument ? (
+          {isProcessingDocument ? (
               <div className="flex items-center text-xs text-gray-500 mt-1">
                 <Icons.spinner className="size-3 animate-spin mr-1" />
                 <span>Creating document...</span>
@@ -55,35 +49,7 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate, isS
                   <div className="mx-1 truncate max-w-[200px] text-sm">{documentTitle || 'Document'}</div>
                 </div>
               </Button>
-            )
-          )}
-
-          {/* Show any content after the document section */}
-          {/* Render appending content if it exists and we are not processing the document */}
-          {!isProcessingDocument && appending && (
-            <Markdown className="react-markdown text-sm whitespace-normal">{appending}</Markdown> 
-          )}
-        </div>
-      );
-    }
-
-    // --- Finished Item Logic (No changes needed here) --- 
-    if (message.role === 'assistant' && content.includes('<Document>')) {
-      const { appending, document, documentTitle, prepending } = parseAssistantResponse(message);
-      
-      return (
-        <div className="space-y-4">
-          {prepending && <Markdown className="react-markdown text-sm whitespace-normal">{prepending}</Markdown>}
-          <Button
-            variant="roundedClear"
-            className="h-auto w-auto cursor-pointer rounded-lg bg-black bg-opacity-50 p-2"
-            onClick={onDocumentUpdate(document, documentTitle)}
-          >
-            <div className="flex items-center">
-              <FileText className='h-full w-auto'/>
-              <div className="mx-1 truncate max-w-[200px] text-sm">{documentTitle || 'Document'}</div>
-            </div>
-          </Button>
+            )}
           {appending && <Markdown className="react-markdown text-sm whitespace-normal">{appending}</Markdown>}
         </div>
       );
@@ -106,12 +72,12 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate, isS
   return (
     <div
       className={`flex flex-col text-sm w-full ${
-        message.role === 'user' ? 'items-end' : 'items-start'
+        streamingState ? 'items-start' : (message.role === 'user' ? 'items-end' : 'items-start')
       }`}
     >
       <div
         className={`px-3 py-1.5 break-words w-full ${
-          message.role === 'user' ? 'bg-gray-200 text-black rounded-[5px]' : 'rounded-xl'
+          streamingState ? 'rounded-xl' : (message.role === 'user' ? 'bg-gray-200 text-black rounded-[5px]' : 'rounded-xl')
         }`}
       >
         {renderMessageContent()}

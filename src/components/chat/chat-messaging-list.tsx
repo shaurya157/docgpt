@@ -24,10 +24,6 @@ export const ChatMessageList = ({
 }: ChatMessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const showThinkingIndicator = status === 'in_progress' && 
-    !streamingState.message.content && 
-    !streamingState.document.isStreaming;
-
   return (
     <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">
       <div className="mx-auto w-full space-y-2">
@@ -36,12 +32,11 @@ export const ChatMessageList = ({
             key={message.id}
             onDocumentUpdate={onDocumentUpdate}
             message={message}
-            streamingState={message.id === 'streaming' ? streamingState : undefined}
-            isStreamingItem={message.id === 'streaming' && status === 'in_progress'}
+            streamingState={message.id === 'streaming' && status === 'in_progress' ? streamingState : undefined}
           />
         ))}
 
-        {showThinkingIndicator && (
+        {status === 'in_progress' && (
           <div className="flex items-start">
             <div className="rounded-xl px-4 py-2 bg-gray-100">
               <div className="flex items-center space-x-2">

@@ -80,14 +80,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       fileNames: [],
       role: 'assistant'
     }]);
-    
-    // Reset state, including the new flag
-    setStreamingState({
-      document: { content: '', isStreaming: true }, // Stream starts
-      message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
-      reasoning: '',
-      isProcessingDocument: false
-    });
 
     try {
       await sendChatMessage(
