@@ -10,6 +10,23 @@ import { useEditorRef, usePlateState } from '@udecode/plate/react';
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { parseAssistantResponse } from '@/utils/document-parser';
 
+// Add useDebounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 interface UseChatMessagingProps {
   chatId: string;
   model: string;
@@ -39,6 +56,25 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
   });
   
   const streamingStateRef = useRef<StreamingState>(streamingState);
+
+  // Track the last parsed document content
+  const [partialDocContent, setPartialDocContent] = useState('');
+  // Debounce the document content updates (300ms delay)
+  const debouncedDocContent = useDebounce(partialDocContent, 300);
+  
+  // Effect to update editor when debounced content changes
+  useEffect(() => {
+    if (debouncedDocContent && editorRef) {
+      try {
+        const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(debouncedDocContent);
+        if (Array.isArray(deserializedNodes) && deserializedNodes.length > 0) {
+          editorRef.tf.setValue(deserializedNodes);
+        }
+      } catch (e) {
+        console.warn("Error deserializing debounced document content:", e);
+      }
+    }
+  }, [debouncedDocContent, editorRef]);
 
   useEffect(() => {
     streamingStateRef.current = streamingState;
@@ -117,19 +153,14 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                 const docRegex = /<Document>([\s\S]*)/;
                 const match = nextState.message.content.match(docRegex);
                 if (match && match[1]) {
-                  let partialDocContent = match[1];
+                  let extractedDocContent = match[1];
                   // Remove closing tag if present for cleaner parsing
-                  partialDocContent = partialDocContent.replace(/<\/Document>[\s\S]*$/, '');
-                  try {
-                    const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(partialDocContent);
-                    // Check if deserialization produced valid nodes before setting value
-                    if (Array.isArray(deserializedNodes) && deserializedNodes.length > 0) {
-                      editorRef.tf.setValue(deserializedNodes);
-                    }
-                  } catch (e) {
-                    // Log parsing errors but don't crash
-                    console.warn("Error deserializing partial document content:", e); 
-                  }
+                  extractedDocContent = extractedDocContent.replace(/<\/Document>[\s\S]*$/, '');
+                  // Update the partial doc content - this will trigger the debounced update
+                  setPartialDocContent(extractedDocContent);
+                  
+                  // No longer directly updating the editor here
+                  // The useEffect with debouncedDocContent will handle the editor update
                 }
               }
               // --- End Live Editor Update Logic ---
@@ -207,6 +238,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               isProcessingDocument: false
             });
             setReadOnly(false);
+            // Reset partial content
+            setPartialDocContent('');
           },
           onStreamStart: () => {
             setReadOnly(true);
@@ -216,6 +249,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               reasoning: '',
               isProcessingDocument: false
             });
+            // Reset partial content on stream start
+            setPartialDocContent('');
           }
         }
       );
@@ -232,6 +267,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
         reasoning: '',
         isProcessingDocument: false
       });
+      // Reset partial content
+      setPartialDocContent('');
     }
   }, [chatId, userId, model, setUserChats, editorRef]); // Added editorRef dependency
 
