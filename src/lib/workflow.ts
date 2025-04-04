@@ -97,7 +97,6 @@ export class DocumentWorkflow {
   }
 
   private async summarizeChangesNode(state: TAgentState) {
-    console.log("Summarizing changes");
     // Check if draft contains a document
     const documentRegex = /<Document>([\s\S]*?)<\/Document>/;
     const documentMatch = state.draft.match(documentRegex);
@@ -105,9 +104,6 @@ export class DocumentWorkflow {
     // If no document in draft or no existing document to compare, return state unchanged
     if (!documentMatch || !state.activeDocument) {
       state.streamController.close(); // Close the stream as we're done
-      console.log("No document in draft or no existing document to compare. Active document:", state.activeDocument);
-      console.log("Draft:", state.draft);
-      console.log("Document match:", documentMatch);
       return state;
     }
 
@@ -117,12 +113,10 @@ export class DocumentWorkflow {
     // If documents are identical, no need for summary
     if (newDocument === oldDocument) {
       state.streamController.close(); // Close the stream as we're done
-      console.log("Documents are identical, no need for summary");
       return state;
     }
 
     try {
-      console.log("Adding summary to stream");
       // Prepare prompt for summarizing changes
       const summaryPrompt = `
         Compare the original document and the new version, then create a concise summary of all changes made:
@@ -247,7 +241,6 @@ export class DocumentWorkflow {
   }
 
   private async userIntentClassificationNode(state: TAgentState) {
-    console.log("Classifying user intent");
     const { query, chatHistory } = state;
 
     // Use the last message from chat history if available, otherwise use the query

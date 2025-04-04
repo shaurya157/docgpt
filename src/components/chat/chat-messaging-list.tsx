@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
