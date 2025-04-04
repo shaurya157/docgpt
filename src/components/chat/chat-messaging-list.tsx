@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
@@ -23,9 +23,30 @@ export const ChatMessageList = ({
   onDocumentUpdate
 }: ChatMessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Scroll to bottom when messages change if user was already at bottom
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, status, streamingState]);
+
+  // Also scroll when streaming state changes if already at bottom
+  useEffect(() => {
+    if (streamingState?.message?.content) {
+      scrollToBottom();
+    }
+  }, [streamingState?.message?.content]);
 
   return (
-    <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap">
+    <div 
+      ref={containerRef}
+      className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap"
+    >
       <div className="mx-auto w-full space-y-2">
         {messages.map((message) => (
           <ChatMessageItem
