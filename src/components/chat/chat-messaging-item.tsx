@@ -24,59 +24,47 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate, isS
   // Check if document tags are fully present in the content
   const hasCompleteDocumentTags = content?.includes('<Document>') && content?.includes('</Document>');
 
+  console.log("Rendering message content");
 
   const renderMessageContent = () => {
     // --- Streaming Item Logic --- 
     if (isStreamingItem && streamingState) {
-      // Case 1: Document is actively being processed (opening tag seen, closing tag maybe not yet)
-      if (isProcessingDocument) {
-        // Extract content *after* the <Document> tag for rendering - NO LONGER NEEDED FOR DISPLAY
-        // const docContentMatch = content.match(/<Document>([\s\S]*)/);
-        // const partialDocContent = docContentMatch ? docContentMatch[1] : '...';
-        
-        return (
-          <div className="whitespace-normal break-words overflow-hidden">
-            {/* Render only the extracted partial document content - REMOVED */}
-            {/* <Markdown className="react-markdown text-sm">{partialDocContent}</Markdown> */}
-            {/* Indicator within the bubble - KEEP */}
-            <div className="flex items-center text-xs text-gray-500 mt-1">
-              <Icons.spinner className="size-3 animate-spin mr-1" />
-              <span>Creating document...</span>
-            </div>
-          </div>
-        );
-      }
-      // Case 2: Document part is finished streaming, but stream continues (summary, etc.)
-      else if (hasCompleteDocumentTags) {
-         // Parse the *current* streaming state message
-        const { appending, document, documentTitle, prepending } = parseAssistantResponse(streamingState.message);
-        return (
-          <div className="space-y-2">
-            {prepending && <Markdown className="react-markdown text-sm whitespace-normal">{prepending}</Markdown>}
-            <Button
-              variant="roundedClear"
-              className="h-auto w-auto cursor-pointer rounded-lg bg-black bg-opacity-50 p-2"
-              // Use the parsed document content from the *streaming* state
-              onClick={onDocumentUpdate(document, documentTitle)} 
-            >
-              <div className="flex items-center">
-                <FileText className='h-full w-auto'/>
-                <div className="mx-1 truncate max-w-[200px] text-sm">{documentTitle || 'Document'}</div>
+      // Parse any document-related content that might exist 
+      const { prepending, document, documentTitle, appending } = parseAssistantResponse(streamingState.message);
+
+      return (
+        <div className="space-y-2">
+          {/* Always show prepending content if it exists */}
+          {prepending && <Markdown className="react-markdown text-sm whitespace-normal">{prepending}</Markdown>}
+          
+          {/* Show either the processing indicator or the document button */}
+          {(isProcessingDocument || hasCompleteDocumentTags) && (
+            isProcessingDocument ? (
+              <div className="flex items-center text-xs text-gray-500 mt-1">
+                <Icons.spinner className="size-3 animate-spin mr-1" />
+                <span>Creating document...</span>
               </div>
-            </Button>
-            {/* The appending part will grow here as the stream continues */} 
-            {appending && <Markdown className="react-markdown text-sm whitespace-normal">{appending}</Markdown>}
-          </div>
-        );
-      }
-      // Case 3: Streaming, but no document involved (or hasn't started yet)
-      else {
-         return (
-          <div className="whitespace-normal break-words overflow-hidden">
-            <Markdown className="react-markdown text-sm">{content || '...'}</Markdown>
-          </div>
-        );
-      }
+            ) : (
+              <Button
+                variant="roundedClear"
+                className="h-auto w-auto cursor-pointer rounded-lg bg-black bg-opacity-50 p-2"
+                onClick={onDocumentUpdate(document, documentTitle)}
+              >
+                <div className="flex items-center">
+                  <FileText className='h-full w-auto'/>
+                  <div className="mx-1 truncate max-w-[200px] text-sm">{documentTitle || 'Document'}</div>
+                </div>
+              </Button>
+            )
+          )}
+
+          {/* Show any content after the document section */}
+          {/* Render appending content if it exists and we are not processing the document */}
+          {!isProcessingDocument && appending && (
+            <Markdown className="react-markdown text-sm whitespace-normal">{appending}</Markdown> 
+          )}
+        </div>
+      );
     }
 
     // --- Finished Item Logic (No changes needed here) --- 

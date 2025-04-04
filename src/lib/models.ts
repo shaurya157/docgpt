@@ -126,7 +126,12 @@ export class ModelRouter {
       const result = await (provider === "deepseek" 
         ? this.generateDeepSeek(systemPrompt, userInput, stream ? streamController : undefined)
         : this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined));
-            
+      
+        // splitting stream output
+      if (streamController) {
+        streamController.writePartialResult("\n\n");
+      }
+      
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
