@@ -10,23 +10,6 @@ import { useEditorRef, usePlateState } from '@udecode/plate/react';
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { parseAssistantResponse } from '@/utils/document-parser';
 
-// Add useDebounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
 interface UseChatMessagingProps {
   chatId: string;
   model: string;
@@ -56,25 +39,34 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
   });
   
   const streamingStateRef = useRef<StreamingState>(streamingState);
+  const lastUpdateTimeRef = useRef<number>(0);
+  const pendingDocUpdateRef = useRef<string | null>(null);
 
-  // Track the last parsed document content
-  const [partialDocContent, setPartialDocContent] = useState('');
-  // Debounce the document content updates (300ms delay)
-  const debouncedDocContent = useDebounce(partialDocContent, 300);
-  
-  // Effect to update editor when debounced content changes
-  useEffect(() => {
-    if (debouncedDocContent && editorRef) {
+  // Throttle function for editor updates
+  const throttleEditorUpdate = useCallback(() => {
+    if (!pendingDocUpdateRef.current) return;
+    
+    const now = Date.now();
+    if (now - lastUpdateTimeRef.current >= 1200) {
       try {
-        const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(debouncedDocContent);
+        const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(pendingDocUpdateRef.current);
         if (Array.isArray(deserializedNodes) && deserializedNodes.length > 0) {
           editorRef.tf.setValue(deserializedNodes);
         }
       } catch (e) {
-        console.warn("Error deserializing debounced document content:", e);
+        console.warn("Error deserializing document content:", e);
       }
+      
+      lastUpdateTimeRef.current = now;
+      pendingDocUpdateRef.current = null;
     }
-  }, [debouncedDocContent, editorRef]);
+  }, [editorRef]);
+
+  // Set up interval for throttled updates
+  useEffect(() => {
+    const intervalId = setInterval(throttleEditorUpdate, 1200);
+    return () => clearInterval(intervalId);
+  }, [throttleEditorUpdate]);
 
   useEffect(() => {
     streamingStateRef.current = streamingState;
@@ -153,14 +145,12 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                 const docRegex = /<Document>([\s\S]*)/;
                 const match = nextState.message.content.match(docRegex);
                 if (match && match[1]) {
-                  let extractedDocContent = match[1];
+                  let partialDocContent = match[1];
                   // Remove closing tag if present for cleaner parsing
-                  extractedDocContent = extractedDocContent.replace(/<\/Document>[\s\S]*$/, '');
-                  // Update the partial doc content - this will trigger the debounced update
-                  setPartialDocContent(extractedDocContent);
+                  partialDocContent = partialDocContent.replace(/<\/Document>[\s\S]*$/, '');
                   
-                  // No longer directly updating the editor here
-                  // The useEffect with debouncedDocContent will handle the editor update
+                  // Instead of updating immediately, store for throttled update
+                  pendingDocUpdateRef.current = partialDocContent;
                 }
               }
               // --- End Live Editor Update Logic ---
@@ -238,19 +228,17 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               isProcessingDocument: false
             });
             setReadOnly(false);
-            // Reset partial content
-            setPartialDocContent('');
           },
           onStreamStart: () => {
             setReadOnly(true);
+            lastUpdateTimeRef.current = 0;
+            pendingDocUpdateRef.current = null;
             setStreamingState({
               document: { content: '', isStreaming: true }, // Stream starts
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
               reasoning: '',
               isProcessingDocument: false
             });
-            // Reset partial content on stream start
-            setPartialDocContent('');
           }
         }
       );
@@ -267,8 +255,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
         reasoning: '',
         isProcessingDocument: false
       });
-      // Reset partial content
-      setPartialDocContent('');
     }
   }, [chatId, userId, model, setUserChats, editorRef]); // Added editorRef dependency
 
