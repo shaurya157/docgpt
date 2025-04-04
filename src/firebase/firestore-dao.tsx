@@ -313,3 +313,20 @@ export async function deleteChat(chatId: string) {
 
   return { error, result };
 }
+
+export async function getDocumentById(documentId: string) {
+  const documentsRef = collection(db, 'documents');
+  const docRef = doc(documentsRef, documentId);
+  let error, result;
+
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      result = { id: docSnap.id, ...docSnap.data() };
+    }
+  } catch (e) {
+    error = e;
+  }
+
+  return { error, result };
+}

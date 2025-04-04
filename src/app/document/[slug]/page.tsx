@@ -1,22 +1,23 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-import { AssistantStatus } from 'ai';
+import { AssistantStatus, CreateMessage } from 'ai';
 import { useSession } from 'next-auth/react';
 import { redirect, useParams, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+import { type PlateEditor } from '@udecode/plate/react';
 
 import ChatContent from "@/components/chat/chat-content";
-import {PlateEditor} from "@/components/editor/plate-editor";
+import {PlateEditor as PlateEditorComponent} from "@/components/editor/plate-editor";
 import {useCreateEditor} from "@/components/editor/use-create-editor";
-import DocumentHeader from "@/components/site/document-header";
-import {createNewChat, saveCurrentDocumentState} from '@/firebase/firestore-dao';
+import DocumentHeader, { SaveStatus } from "@/components/site/document-header";
+import {createNewChat, getDocumentById, saveCurrentDocumentState, getChatMessages} from '@/firebase/firestore-dao';
 import { ChatSettingsProvider } from '@/providers/chat-settings-provider';
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
-import { Document, Message, Template } from '@/types';
+import { Document, Message, Template, Chat } from '@/types';
 import { Plate } from '@udecode/plate/react';
 
 export default function DocumentPage() {
@@ -27,11 +28,14 @@ export default function DocumentPage() {
   const editor = useCreateEditor();
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
-  const { setActiveUserDocument } = useDocument();
+  const { activeUserDocument, setActiveUserDocument } = useDocument();
   const { setUserChats, setUserOwnedDocuments, userChats, userOwnedDocuments, userTemplates } = useUserDataContext();
   const { providedTemplates } = useDocument();
   const initialized = useRef(false);
+  const isProgrammaticChangeRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('Saved');
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   if (!session?.user) {
     redirect('/');
@@ -41,124 +45,229 @@ export default function DocumentPage() {
     const initializePage = async () => {
       if (initialized.current) return;
       initialized.current = true;
-      setIsLoading(true);
+      setSaveStatus('Loading...');
 
       const slug = params.slug as string;
 
       try {
+        let docToLoad: Document | undefined;
+        let chatToLoad: { id: string; messages: Message[] } | undefined;
+
         if (slug === 'new') {
           const templateId = searchParams.get('templateId');
           if (templateId) {
-            // Find template from both user and provided templates
             const template = [...(userTemplates || []), ...(providedTemplates || [])]
               .find(t => t.id === templateId) as Template;
 
             if (!template) {
               toast.error('Template not found');
-              redirect('/home');
+              return router.replace('/home');
             }
-
-            // Create new document with template content
-            const newDoc = await handleNewChat(template.template);
-            if (!newDoc) {
-              redirect('/home');
-            }
-            router.replace(`/document/${newDoc.id}`);
+            docToLoad = await handleNewChat(template.template);
           } else {
-            // Create new blank document
-            const newDoc = await handleNewChat();
-            if (!newDoc) {
-              redirect('/home');
-            }
-            router.replace(`/document/${newDoc.id}`);
+            docToLoad = await handleNewChat();
           }
-        } else {
-          // Find existing document
-          const document = userOwnedDocuments?.find(doc => doc.id === slug);
-          if (!document) {
-            toast.error('Document not found');
-            redirect('/home');
-          }
+          if (!docToLoad) return router.replace('/home');
+          window.history.replaceState(null, '', `/document/${docToLoad.id}`);
 
-          // Find corresponding chat
-          const chat = userChats?.find(c => c.id === document.chatId);
-          if (!chat) {
-            toast.error('Chat not found');
-            redirect('/home');
+        } else {
+          const docResult = await getDocumentById(slug);
+          if (docResult.error || !docResult.result) {
+            toast.error('Document not found');
+            return router.replace('/home');
           }
-          changeEditorContent(document.document)
-          setActiveChatMessages(chat.messages)
-          setActiveUserDocument(document);
+          docToLoad = docResult.result as Document;
+          
+          const chatResult = await getChatMessages(docToLoad.chatId);
+          if (chatResult.error || !session?.user?.email) {
+            toast.error('Chat not found');
+            return router.replace('/home');
+          }
+          chatToLoad = {
+            id: docToLoad.chatId,
+            chatName: 'Untitled',
+            documentIds: [docToLoad.id],
+            files: [],
+            messages: chatResult.result || [],
+            userId: session.user.email
+          } as Chat;
         }
+
+        setActiveUserDocument(docToLoad);
+        changeEditorContent(docToLoad.document, true);
+        // Initialize localStorage on load
+        if (docToLoad.id) {
+            const initialContentString = JSON.stringify(docToLoad.document);
+            localStorage.setItem(`docgpt-save-${docToLoad.id}`, initialContentString);
+        }
+        if (chatToLoad) {
+            setActiveChatMessages(chatToLoad.messages);
+        }
+        setSaveStatus('Saved');
         setIsLoading(false);
       } catch (error) {
         console.error('Error initializing page:', error);
         toast.error('Error loading document');
-        redirect('/home');
+        setSaveStatus('Error');
+        router.replace('/home');
       }
     };
 
-    initializePage();
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+    if(session?.user && userOwnedDocuments !== undefined && userChats !== undefined && userTemplates !== undefined && providedTemplates !== undefined) {
+        initializePage();
+    }
+    
+    // Cleanup timeout on unmount or when dependencies change significantly (like slug)
+    return () => {
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+    };
+  }, [params.slug, searchParams, session, userOwnedDocuments, userChats, userTemplates, providedTemplates]);
 
-  const handleNewChat = async (initialContent?: any[]): Promise<Document> => {
+  const handleNewChat = async (initialContent?: any[]): Promise<Document | undefined> => {
+    if (!session?.user?.email) return;
     setActiveChatMessages([]);
     const chatId = uuidv4();
-    const item: Document = {
-      id: "",
+    const newDocId = uuidv4();
+    const initialDocName = 'Untitled document';
+    const initialDocValue = initialContent || [
+        { id: '1', children: [{ text: '' }], type: 'p' },
+    ];
+
+    const optimisticDoc: Document = {
+      id: newDocId,
       chatId: chatId,
-      document: initialContent || [{
-        id: '1',
-        children: [{ text: '' }],
-        type: 'p',
-      }],
-      documentName: 'Untitled document',
-      documentOwnerId: session!.user!.email!
+      document: initialDocValue,
+      documentName: initialDocName,
+      documentOwnerId: session.user.email,
     };
+
+    setUserChats(prev => prev ? [{ id: chatId, chatName: 'Untitled', documentIds: [newDocId], messages: [], userId: session.user!.email! }, ...prev] : [{ id: chatId, chatName: 'Untitled', documentIds: [newDocId], messages: [], userId: session.user!.email! }]);
+    setUserOwnedDocuments(prev => prev ? [optimisticDoc, ...prev] : [optimisticDoc]);
+    setActiveUserDocument(optimisticDoc);
+    changeEditorContent(optimisticDoc.document, true);
 
     const res = await saveCurrentDocumentState(
-      session!.user!.email!,
-      item.documentName,
+      session.user.email,
+      initialDocName,
       chatId,
-      item.document
+      initialDocValue
     );
 
-    if (res.error) {
-      toast.error(`Error creating document: ${res.error}`);
+    if (res.error || !res.result?.id) {
+      toast.error(`Error creating document: ${res.error?.message || 'Unknown error'}`);
+      return undefined;
     }
 
-    item.id = res.result.id;
+    const finalDocId = res.result.id;
 
-    const chatRes = await createNewChat(session!.user!.email!, res.result.id, chatId);
+    const chatRes = await createNewChat(session.user.email, finalDocId, chatId);
     if (chatRes.error) {
-      toast.error(`Error creating chat: ${chatRes.error}`);
+      toast.error(`Error creating chat: ${chatRes.error.message}`);
+      return undefined;
     }
-    
-    const newChat = {
-      id: chatId,
-      chatName: 'Untitled',
-      documentIds: [res.result.id],
-      messages: [],
-      userId: session!.user!.email!
-    };
-    
-    setUserChats(prev => prev ? [newChat, ...prev] : [newChat]);
-    setUserOwnedDocuments(prev => prev ? [item, ...prev] : [item]);
-    setActiveUserDocument(item);
-    changeEditorContent(item.document);
-    
-    return item;
+
+    const finalDoc: Document = { ...optimisticDoc, id: finalDocId };
+    setActiveUserDocument(finalDoc);
+    setUserOwnedDocuments(prev => prev?.map(doc => doc.id === newDocId ? finalDoc : doc) || [finalDoc]);
+    setUserChats(prev => prev?.map(chat => chat.id === chatId ? { ...chat, documentIds: [finalDocId] } : chat) || []);
+
+    return finalDoc;
   };
 
-  const changeEditorContent = (content: any[]) => {
+  const changeEditorContent = (content: any, isInitialLoad = false) => {
+    // Always mark programmatic changes to avoid triggering save logic
+    isProgrammaticChangeRef.current = true;
     editor.tf.setValue(content);
+
+    // If it's an initial load or a programmatic change that should update the baseline,
+    // update localStorage immediately.
+    if (isInitialLoad && activeUserDocument?.id) {
+        const contentString = JSON.stringify(content);
+        localStorage.setItem(`docgpt-save-${activeUserDocument.id}`, contentString);
+        // Ensure save status reflects the loaded state
+        setSaveStatus('Saved');
+        // Clear any pending save timeout from previous interactions if any
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+        }
+    }
   }
+
+  const handleEditorChange = useCallback(({ value }: { value: any }) => {
+    if (isProgrammaticChangeRef.current) {
+        isProgrammaticChangeRef.current = false;
+        return;
+    }
+
+    if (isLoading || !activeUserDocument?.id || !session?.user?.email) return;
+
+    const currentContentString = JSON.stringify(value);
+    const localStorageKey = `docgpt-save-${activeUserDocument.id}`;
+    const storedContentString = localStorage.getItem(localStorageKey);
+
+    if (currentContentString === storedContentString) {
+        // If content matches localStorage, no need to do anything, ensure status is Saved
+        if (saveStatus !== 'Saved') {
+            setSaveStatus('Saved');
+        }
+        // Clear any potentially lingering timeout if user reverts to saved state
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+        }
+        return;
+    }
+
+    // Content has changed and differs from localStorage
+    setSaveStatus('Unsaved');
+
+    // Clear existing timeout and set a new one
+    if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(async () => {
+        const finalContentValue = editor.children; // Get the latest value directly from the editor state
+        const finalContentString = JSON.stringify(finalContentValue);
+        const finalStoredString = localStorage.getItem(localStorageKey);
+
+        if (finalContentString !== finalStoredString) {
+            setSaveStatus('Saving');
+            const res = await saveCurrentDocumentState(
+                session.user!.email!,
+                activeUserDocument.documentName,
+                activeUserDocument.chatId,
+                finalContentValue,
+                activeUserDocument.id
+            );
+
+            if (res.error) {
+                toast.error(`Auto-save failed: ${res.error.message}`);
+                setSaveStatus('Error');
+            } else {
+                localStorage.setItem("documentJson", finalContentString); // Use static key
+                setSaveStatus('Saved');
+            }
+        } else {
+            // If, after the timeout, the content matches localStorage again (e.g., undo), mark as saved.
+            setSaveStatus('Saved');
+        }
+        saveTimeoutRef.current = null; // Clear the ref after execution
+    }, 2000); // 2-second delay
+
+  }, [editor, activeUserDocument, isLoading, session, saveStatus]); // Added saveStatus to dependencies
 
   if (isLoading) {
     return (
       <div className="flex h-screen flex-col">
         <div className="h-16 border-b bg-gray-100">
-          <div className="h-full w-48 animate-pulse bg-gray-200 rounded-md m-2" />
+          <div className="h-full flex items-center px-4">
+              <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-full mr-3" />
+              <div className="h-6 w-48 bg-gray-200 animate-pulse rounded-md" />
+          </div>
         </div>
         <div className='relative flex flex-1 overflow-hidden bg-gray-100'>
           <div className="flex w-full h-full justify-center">
@@ -178,35 +287,33 @@ export default function DocumentPage() {
   }
 
   return (
-    <Plate editor={editor}>
+    <Plate editor={editor} onValueChange={handleEditorChange}>
       <ChatSettingsProvider>
       <div className="flex h-screen flex-col">
-        <DocumentHeader editor={editor} />
+        <DocumentHeader editor={editor} saveStatus={saveStatus} />
         <div className='relative flex flex-1 overflow-hidden bg-gray-200'>
-          {/* Document container with dynamic positioning */}
-          <div 
+          <div
             id="document-container"
             className="flex w-full h-full justify-center"
             style={{
-              paddingRight: '0px', // Will be dynamically adjusted by chat pane width
+              paddingRight: '0px',
               transition: 'padding-right 0.1s ease-out'
             }}
           >
-            {/* Document editor area */}
             <div className="flex items-start justify-center">
-              <div 
+              <div
                 id="document-editor"
                 className='z-10 border bg-background shadow h-full mt-12
-                        w-[816px] 
-                        sm:w-[90%] 
-                        md:w-[700px] 
+                        w-[816px]
+                        sm:w-[90%]
+                        md:w-[700px]
                         lg:w-[816px]'
                 style={{
                     maxWidth: 'min(816px, 65vw)',
                     minWidth: 'min(500px, 65vw)'
                 }}
               >
-                <PlateEditor />
+                <PlateEditorComponent />
               </div>
             </div>
           </div>

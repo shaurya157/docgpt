@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
@@ -10,21 +10,37 @@ import TemplateGallery from "@/components/gallery/template-gallery";
 import HomeHeader from "@/components/site/home-header";
 import { useDocument } from "@/providers/document-provider"; 
 import { useUserDataContext } from "@/providers/user-data-provider";
-
-interface Template {
-    id: string;
-    template: any[];
-    templateName: string;
-    templateOwnerId: string;
-}
+import { getUserOwnedDocuments, getOwnedTemplates } from "@/firebase/firestore-dao";
+import { Document, Template } from "@/types";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { userOwnedDocuments, userTemplates } = useUserDataContext();
+  const { userOwnedDocuments, userTemplates, setUserOwnedDocuments, setUserTemplates } = useUserDataContext();
   const { providedTemplates } = useDocument();
   const { data: session } = useSession();
 
-  // TODO: a bit hacky...
+  useEffect(() => {
+    console.log("Fetching user data");
+    const fetchData = async () => {
+      if (session?.user?.id) {
+        try {
+          const docsSnapshot = await getUserOwnedDocuments(session.user.id);
+          const templatesSnapshot = await getOwnedTemplates(session.user.id);
+
+          const fetchedDocs = docsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Document));
+          const fetchedTemplates = templatesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Template));
+          
+          setUserOwnedDocuments(fetchedDocs);
+          setUserTemplates(fetchedTemplates);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+
+    fetchData();
+  }, [session, setUserOwnedDocuments, setUserTemplates]);
+
   if (!session?.user) {
     redirect('/');
   }
@@ -33,7 +49,7 @@ export default function Home() {
     doc.documentName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredUserTemplates = userTemplates?.map(t => t as unknown as Template).filter(template => 
+  const filteredUserTemplates = userTemplates?.filter(template => 
     template.templateName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

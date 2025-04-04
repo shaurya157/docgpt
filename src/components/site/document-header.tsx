@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { type PlateEditor } from '@udecode/plate/react';
-import { PenIcon } from 'lucide-react';
+import { PenIcon, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { saveCurrentDocumentState, saveUserTemplate, updateDocumentTitle } from '@/firebase/firestore-dao';
+import { saveUserTemplate, updateDocumentTitle } from '@/firebase/firestore-dao';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
@@ -16,7 +16,9 @@ import DocumentGalleryModal from '../gallery/document-gallery-modal';
 import TemplateGalleryModal from '../gallery/template-gallery-modal';
 import { SignOut } from '../landing/auth';
 
-const EditableDocumentName = () => {
+export type SaveStatus = 'Saved' | 'Unsaved' | 'Saving' | 'Error' | 'Loading...';
+
+const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
   const { activeUserDocument, setActiveUserDocument } = useDocument();
   const { setUserOwnedDocuments } = useUserDataContext();
   const [isEditing, setIsEditing] = useState(false);
@@ -42,10 +44,9 @@ const EditableDocumentName = () => {
     } else {
       const updatedDoc = { ...activeUserDocument, documentName: name };
       setActiveUserDocument(updatedDoc);
-      setUserOwnedDocuments(prev => 
+      setUserOwnedDocuments(prev =>
         prev?.map(doc => doc.id === activeUserDocument.id ? updatedDoc : doc)
       );
-      toast.success('Document name updated');
     }
     setIsEditing(false);
   };
@@ -56,45 +57,75 @@ const EditableDocumentName = () => {
     }
   }, [isEditing]);
 
+  const renderSaveStatusIcon = () => {
+    switch (saveStatus) {
+      case 'Saving':
+        return <Loader2 className="w-4 h-4 ml-2 animate-spin" />;
+      case 'Saved':
+        return <CheckCircle className="w-4 h-4 ml-2 text-green-600" />;
+      case 'Error':
+        return <AlertTriangle className="w-4 h-4 ml-2 text-red-600" />;
+      case 'Unsaved':
+      case 'Loading...':
+      default:
+        return null;
+    }
+  };
+
+  const getSaveStatusText = () => {
+    switch (saveStatus) {
+        case 'Saving': return 'Saving...';
+        case 'Saved': return 'Saved';
+        case 'Error': return 'Save Error';
+        case 'Unsaved': return 'Unsaved changes';
+        case 'Loading...': return 'Loading...';
+        default: return '';
+    }
+  }
+
   return (
-    <div>
-      {isEditing ? (
-        <input
-          ref={inputRef}
-          className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none px-2 py-1 w-48 text-lg"
-          value={name}
-          onBlur={handleNameChange}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleNameChange();
-            } else if (e.key === 'Escape') {
-              setName(activeUserDocument?.documentName || 'Untitled');
-              setIsEditing(false);
-            }
-          }}
-          type="text"
-        />
-      ) : (
-        <div className="flex items-center">
-          <h1 
-            className="text-lg font-medium cursor-pointer hover:border-b hover:border-black"
-            onClick={() => setIsEditing(true)}
-          >
-              {name}
-          </h1>
-          <PenIcon className="w-3.5 h-3.5 ml-1.5" />
-        </div>
-      )}
+    <div className="flex flex-col">
+      <div className="flex items-center">
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none px-1 py-0.5 w-48 text-lg font-medium -ml-1"
+            value={name}
+            onBlur={handleNameChange}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleNameChange();
+              } else if (e.key === 'Escape') {
+                setName(activeUserDocument?.documentName || 'Untitled');
+                setIsEditing(false);
+              }
+            }}
+            type="text"
+          />
+        ) : (
+          <div className="flex items-center group" onClick={() => setIsEditing(true)}>
+            <h1 className="text-lg font-medium cursor-pointer group-hover:border-b group-hover:border-gray-400 py-0.5">
+                {name}
+            </h1>
+            <PenIcon className="w-3.5 h-3.5 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+          </div>
+        )}
+      </div>
+      <div className="flex items-center h-4 mt-0.5">
+        <span className="text-xs text-gray-500 mr-1">{getSaveStatusText()}</span>
+        {renderSaveStatusIcon()}
+      </div>
     </div>
   );
 };
 
 interface DocumentHeaderProps {
   editor: PlateEditor;
+  saveStatus: SaveStatus;
 }
 
-const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
+const DocumentHeader = ({ editor, saveStatus }: DocumentHeaderProps) => {
   const router = useRouter();
   const { data: session } = useSession();
   const { activeUserDocument } = useDocument();
@@ -131,31 +162,14 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
     setIsDocumentModalOpen(true);
   };
 
-  const handleSaveDocument = async () => {
-    if (!activeUserDocument || !session?.user?.email) {
-      toast.error('No active document to save');
-      return;
-    }
-
-    const res = await saveCurrentDocumentState(
-      session.user.email,
-      activeUserDocument.documentName,
-      activeUserDocument.chatId,
-      editor.children,
-      activeUserDocument.id
-    );
-
-    if (res.error) {
-      toast.error('Error saving document');
-    } else {
-      toast.success('Document saved successfully');
-    }
-    setActiveDropdown(null);
-  };
-
   const handleSaveAsTemplate = async () => {
     if (!session?.user?.email) {
       toast.error('You must be logged in to save templates');
+      return;
+    }
+
+    if (saveStatus !== 'Saved') {
+      toast.info('Please wait for changes to save before creating a template.');
       return;
     }
 
@@ -164,7 +178,7 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
       session.user.email,
       templateName,
       editor.children,
-      false // new template, so not template owner
+      false
     );
 
     if (res.error) {
@@ -186,85 +200,63 @@ const DocumentHeader = ({ editor }: DocumentHeaderProps) => {
     <>
       <header className="flex h-18 items-center border-b bg-white px-4 justify-between">
         <div className="flex items-center">
-          <Image 
-            className="cursor-pointer w-7 h-7" 
-            onClick={() => router.push("/home")} 
-            alt="Home" 
-            src={DocGPTIcon} 
+          <Image
+            className="cursor-pointer w-7 h-7"
+            onClick={() => router.push("/home")}
+            alt="Home"
+            src={DocGPTIcon}
           />
-          
-          <div className="flex flex-col items-center ml-3">
-            <EditableDocumentName />
-          
-            <div ref={dropdownRef} className="flex w-full">
-              <div className="relative">
-                <button
-                  className="text-sm hover:bg-[#ECECEC] rounded cursor-pointer text-gray-600"
-                  onClick={() => handleDropdownClick('file')}
-                >
-                  File
-                </button>
-                {activeDropdown === 'file' && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg py-1 z-50">
-                    <button className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer" onClick={() => window.open("/document/new", "_blank")}>New</button>
-                    <button 
-                      className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
-                      onClick={handleNewDocFromTemplate}
-                    >
-                      New from template
-                    </button>
-                    <button 
-                      className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
-                      onClick={handleOpenDocument}
-                    >
-                      Open
-                    </button>
-                    <button 
-                      className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
-                      onClick={handleSaveDocument}
-                    >
-                      Save
-                    </button>
-                    <button 
-                      className="w-full px-4 py-2 text-left hover:bg-[#ECECEC] cursor-pointer"
-                      onClick={handleSaveAsTemplate}
-                    >
-                      Save as new template
-                    </button>
-                  </div>
-                )}
-              </div>
 
-              <div className="relative">
-                <button
-                  className="text-sm px-3 hover:bg-[#ECECEC] rounded cursor-pointer text-gray-600"
-                  onClick={() => handleDropdownClick('help')}
-                >
-                  Help
-                </button>
-                {activeDropdown === 'help' && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg py-1 z-50">
-                    <a className="block px-4 py-2 text-left hover:bg-[#ECECEC]" href="mailto:hello@docgpt.work">
-                      Email: hello@docgpt.work
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="flex flex-col items-start ml-3">
+            <EditableDocumentName saveStatus={saveStatus} />
           </div>
         </div>
-        <SignOut className="w-24" />
+
+        <div ref={dropdownRef} className="flex items-center space-x-2">
+          <div className="relative">
+            <button
+              onClick={() => handleDropdownClick('file')}
+              className="text-sm px-3 py-1.5 hover:bg-gray-100 rounded"
+            >
+              File
+            </button>
+            {activeDropdown === 'file' && (
+              <div className="absolute left-0 mt-2 w-48 bg-white border rounded shadow-lg z-20">
+                <button onClick={handleNewDocFromTemplate} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">New from Template</button>
+                <button onClick={handleOpenDocument} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Open Document</button>
+                <button onClick={handleSaveAsTemplate} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Save as Template</button>
+                <div className="border-t my-1"></div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center">
+            {session?.user?.image && (
+                <Image
+                    className="w-7 h-7 rounded-full mr-2"
+                    src={session.user.image}
+                    alt="User profile picture"
+                    width={28}
+                    height={28}
+                />
+            )}
+            <SignOut />
+          </div>
+        </div>
       </header>
 
-      <TemplateGalleryModal
-        onClose={() => setIsTemplateModalOpen(false)}
-        isOpen={isTemplateModalOpen}
-      />
-
-      <DocumentGalleryModal
-        onClose={() => setIsDocumentModalOpen(false)}
-        isOpen={isDocumentModalOpen}
-      />
+      {isTemplateModalOpen && (
+        <TemplateGalleryModal
+          isOpen={isTemplateModalOpen}
+          onClose={() => setIsTemplateModalOpen(false)}
+        />
+      )}
+      {isDocumentModalOpen && (
+        <DocumentGalleryModal
+          isOpen={isDocumentModalOpen}
+          onClose={() => setIsDocumentModalOpen(false)}
+        />
+      )}
     </>
   );
 };

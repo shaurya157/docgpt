@@ -157,6 +157,9 @@ export const useCreateEditor = (displayedTemplate?) => {
       FixedToolbarPlugin,
       FloatingToolbarPlugin,
     ],
+    handlers: {
+
+    },
     value: displayedTemplate ? displayedTemplate : [
       {
         children: [{ text: '' }],
