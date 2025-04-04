@@ -18,6 +18,7 @@ import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Document, Message, Template } from '@/types';
 import { Plate } from '@udecode/plate/react';
+
 export default function DocumentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -30,6 +31,7 @@ export default function DocumentPage() {
   const { setUserChats, setUserOwnedDocuments, userChats, userOwnedDocuments, userTemplates } = useUserDataContext();
   const { providedTemplates } = useDocument();
   const initialized = useRef(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   if (!session?.user) {
     redirect('/');
@@ -39,6 +41,7 @@ export default function DocumentPage() {
     const initializePage = async () => {
       if (initialized.current) return;
       initialized.current = true;
+      setIsLoading(true);
 
       const slug = params.slug as string;
 
@@ -87,6 +90,7 @@ export default function DocumentPage() {
           setActiveChatMessages(chat.messages)
           setActiveUserDocument(document);
         }
+        setIsLoading(false);
       } catch (error) {
         console.error('Error initializing page:', error);
         toast.error('Error loading document');
@@ -94,7 +98,6 @@ export default function DocumentPage() {
       }
     };
 
-    console.log('initializing page');
     initializePage();
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -151,6 +154,29 @@ export default function DocumentPage() {
     editor.tf.setValue(content);
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex h-screen flex-col">
+        <div className="h-16 border-b bg-gray-100">
+          <div className="h-full w-48 animate-pulse bg-gray-200 rounded-md m-2" />
+        </div>
+        <div className='relative flex flex-1 overflow-hidden bg-gray-100'>
+          <div className="flex w-full h-full justify-center">
+            <div className="flex items-start justify-center w-full">
+              <div className="z-10 border bg-white shadow h-[calc(100vh-4rem)] mt-12 w-[816px] rounded-lg overflow-hidden">
+                <div className="h-8 w-3/4 bg-gray-200 animate-pulse m-4 rounded-md" />
+                <div className="h-4 w-1/2 bg-gray-200 animate-pulse mx-4 my-2 rounded-md" />
+                <div className="h-4 w-2/3 bg-gray-200 animate-pulse mx-4 my-2 rounded-md" />
+                <div className="h-4 w-3/4 bg-gray-200 animate-pulse mx-4 my-2 rounded-md" />
+                <div className="h-4 w-1/2 bg-gray-200 animate-pulse mx-4 my-2 rounded-md" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Plate editor={editor}>
       <ChatSettingsProvider>
@@ -196,6 +222,5 @@ export default function DocumentPage() {
       </div>
       </ChatSettingsProvider>
     </Plate>
-    
   );
 }

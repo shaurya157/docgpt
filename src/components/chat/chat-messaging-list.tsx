@@ -24,7 +24,6 @@ export const ChatMessageList = ({
 }: ChatMessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  // const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,7 +36,7 @@ export const ChatMessageList = ({
 
   // Also scroll when streaming state changes if already at bottom
   useEffect(() => {
-    if (streamingState?.message?.content) {
+    if ( streamingState?.message?.content) {
       scrollToBottom();
     }
   }, [streamingState?.message?.content]);
