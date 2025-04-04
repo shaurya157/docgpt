@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { type PlateEditor } from '@udecode/plate/react';
-import { PenIcon, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2, PenIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ import DocumentGalleryModal from '../gallery/document-gallery-modal';
 import TemplateGalleryModal from '../gallery/template-gallery-modal';
 import { SignOut } from '../landing/auth';
 
-export type SaveStatus = 'Saved' | 'Unsaved' | 'Saving' | 'Error' | 'Loading...';
+export type SaveStatus = 'Error' | 'Loading...' | 'Saved' | 'Saving' | 'Unsaved';
 
 const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
   const { activeUserDocument, setActiveUserDocument } = useDocument();
@@ -59,14 +59,14 @@ const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
 
   const renderSaveStatusIcon = () => {
     switch (saveStatus) {
-      case 'Saving':
-        return <Loader2 className="w-4 h-4 ml-2 animate-spin" />;
-      case 'Saved':
-        return <CheckCircle className="w-4 h-4 ml-2 text-green-600" />;
       case 'Error':
         return <AlertTriangle className="w-4 h-4 ml-2 text-red-600" />;
-      case 'Unsaved':
+      case 'Saved':
+        return <CheckCircle className="w-4 h-4 ml-2 text-green-600" />;
+      case 'Saving':
+        return <Loader2 className="w-4 h-4 ml-2 animate-spin" />;
       case 'Loading...':
+      case 'Unsaved':
       default:
         return null;
     }
@@ -74,11 +74,11 @@ const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
 
   const getSaveStatusText = () => {
     switch (saveStatus) {
-        case 'Saving': return 'Saving...';
-        case 'Saved': return 'Saved';
         case 'Error': return 'Save Error';
-        case 'Unsaved': return 'Unsaved changes';
         case 'Loading...': return 'Loading...';
+        case 'Saved': return 'Saved';
+        case 'Saving': return 'Saving...';
+        case 'Unsaved': return 'Unsaved changes';
         default: return '';
     }
   }
@@ -215,16 +215,16 @@ const DocumentHeader = ({ editor, saveStatus }: DocumentHeaderProps) => {
         <div ref={dropdownRef} className="flex items-center space-x-2">
           <div className="relative">
             <button
-              onClick={() => handleDropdownClick('file')}
               className="text-sm px-3 py-1.5 hover:bg-gray-100 rounded"
+              onClick={() => handleDropdownClick('file')}
             >
               File
             </button>
             {activeDropdown === 'file' && (
               <div className="absolute left-0 mt-2 w-48 bg-white border rounded shadow-lg z-20">
-                <button onClick={handleNewDocFromTemplate} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">New from Template</button>
-                <button onClick={handleOpenDocument} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Open Document</button>
-                <button onClick={handleSaveAsTemplate} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Save as Template</button>
+                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleNewDocFromTemplate}>New from Template</button>
+                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleOpenDocument}>Open Document</button>
+                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleSaveAsTemplate}>Save as Template</button>
                 <div className="border-t my-1"></div>
               </div>
             )}
@@ -234,10 +234,10 @@ const DocumentHeader = ({ editor, saveStatus }: DocumentHeaderProps) => {
             {session?.user?.image && (
                 <Image
                     className="w-7 h-7 rounded-full mr-2"
-                    src={session.user.image}
                     alt="User profile picture"
-                    width={28}
                     height={28}
+                    src={session.user.image}
+                    width={28}
                 />
             )}
             <SignOut />
@@ -247,14 +247,14 @@ const DocumentHeader = ({ editor, saveStatus }: DocumentHeaderProps) => {
 
       {isTemplateModalOpen && (
         <TemplateGalleryModal
-          isOpen={isTemplateModalOpen}
           onClose={() => setIsTemplateModalOpen(false)}
+          isOpen={isTemplateModalOpen}
         />
       )}
       {isDocumentModalOpen && (
         <DocumentGalleryModal
-          isOpen={isDocumentModalOpen}
           onClose={() => setIsDocumentModalOpen(false)}
+          isOpen={isDocumentModalOpen}
         />
       )}
     </>

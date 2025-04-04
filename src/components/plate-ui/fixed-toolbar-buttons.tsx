@@ -33,7 +33,6 @@ import {
   UnderlineIcon,
   WandSparklesIcon,
 } from 'lucide-react';
-import {useSession} from "next-auth/react";
 
 import { MoreDropdownMenu } from '@/components/plate-ui/more-dropdown-menu';
 

@@ -96,65 +96,6 @@ export class DocumentWorkflow {
     }
   }
 
-  private async summarizeChangesNode(state: TAgentState) {
-    // Check if draft contains a document
-    const documentRegex = /<Document>([\s\S]*?)<\/Document>/;
-    const documentMatch = state.draft.match(documentRegex);
-
-    // If no document in draft or no existing document to compare, return state unchanged
-    if (!documentMatch || !state.activeDocument) {
-      state.streamController.close(); // Close the stream as we're done
-      return state;
-    }
-
-    const newDocument = documentMatch[1].trim();
-    const oldDocument = state.activeDocument.trim();
-
-    // If documents are identical, no need for summary
-    if (newDocument === oldDocument) {
-      state.streamController.close(); // Close the stream as we're done
-      return state;
-    }
-
-    try {
-      // Prepare prompt for summarizing changes
-      const summaryPrompt = `
-        Compare the original document and the new version, then create a concise summary of all changes made:
-
-        Original document:
-        ${oldDocument}
-
-        New document:
-        ${newDocument}
-
-        Provide a concise bullet point list of all modifications, additions, and deletions.
-        Your summary should be written from the perspective of the one making the changes. E.g.: I've made the following changes: 1)In section XYZ I changed \n - A -\n to \n - B -\n.
-        Reply in markdown format. Use ordered lists for the bullet points.
-        Never add triple backticks to the beginning or end of your response unless referring to code.
-        `;
-
-      // Use Open AI 4o to generate summary
-      const summary = await this.model.generate(
-        "Open AI 4o",
-        summaryPrompt,
-        "Generate a summary of document changes",
-        true,
-        state.streamController
-      );
-
-      // Close the stream when we're done with everything
-      state.streamController.close();
-      
-      // Return state (summary is already streamed to the client)
-      return state;
-    } catch (error) {
-      console.error("Error in summarize changes node:", error);
-      state.streamController.writeSystemMessage("Failed to generate change summary\n");
-      state.streamController.close(); // Close stream on error
-      return state;
-    }
-  }
-
   private async retrieveChatHistoryNode(state: TAgentState) {
     try {
       const messages = await getChatHistory(state.chatId);
@@ -180,7 +121,7 @@ export class DocumentWorkflow {
       results = await index.searchRecords({
         fields: ["text", "userId", "fileName"],
         query: {
-            filter: { userId: state.userId, chatId: state.chatId },
+            filter: { chatId: state.chatId, userId: state.userId },
             inputs: { text: state.query },
             topK: 10,
         }
@@ -240,8 +181,67 @@ export class DocumentWorkflow {
     return state.feedback.length > 0 ? "generate" : "end";
   }
 
+  private async summarizeChangesNode(state: TAgentState) {
+    // Check if draft contains a document
+    const documentRegex = /<Document>([\s\S]*?)<\/Document>/;
+    const documentMatch = state.draft.match(documentRegex);
+
+    // If no document in draft or no existing document to compare, return state unchanged
+    if (!documentMatch || !state.activeDocument) {
+      state.streamController.close(); // Close the stream as we're done
+      return state;
+    }
+
+    const newDocument = documentMatch[1].trim();
+    const oldDocument = state.activeDocument.trim();
+
+    // If documents are identical, no need for summary
+    if (newDocument === oldDocument) {
+      state.streamController.close(); // Close the stream as we're done
+      return state;
+    }
+
+    try {
+      // Prepare prompt for summarizing changes
+      const summaryPrompt = `
+        Compare the original document and the new version, then create a concise summary of all changes made:
+
+        Original document:
+        ${oldDocument}
+
+        New document:
+        ${newDocument}
+
+        Provide a concise bullet point list of all modifications, additions, and deletions.
+        Your summary should be written from the perspective of the one making the changes. E.g.: I've made the following changes: 1)In section XYZ I changed \n - A -\n to \n - B -\n.
+        Reply in markdown format. Use ordered lists for the bullet points.
+        Never add triple backticks to the beginning or end of your response unless referring to code.
+        `;
+
+      // Use Open AI 4o to generate summary
+      const summary = await this.model.generate(
+        "Open AI 4o",
+        summaryPrompt,
+        "Generate a summary of document changes",
+        true,
+        state.streamController
+      );
+
+      // Close the stream when we're done with everything
+      state.streamController.close();
+      
+      // Return state (summary is already streamed to the client)
+      return state;
+    } catch (error) {
+      console.error("Error in summarize changes node:", error);
+      state.streamController.writeSystemMessage("Failed to generate change summary\n");
+      state.streamController.close(); // Close stream on error
+      return state;
+    }
+  }
+
   private async userIntentClassificationNode(state: TAgentState) {
-    const { query, chatHistory } = state;
+    const { chatHistory, query } = state;
 
     // Use the last message from chat history if available, otherwise use the query
     const lastUserMessage = chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;

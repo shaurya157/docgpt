@@ -7,7 +7,7 @@ import { StreamParser } from './parse-stream';
 
 interface StreamCallbacks {
   onError: (error: Error) => void;
-  onStateUpdate: (state: Pick<StreamingState, 'message' | 'reasoning' | 'isProcessingDocument'>) => void;
+  onStateUpdate: (state: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'>) => void;
   onStreamEnd: (finalContent: string) => void;
   onStreamStart: () => void;
 }
@@ -46,15 +46,15 @@ export const sendChatMessage = async (
     reader = result.body.getReader();
     const streamParser = new StreamParser();
     let accumulatedContent = '';
-    const internalState: Pick<StreamingState, 'message' | 'reasoning' | 'isProcessingDocument'> = {
+    const internalState: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'> = {
+      isProcessingDocument: false,
       message: {
         id: 'streaming',
         content: '',
         fileNames: [],
         role: 'assistant'
       },
-      reasoning: '',
-      isProcessingDocument: false
+      reasoning: ''
     };
 
     callbacks.onStreamStart();
@@ -93,7 +93,7 @@ export const sendChatMessage = async (
 
 function processMessages(
   messages: StreamMessage[],
-  state: Pick<StreamingState, 'message' | 'reasoning' | 'isProcessingDocument'>,
+  state: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'>,
   callbacks: StreamCallbacks,
   onContentUpdate?: (content: string) => void
 ) {
@@ -135,9 +135,9 @@ function processMessages(
 
   if (hasUpdates) {
     callbacks.onStateUpdate({
+      isProcessingDocument: state.isProcessingDocument,
       message: { ...state.message },
-      reasoning: currentReasoning,
-      isProcessingDocument: state.isProcessingDocument
+      reasoning: currentReasoning
     });
     if (state.isProcessingDocument && state.message.content.includes('</Document>')) {
         state.isProcessingDocument = false;

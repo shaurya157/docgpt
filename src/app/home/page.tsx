@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
@@ -8,14 +8,14 @@ import { redirect } from "next/navigation";
 import DocumentGallery from "@/components/gallery/document-gallery";
 import TemplateGallery from "@/components/gallery/template-gallery";
 import HomeHeader from "@/components/site/home-header";
-import { useDocument } from "@/providers/document-provider"; 
+import { getOwnedTemplates, getUserOwnedDocuments } from "@/firebase/firestore-dao"; 
+import { useDocument } from "@/providers/document-provider";
 import { useUserDataContext } from "@/providers/user-data-provider";
-import { getUserOwnedDocuments, getOwnedTemplates } from "@/firebase/firestore-dao";
 import { Document, Template } from "@/types";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { userOwnedDocuments, userTemplates, setUserOwnedDocuments, setUserTemplates } = useUserDataContext();
+  const { setUserOwnedDocuments, setUserTemplates, userOwnedDocuments, userTemplates } = useUserDataContext();
   const { providedTemplates } = useDocument();
   const { data: session } = useSession();
 

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { MarkdownPlugin } from '@udecode/plate-markdown';
+import { useEditorRef, usePlateState } from '@udecode/plate/react';
 import { toast } from 'sonner';
 
 import { storeMessage } from '@/firebase/firestore-dao';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message, StreamingState } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
-import { useEditorRef, usePlateState } from '@udecode/plate/react';
-import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { parseAssistantResponse } from '@/utils/document-parser';
 
 interface UseChatMessagingProps {
@@ -28,14 +28,14 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       content: '',
       isStreaming: false
     },
+    isProcessingDocument: false,
     message: {
       id: 'streaming',
       content: '',
       fileNames: [],
       role: 'assistant'
     },
-    reasoning: '',
-    isProcessingDocument: false
+    reasoning: ''
   });
   
   const streamingStateRef = useRef<StreamingState>(streamingState);
@@ -123,20 +123,20 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             setMessages(prev => prev.filter(m => m.id !== 'streaming'));
             setStreamingState({
               document: { content: '', isStreaming: false }, // Stream ends
+              isProcessingDocument: false,
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
-              reasoning: '',
-              isProcessingDocument: false
+              reasoning: ''
             });
           },
           // Use the extended state update type
-          onStateUpdate: (newStateUpdate: Pick<StreamingState, 'message' | 'reasoning' | 'isProcessingDocument'>) => {
+          onStateUpdate: (newStateUpdate: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'>) => {
             setStreamingState(prevState => {
               const nextState: StreamingState = {
                 // Update all parts based on the incoming update
                 document: prevState.document, // Keep document content until end
-                message: newStateUpdate.message, 
+                isProcessingDocument: newStateUpdate.isProcessingDocument, 
+                message: newStateUpdate.message,
                 reasoning: newStateUpdate.reasoning,
-                isProcessingDocument: newStateUpdate.isProcessingDocument,
               };
 
               // --- Live Editor Update Logic --- 
@@ -170,8 +170,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
               const { document } = parseAssistantResponse({ 
                 id: 'temp', 
                 content: finalContent, 
-                role: 'assistant', 
-                fileNames: []
+                fileNames: [], 
+                role: 'assistant'
               });
               finalDocumentContent = document;
               // Update the editor with the final document content
@@ -223,9 +223,9 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                 content: finalDocumentContent, 
                 isStreaming: false // Stream ended
               },
+              isProcessingDocument: false,
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
-              reasoning: '',
-              isProcessingDocument: false
+              reasoning: ''
             });
             setReadOnly(false);
           },
@@ -235,9 +235,9 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             pendingDocUpdateRef.current = null;
             setStreamingState({
               document: { content: '', isStreaming: true }, // Stream starts
+              isProcessingDocument: false,
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
-              reasoning: '',
-              isProcessingDocument: false
+              reasoning: ''
             });
           }
         }
@@ -251,9 +251,9 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       // Reset state on catch
       setStreamingState({
         document: { content: '', isStreaming: false }, // Stream ends
+        isProcessingDocument: false,
         message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
-        reasoning: '',
-        isProcessingDocument: false
+        reasoning: ''
       });
     }
   }, [chatId, userId, model, setUserChats, editorRef]); // Added editorRef dependency

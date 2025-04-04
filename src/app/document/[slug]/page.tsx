@@ -1,24 +1,23 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { AssistantStatus, CreateMessage } from 'ai';
+import { Plate } from '@udecode/plate/react';
+import { AssistantStatus } from 'ai';
 import { useSession } from 'next-auth/react';
 import { redirect, useParams, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-import { type PlateEditor } from '@udecode/plate/react';
 
 import ChatContent from "@/components/chat/chat-content";
 import {PlateEditor as PlateEditorComponent} from "@/components/editor/plate-editor";
 import {useCreateEditor} from "@/components/editor/use-create-editor";
 import DocumentHeader, { SaveStatus } from "@/components/site/document-header";
-import {createNewChat, getDocumentById, saveCurrentDocumentState, getChatMessages} from '@/firebase/firestore-dao';
+import {createNewChat, getChatMessages, getDocumentById, saveCurrentDocumentState} from '@/firebase/firestore-dao';
 import { ChatSettingsProvider } from '@/providers/chat-settings-provider';
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
-import { Document, Message, Template, Chat } from '@/types';
-import { Plate } from '@udecode/plate/react';
+import { Chat, Document, Message, Template } from '@/types';
 
 export default function DocumentPage() {
   const params = useParams();
@@ -287,7 +286,7 @@ export default function DocumentPage() {
   }
 
   return (
-    <Plate editor={editor} onValueChange={handleEditorChange}>
+    <Plate onValueChange={handleEditorChange} editor={editor}>
       <ChatSettingsProvider>
       <div className="flex h-screen flex-col">
         <DocumentHeader editor={editor} saveStatus={saveStatus} />

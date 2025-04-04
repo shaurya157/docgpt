@@ -73,9 +73,9 @@ export default function Landing() {
                   <Image 
                     className="w-full rounded-[24px] shadow-lg" 
                     alt="DocGPT document editor interface" 
+                    height={675}
                     src={MainUIImage}
                     width={1200}
-                    height={675}
                     priority
                   />
                 </div>
@@ -93,36 +93,36 @@ export default function Landing() {
                 <Image 
                   className="w-auto h-[40px] object-contain mt-[10px]" 
                   alt="Amazon Logo" 
+                  height={80}
                   src={AmazonLogo}
                   width={220}
-                  height={80}
                 />
               </div>
               <div className="w-[220px] h-[80px] flex items-center justify-center">
                 <Image 
                   className="w-auto h-[80px] object-contain" 
                   alt="Uber Logo" 
+                  height={80}
                   src={UberLogo}
                   width={220}
-                  height={80}
                 />
               </div>
               <div className="w-[220px] h-[80px] flex items-center justify-center">
                 <Image 
                   className="w-auto h-[80px] object-contain" 
                   alt="Meta Logo" 
+                  height={80}
                   src={MetaLogo}
                   width={220}
-                  height={80}
                 />
               </div>
               <div className="w-[220px] h-[80px] flex items-center justify-center">
                 <Image 
                   className="w-auto h-[45px] object-contain" 
                   alt="Google Logo" 
+                  height={80}
                   src={GoogleLogo}
                   width={220}
-                  height={80}
                 />
               </div>
             </div>
@@ -149,9 +149,9 @@ export default function Landing() {
                   <Image 
                     className="w-full h-auto object-cover rounded-xl" 
                     alt="DocGPT chat interface with prompt" 
+                    height={500}
                     src={ChatPromptImage}
                     width={800}
-                    height={500}
                   />
                 </div>
               </div>
@@ -169,9 +169,9 @@ export default function Landing() {
                   <Image 
                     className="w-full h-auto object-cover rounded-xl" 
                     alt="Amazon BRD template example" 
+                    height={500}
                     src={AmazonBRD}
                     width={800}
-                    height={500}
                   />
                 </div>
               </div>
@@ -213,11 +213,11 @@ export default function Landing() {
                     <div className="bg-white py-3 px-6 rounded-full shadow-sm flex items-center">
                       <div className="flex-shrink-0 mr-4">
                         <Image 
-                          src={OpenAIFullLogo}
-                          alt="OpenAI Logo"
-                          width={180}
-                          height={40}
                           className="h-6 w-auto"
+                          alt="OpenAI Logo"
+                          height={40}
+                          src={OpenAIFullLogo}
+                          width={180}
                         />
                       </div>
                       <h3 className="font-medium text-[#1d1d1f] text-[18px]">O1</h3>
@@ -227,11 +227,11 @@ export default function Landing() {
                     <div className="bg-white py-3 px-6 rounded-full shadow-sm flex items-center">
                       <div className="flex-shrink-0 mr-4">
                         <Image 
-                          src={OpenAIFullLogo}
-                          alt="OpenAI Logo"
-                          width={180}
-                          height={40}
                           className="h-6 w-auto"
+                          alt="OpenAI Logo"
+                          height={40}
+                          src={OpenAIFullLogo}
+                          width={180}
                         />
                       </div>
                       <h3 className="font-medium text-[#1d1d1f] text-[18px]">GPT-4o</h3>
@@ -244,11 +244,11 @@ export default function Landing() {
                     <div className="bg-white py-3 px-6 rounded-full shadow-sm flex items-center">
                       <div className="flex-shrink-0 mr-4">
                         <Image 
-                          src={DeepSeekLogo}
-                          alt="DeepSeek Logo"
-                          width={180}
-                          height={40}
                           className="h-7 w-auto"
+                          alt="DeepSeek Logo"
+                          height={40}
+                          src={DeepSeekLogo}
+                          width={180}
                         />
                       </div>
                       <h3 className="font-medium text-[#1d1d1f] text-[18px]">R1</h3>

@@ -101,6 +101,9 @@ import { ToggleElement } from '@/components/plate-ui/toggle-element';
 
 export const useCreateEditor = (displayedTemplate?) => {
   return usePlateEditor({
+    handlers: {
+
+    },
     override: {
       components: withPlaceholders({
         [AIPlugin.key]: AILeaf,
@@ -157,9 +160,6 @@ export const useCreateEditor = (displayedTemplate?) => {
       FixedToolbarPlugin,
       FloatingToolbarPlugin,
     ],
-    handlers: {
-
-    },
     value: displayedTemplate ? displayedTemplate : [
       {
         children: [{ text: '' }],
