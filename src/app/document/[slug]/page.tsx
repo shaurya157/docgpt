@@ -45,6 +45,7 @@ export default function DocumentPage() {
       if (initialized.current) return;
       initialized.current = true;
       setSaveStatus('Loading...');
+      setIsLoading(true);
 
       const slug = params.slug as string;
 
@@ -55,6 +56,12 @@ export default function DocumentPage() {
         if (slug === 'new') {
           const templateId = searchParams.get('templateId');
           if (templateId) {
+            if (!userTemplates || !providedTemplates) {
+                console.warn("Templates not ready, deferring 'new' document creation from template.");
+                initialized.current = false;
+                setIsLoading(false);
+                return;
+            }
             const template = [...(userTemplates || []), ...(providedTemplates || [])]
               .find(t => t.id === templateId) as Template;
 
@@ -70,37 +77,51 @@ export default function DocumentPage() {
           window.history.replaceState(null, '', `/document/${docToLoad.id}`);
 
         } else {
+          // Fetch document first
           const docResult = await getDocumentById(slug);
+
           if (docResult.error || !docResult.result) {
             toast.error('Document not found');
+            setIsLoading(false);
+            setSaveStatus('Error');
             return router.replace('/home');
           }
           docToLoad = docResult.result as Document;
-          
-          const chatResult = await getChatMessages(docToLoad.chatId);
-          if (chatResult.error || !session?.user?.email) {
-            toast.error('Chat not found');
-            return router.replace('/home');
+
+          // Then fetch chat messages using the chatId from the loaded document
+          const chatResult = await getChatMessages(docToLoad.chatId); // Ensure only chatId is passed
+
+          if (chatResult.error) {
+            // Log the error but proceed, initializing chat messages as empty
+            console.warn(`Error fetching chat messages for chat ${docToLoad.chatId}:`, chatResult.error);
+            chatToLoad = { id: docToLoad.chatId, messages: [] };
+          } else {
+            // Chat messages fetched successfully (or document had no messages)
+            chatToLoad = {
+              id: docToLoad.chatId,
+              messages: chatResult.result || [], // Use fetched messages or empty array
+            };
           }
-          chatToLoad = {
-            id: docToLoad.chatId,
-            chatName: 'Untitled',
-            documentIds: [docToLoad.id],
-            files: [],
-            messages: chatResult.result || [],
-            userId: session.user.email
-          } as Chat;
+        }
+
+        if (!docToLoad) {
+             console.error("docToLoad is undefined after initialization logic.");
+             toast.error("Failed to load or create document.");
+             setSaveStatus('Error');
+             setIsLoading(false);
+             return;
         }
 
         setActiveUserDocument(docToLoad);
         changeEditorContent(docToLoad.document, true);
-        // Initialize localStorage on load
         if (docToLoad.id) {
             const initialContentString = JSON.stringify(docToLoad.document);
             localStorage.setItem(`docgpt-save-${docToLoad.id}`, initialContentString);
         }
         if (chatToLoad) {
-            setActiveChatMessages(chatToLoad.messages);
+            setActiveChatMessages(chatToLoad.messages.filter(msg => msg) || []);
+        } else {
+            setActiveChatMessages([]);
         }
         setSaveStatus('Saved');
         setIsLoading(false);
@@ -108,21 +129,23 @@ export default function DocumentPage() {
         console.error('Error initializing page:', error);
         toast.error('Error loading document');
         setSaveStatus('Error');
+        setIsLoading(false);
         router.replace('/home');
       }
     };
 
-    if(session?.user && userOwnedDocuments !== undefined && userChats !== undefined && userTemplates !== undefined && providedTemplates !== undefined) {
+    if (session?.user) {
         initializePage();
+    } else {
+      console.log("Waiting for session...");
     }
-    
-    // Cleanup timeout on unmount or when dependencies change significantly (like slug)
+
     return () => {
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
         }
     };
-  }, [params.slug, searchParams, session, userOwnedDocuments, userChats, userTemplates, providedTemplates]);
+  }, [params.slug, session, router, searchParams, userTemplates, providedTemplates]);
 
   const handleNewChat = async (initialContent?: any[]): Promise<Document | undefined> => {
     if (!session?.user?.email) return;
@@ -156,6 +179,10 @@ export default function DocumentPage() {
 
     if (res.error || !res.result?.id) {
       toast.error(`Error creating document: ${res.error?.message || 'Unknown error'}`);
+      // Clean up optimistic updates if creation fails
+      setUserChats(prev => prev?.filter(chat => chat.id !== chatId) || []);
+      setUserOwnedDocuments(prev => prev?.filter(doc => doc.id !== newDocId) || []);
+      setActiveUserDocument(undefined);
       return undefined;
     }
 
@@ -164,11 +191,16 @@ export default function DocumentPage() {
     const chatRes = await createNewChat(session.user.email, finalDocId, chatId);
     if (chatRes.error) {
       toast.error(`Error creating chat: ${chatRes.error.message}`);
+      // Consider how to handle partial success (document created, chat failed)
+      // Maybe delete the created document or allow user to retry chat creation?
+      // For now, return undefined, leaving the created doc potentially orphaned in terms of chat linkage UI
+       setUserChats(prev => prev?.filter(chat => chat.id !== chatId) || []); // remove optimistic chat
       return undefined;
     }
 
     const finalDoc: Document = { ...optimisticDoc, id: finalDocId };
     setActiveUserDocument(finalDoc);
+    // Update optimistic states with final ID
     setUserOwnedDocuments(prev => prev?.map(doc => doc.id === newDocId ? finalDoc : doc) || [finalDoc]);
     setUserChats(prev => prev?.map(chat => chat.id === chatId ? { ...chat, documentIds: [finalDocId] } : chat) || []);
 
@@ -176,28 +208,33 @@ export default function DocumentPage() {
   };
 
   const changeEditorContent = (content: any, isInitialLoad = false) => {
-    // Always mark programmatic changes to avoid triggering save logic
+    // Mark programmatic changes to avoid triggering save logic unnecessarily
     isProgrammaticChangeRef.current = true;
     editor.tf.setValue(content);
 
-    // If it's an initial load or a programmatic change that should update the baseline,
-    // update localStorage immediately.
+    // If it's an initial load, update localStorage baseline immediately.
     if (isInitialLoad && activeUserDocument?.id) {
         const contentString = JSON.stringify(content);
         localStorage.setItem(`docgpt-save-${activeUserDocument.id}`, contentString);
-        // Ensure save status reflects the loaded state
+        // Reflect the loaded state
         setSaveStatus('Saved');
-        // Clear any pending save timeout from previous interactions if any
+        // Clear any pending save timeout from previous interactions
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
             saveTimeoutRef.current = null;
         }
     }
+    // Important: Reset the flag *after* the update operation that might trigger onChange
+    // Use setTimeout to ensure it resets after the current event loop tick
+    setTimeout(() => {
+        isProgrammaticChangeRef.current = false;
+    }, 0);
   }
 
   const handleEditorChange = useCallback(({ value }: { value: any }) => {
+    // Ignore changes triggered by programmatic updates (like initial load or AI response)
     if (isProgrammaticChangeRef.current) {
-        isProgrammaticChangeRef.current = false;
+        // Do not reset the flag here; changeEditorContent handles resetting it after update
         return;
     }
 
@@ -207,12 +244,11 @@ export default function DocumentPage() {
     const localStorageKey = `docgpt-save-${activeUserDocument.id}`;
     const storedContentString = localStorage.getItem(localStorageKey);
 
+    // If content matches localStorage, ensure status is Saved and clear any pending save.
     if (currentContentString === storedContentString) {
-        // If content matches localStorage, no need to do anything, ensure status is Saved
         if (saveStatus !== 'Saved') {
             setSaveStatus('Saved');
         }
-        // Clear any potentially lingering timeout if user reverts to saved state
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
             saveTimeoutRef.current = null;
@@ -220,19 +256,22 @@ export default function DocumentPage() {
         return;
     }
 
-    // Content has changed and differs from localStorage
+    // Content has changed and differs from localStorage baseline
     setSaveStatus('Unsaved');
 
-    // Clear existing timeout and set a new one
+    // Clear existing debounce timeout and set a new one for auto-save
     if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
     }
 
     saveTimeoutRef.current = setTimeout(async () => {
-        const finalContentValue = editor.children; // Get the latest value directly from the editor state
+        // Re-read the editor state at the moment of saving to get the latest value
+        const finalContentValue = editor.children;
         const finalContentString = JSON.stringify(finalContentValue);
-        const finalStoredString = localStorage.getItem(localStorageKey);
 
+        // Double-check against localStorage *again* before saving
+        // User might have quickly undone changes back to the saved state
+        const finalStoredString = localStorage.getItem(localStorageKey);
         if (finalContentString !== finalStoredString) {
             setSaveStatus('Saving');
             const res = await saveCurrentDocumentState(
@@ -247,44 +286,42 @@ export default function DocumentPage() {
                 toast.error(`Auto-save failed: ${res.error.message}`);
                 setSaveStatus('Error');
             } else {
-                localStorage.setItem("documentJson", finalContentString); // Use static key
+                // Update localStorage baseline *after* successful save
+                localStorage.setItem(localStorageKey, finalContentString);
                 setSaveStatus('Saved');
             }
         } else {
-            // If, after the timeout, the content matches localStorage again (e.g., undo), mark as saved.
+            // Content matches saved state again, just ensure status is Saved.
             setSaveStatus('Saved');
         }
         saveTimeoutRef.current = null; // Clear the ref after execution
-    }, 2000); // 2-second delay
+    }, 2000); // 2-second debounce delay
 
-  }, [editor, activeUserDocument, isLoading, session, saveStatus]); // Added saveStatus to dependencies
+  }, [editor, activeUserDocument, isLoading, session, saveStatus]); // Dependencies for the editor change handler
 
+  // Loading state display
   if (isLoading) {
     return (
       <div className="flex h-screen flex-col">
-        <div className="h-16 border-b bg-gray-100">
-          <div className="h-full flex items-center px-4">
-              <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-full mr-3" />
-              <div className="h-6 w-48 bg-gray-200 animate-pulse rounded-md" />
-          </div>
+        {/* Simplified Skeleton Loader */}
+        <div className="h-16 border-b bg-gray-100 flex items-center px-4">
+            <div className="h-8 w-8 bg-gray-200 animate-pulse rounded-full mr-3" />
+            <div className="h-6 w-48 bg-gray-200 animate-pulse rounded-md" />
         </div>
-        <div className='relative flex flex-1 overflow-hidden bg-gray-100'>
-          <div className="flex w-full h-full justify-center">
-            <div className="flex items-start justify-center w-full">
-              <div className="z-10 border bg-white shadow h-[calc(100vh-4rem)] mt-12 w-[816px] rounded-lg overflow-hidden">
-                <div className="h-8 w-3/4 bg-gray-200 animate-pulse m-4 rounded-md" />
-                <div className="h-4 w-1/2 bg-gray-200 animate-pulse mx-4 my-2 rounded-md" />
-                <div className="h-4 w-2/3 bg-gray-200 animate-pulse mx-4 my-2 rounded-md" />
-                <div className="h-4 w-3/4 bg-gray-200 animate-pulse mx-4 my-2 rounded-md" />
-                <div className="h-4 w-1/2 bg-gray-200 animate-pulse mx-4 my-2 rounded-md" />
-              </div>
+        <div className='relative flex flex-1 overflow-hidden bg-gray-100 justify-center items-start p-4'>
+            <div className="z-10 border bg-white shadow mt-12 w-full max-w-[816px] rounded-lg overflow-hidden p-4 space-y-3">
+              <div className="h-8 w-3/4 bg-gray-200 animate-pulse rounded-md" />
+              <div className="h-4 w-1/2 bg-gray-200 animate-pulse rounded-md" />
+              <div className="h-4 w-2/3 bg-gray-200 animate-pulse rounded-md" />
+              <div className="h-4 w-3/4 bg-gray-200 animate-pulse rounded-md" />
+              <div className="h-4 w-1/2 bg-gray-200 animate-pulse rounded-md" />
             </div>
-          </div>
         </div>
       </div>
     );
   }
 
+  // Main component return when not loading
   return (
     <Plate onValueChange={handleEditorChange} editor={editor}>
       <ChatSettingsProvider>
@@ -293,30 +330,27 @@ export default function DocumentPage() {
         <div className='relative flex flex-1 overflow-hidden bg-gray-200'>
           <div
             id="document-container"
-            className="flex w-full h-full justify-center"
+            className="flex w-full h-full justify-center overflow-y-auto" // Added overflow-y-auto
             style={{
-              paddingRight: '0px',
+              paddingRight: '0px', // Consider if chat panel width needs to affect this
               transition: 'padding-right 0.1s ease-out'
             }}
           >
-            <div className="flex items-start justify-center">
-              <div
-                id="document-editor"
-                className='z-10 border bg-background shadow h-full mt-12
-                        w-[816px]
-                        sm:w-[90%]
-                        md:w-[700px]
-                        lg:w-[816px]'
-                style={{
-                    maxWidth: 'min(816px, 65vw)',
-                    minWidth: 'min(500px, 65vw)'
-                }}
-              >
-                <PlateEditorComponent />
-              </div>
+            {/* Removed intermediate divs, apply padding/margin directly if needed */}
+            <div
+              id="document-editor"
+              className='z-10 border bg-background shadow-lg h-fit min-h-full my-12 p-8 md:p-12' // Added padding, shadow-lg, h-fit, min-h-full
+              style={{
+                  // Responsive width using max-w and viewport units
+                  width: '100%',
+                  maxWidth: 'min(816px, 90vw)', // Max width, responsive
+                  boxSizing: 'border-box', // Include padding in width calculation
+              }}
+            >
+              <PlateEditorComponent />
             </div>
           </div>
-          
+
           <ChatContent
             activeChatMessages={activeChatMessages}
             changeEditorContent={changeEditorContent}
