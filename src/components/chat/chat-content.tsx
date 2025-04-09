@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { ChatMessageList } from '@/components/chat/chat-messaging-list';
 import { ChatSettings } from '@/components/chat/chat-settings';
 import { FileAttachmentList } from '@/components/chat/file-attachment-list';
+import { CustomContextDisplay } from '@/components/chat/custom-context'; // Added import
 import { appendChatSpecificFileIds } from '@/firebase/firestore-dao';
 import { useChatMessaging } from '@/hooks/use-chat-messaging';
 import { useDocumentIntegration } from '@/hooks/use-document-integration';
@@ -33,12 +34,12 @@ const ChatContent = ({
   setStatus,
   status
 }: ContentProps) => {
+  
   const { activeUserDocument } = useDocument();
   const { data: session } = useSession();
   const userDataContext = useUserDataContext();
   const { setUserChats } = userDataContext;
   const [inputValue, setInputValue] = useState('');
-  const [isChatActive, setIsChatActive] = useState(false);
   const { selectedModel } = useChatSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -277,23 +278,6 @@ const ChatContent = ({
     updateAttachments(e.target.files);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (chatContainerRef.current && !chatContainerRef.current.contains(event.target as Node)) {
-        setIsChatActive(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleChatFocus = () => {
-    setIsChatActive(true);
-  };
-
   return (
     <motion.div
       ref={chatContainerRef}
@@ -303,7 +287,6 @@ const ChatContent = ({
         transition: isDragging ? 'none' : 'width 0.1s ease-out',
         width: `${paneWidth}px`
       }}
-      onClick={handleChatFocus}
     >
       {/* Drag handle */}
       <div 
@@ -335,6 +318,8 @@ const ChatContent = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
+            {/* Display Custom Context Items */}
+            <CustomContextDisplay />
       <div className="w-full border-t border-gray-200 bg-white pt-0.5 pb-1 px-2">
         <div className="flex flex-col gap-0">
           <div className="mt-0.5 mb-0">

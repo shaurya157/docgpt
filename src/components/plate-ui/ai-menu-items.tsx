@@ -1,12 +1,12 @@
-'use client';
-
-import { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { type SlateEditor, NodeApi } from '@udecode/plate';
+// Removed incorrect import: import { getEditorString } from '@udecode/plate-common';
 import { AIChatPlugin, AIPlugin } from '@udecode/plate-ai/react';
 import { useIsSelecting } from '@udecode/plate-selection/react';
 import {
   type PlateEditor,
+  useEditorString, // Use the suggested hook
   useEditorRef,
   usePluginOption,
 } from '@udecode/plate/react';
@@ -19,12 +19,14 @@ import {
   ListEnd,
   ListMinus,
   ListPlus,
+  MessageSquarePlus, // Added Icon
   PenLine,
   SmileIcon,
   Wand,
   X,
 } from 'lucide-react';
 
+import { useCustomContext } from '@/providers/custom-context-provider'; // Added import
 import { CommandGroup, CommandItem } from './command';
 
 export type EditorChatState =
@@ -33,7 +35,44 @@ export type EditorChatState =
   | 'selectionCommand'
   | 'selectionSuggestion';
 
-export const aiChatItems = {
+// Define the type for onSelect more explicitly to satisfy TypeScript
+type AiChatItemOnSelect = ({
+  aiEditor,
+  editor,
+}: {
+  aiEditor: SlateEditor;
+  editor: PlateEditor;
+}) => void;
+
+// Define the structure for each item, including the optional onSelect
+interface AiChatItem {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  component?: React.ComponentType<{ menuState: EditorChatState }>;
+  filterItems?: boolean;
+  items?: { label: string; value: string }[];
+  shortcut?: string;
+  onSelect?: AiChatItemOnSelect;
+}
+
+// Helper function to get the custom context hook within the component's render cycle
+const useAddToChatHandler = (editor: PlateEditor) => {
+  const { addCustomContext } = useCustomContext();
+  // Get selected text using the hook without arguments
+  const selectedText = useEditorString();
+
+  return () => {
+    // selectedText is now derived from the hook call above
+    if (selectedText && selectedText.trim()) { // Check if text exists and is not just whitespace
+      addCustomContext(selectedText.trim());
+      editor.getApi(AIChatPlugin).aiChat.hide(); // Hide the menu after adding
+    }
+  };
+};
+
+
+export const aiChatItems: Record<string, AiChatItem> = {
   accept: {
     icon: <Check />,
     label: 'Accept',
@@ -186,30 +225,19 @@ Start writing a new paragraph AFTER <Document> ONLY ONE SENTENCE`
       void editor.getApi(AIChatPlugin).aiChat.reload();
     },
   },
-} satisfies Record<
-  string,
-  {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-    component?: React.ComponentType<{ menuState: EditorChatState }>;
-    filterItems?: boolean;
-    items?: { label: string; value: string }[];
-    shortcut?: string;
-    onSelect?: ({
-      aiEditor,
-      editor,
-    }: {
-      aiEditor: SlateEditor;
-      editor: PlateEditor;
-    }) => void;
-  }
->;
+  addToChat: { // Added new item definition
+    icon: <MessageSquarePlus />,
+    label: 'Add to chat',
+    value: 'addToChat',
+    // onSelect will be handled specially within the component
+    // to correctly use the hook context.
+  },
+};
 
 const menuStateItems: Record<
   EditorChatState,
   {
-    items: (typeof aiChatItems)[keyof typeof aiChatItems][];
+    items: AiChatItem[]; // Use the defined interface
     heading?: string;
   }[]
 > = {
@@ -236,6 +264,7 @@ const menuStateItems: Record<
         aiChatItems.makeShorter,
         aiChatItems.fixSpelling,
         aiChatItems.simplifyLanguage,
+        aiChatItems.addToChat, // Added item to selection commands
       ],
     },
   ],
@@ -260,6 +289,7 @@ export const AIMenuItems = ({
   const { messages } = usePluginOption(AIChatPlugin, 'chat');
   const aiEditor = usePluginOption(AIChatPlugin, 'aiEditor')!;
   const isSelecting = useIsSelecting();
+  const handleAddToChat = useAddToChatHandler(editor); // Get the handler function
 
   const menuState = useMemo(() => {
     if (messages && messages.length > 0) {
@@ -270,9 +300,7 @@ export const AIMenuItems = ({
   }, [isSelecting, messages]);
 
   const menuGroups = useMemo(() => {
-    const items = menuStateItems[menuState];
-
-    return items;
+    return menuStateItems[menuState];
   }, [menuState]);
 
   useEffect(() => {
@@ -291,10 +319,15 @@ export const AIMenuItems = ({
               className="[&_svg]:text-muted-foreground"
               value={menuItem.value}
               onSelect={() => {
-                menuItem.onSelect?.({
-                  aiEditor,
-                  editor: editor,
-                });
+                // Call the specific onSelect OR handle addToChat directly
+                if (menuItem.value === 'addToChat') {
+                  handleAddToChat(); // Call the handler from the hook
+                } else {
+                  menuItem.onSelect?.({ // Call the item's defined onSelect
+                    aiEditor,
+                    editor: editor,
+                  });
+                }
               }}
             >
               {menuItem.icon}

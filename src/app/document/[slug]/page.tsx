@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Plate } from '@udecode/plate/react';
+import { Plate, useEditorSelection } from '@udecode/plate/react';
 import { AssistantStatus } from 'ai';
 import { useSession } from 'next-auth/react';
 import { redirect, useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -17,7 +17,8 @@ import {createNewChat, getChatMessages, getDocumentById, saveCurrentDocumentStat
 import { ChatSettingsProvider } from '@/providers/chat-settings-provider';
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
-import { Chat, Document, Message, Template } from '@/types';
+import { Document, Message, Template } from '@/types';
+import { CustomContextProvider } from '@/providers/custom-context-provider';
 
 export default function DocumentPage() {
   const params = useParams();
@@ -28,7 +29,7 @@ export default function DocumentPage() {
   const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
   const [activeChatMessages, setActiveChatMessages] = useState<Message[]>([]);
   const { activeUserDocument, setActiveUserDocument } = useDocument();
-  const { setUserChats, setUserOwnedDocuments, userChats, userOwnedDocuments, userTemplates } = useUserDataContext();
+  const { setUserChats, setUserOwnedDocuments, userTemplates } = useUserDataContext();
   const { providedTemplates } = useDocument();
   const initialized = useRef(false);
   const isProgrammaticChangeRef = useRef(false);
@@ -323,7 +324,8 @@ export default function DocumentPage() {
 
   // Main component return when not loading
   return (
-    <Plate onValueChange={handleEditorChange} editor={editor}>
+    <CustomContextProvider>
+      <Plate onValueChange={handleEditorChange} editor={editor}>
       <ChatSettingsProvider>
       <div className="flex h-screen flex-col">
         <DocumentHeader editor={editor} saveStatus={saveStatus} />
@@ -336,10 +338,9 @@ export default function DocumentPage() {
               transition: 'padding-right 0.1s ease-out'
             }}
           >
-            {/* Removed intermediate divs, apply padding/margin directly if needed */}
             <div
               id="document-editor"
-              className='z-10 border bg-background shadow-lg h-fit min-h-full my-12 p-8 md:p-12' // Added padding, shadow-lg, h-fit, min-h-full
+              className='z-10 border bg-background shadow-lg h-fit min-h-full my-12'
               style={{
                   // Responsive width using max-w and viewport units
                   width: '100%',
@@ -361,6 +362,7 @@ export default function DocumentPage() {
         </div>
       </div>
       </ChatSettingsProvider>
-    </Plate>
+      </Plate>
+    </CustomContextProvider>
   );
 }
