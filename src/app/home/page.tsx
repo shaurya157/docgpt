@@ -20,7 +20,6 @@ export default function Home() {
   const { data: session } = useSession();
 
   useEffect(() => {
-    console.log("Fetching user data");
     const fetchData = async () => {
       if (session?.user?.id) {
         try {
