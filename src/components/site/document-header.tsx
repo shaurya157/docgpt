@@ -72,24 +72,13 @@ const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
     }
   };
 
-  const getSaveStatusText = () => {
-    switch (saveStatus) {
-        case 'Error': return 'Save Error';
-        case 'Loading...': return 'Loading...';
-        case 'Saved': return 'Saved';
-        case 'Saving': return 'Saving...';
-        case 'Unsaved': return 'Unsaved changes';
-        default: return '';
-    }
-  }
-
   return (
     <div className="flex flex-col">
-      <div className="flex items-center">
+      <div className="flex flex-col items-center">
         {isEditing ? (
           <input
             ref={inputRef}
-            className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none px-1 py-0.5 w-48 text-lg font-medium -ml-1"
+            className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none w-48 text-lg font-medium -ml-1"
             value={name}
             onBlur={handleNameChange}
             onChange={(e) => setName(e.target.value)}
@@ -105,16 +94,14 @@ const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
           />
         ) : (
           <div className="flex items-center group" onClick={() => setIsEditing(true)}>
-            <h1 className="text-lg font-medium cursor-pointer group-hover:border-b group-hover:border-gray-400 py-0.5">
+            <h1 className="text-lg font-medium cursor-pointer group-hover:border-b group-hover:border-gray-400">
                 {name}
             </h1>
+            {renderSaveStatusIcon()}
             <PenIcon className="w-3.5 h-3.5 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+            
           </div>
         )}
-      </div>
-      <div className="flex items-center h-4 mt-0.5">
-        <span className="text-xs text-gray-500 mr-1">{getSaveStatusText()}</span>
-        {renderSaveStatusIcon()}
       </div>
     </div>
   );
@@ -209,27 +196,27 @@ const DocumentHeader = ({ editor, saveStatus }: DocumentHeaderProps) => {
 
           <div className="flex flex-col items-start ml-3">
             <EditableDocumentName saveStatus={saveStatus} />
+            <div className="relative">
+              <button
+                className="text-sm hover:bg-gray-100 rounded"
+                onClick={() => handleDropdownClick('file')}
+              >
+                File
+              </button>
+              {activeDropdown === 'file' && (
+                <div ref={dropdownRef} className="absolute left-0 mt-2 w-48 bg-white border rounded shadow-lg z-120">
+                  <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={() => window.open('/document/new', '_blank')}>New</button>
+                  <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleNewDocFromTemplate}>New from Template</button>
+                  <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleOpenDocument}>Open Document</button>
+                  <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleSaveAsTemplate}>Save as Template</button>
+                </div>
+              )}
+            </div>
           </div>
+
         </div>
 
-        <div ref={dropdownRef} className="flex items-center space-x-2">
-          <div className="relative">
-            <button
-              className="text-sm px-3 py-1.5 hover:bg-gray-100 rounded"
-              onClick={() => handleDropdownClick('file')}
-            >
-              File
-            </button>
-            {activeDropdown === 'file' && (
-              <div className="absolute left-0 mt-2 w-48 bg-white border rounded shadow-lg z-20">
-                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleNewDocFromTemplate}>New from Template</button>
-                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleOpenDocument}>Open Document</button>
-                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" onClick={handleSaveAsTemplate}>Save as Template</button>
-                <div className="border-t my-1"></div>
-              </div>
-            )}
-          </div>
-
+        <div className="flex items-center space-x-2">
           <div className="flex items-center">
             {session?.user?.image && (
                 <Image

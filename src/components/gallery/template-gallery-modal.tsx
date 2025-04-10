@@ -36,7 +36,7 @@ export default function TemplateGalleryModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 overflow-y-auto z-100">
             <div className="flex min-h-full items-center justify-center">
                 {/* Backdrop */}
                 <div 
