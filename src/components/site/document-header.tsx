@@ -215,10 +215,7 @@ const DocumentHeader = ({ editor, saveStatus }: DocumentHeaderProps) => {
         <div ref={dropdownRef} className="flex items-center space-x-2">
           <div className="relative">
             <button
-              className="
-              
-              
-              "
+              className="text-sm px-3 py-1.5 hover:bg-gray-100 rounded"
               onClick={() => handleDropdownClick('file')}
             >
               File
