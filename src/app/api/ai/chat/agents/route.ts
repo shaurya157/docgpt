@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const streamController = new CustomStreamController();
   
   try {
-    const { chatId, messages, model, userId } = await req.json();
+    const { chatId, customContexts, messages, model, userId } = await req.json();
     const selectedModel = model || 'Open AI 4o';
     const message = typeof messages === 'string' ? messages : messages[0].content;
 
@@ -18,13 +18,14 @@ export async function POST(req: NextRequest) {
     app.invoke({
       chatId,
       context: [],
+      customContexts: customContexts || [],
       draft: "",
       feedback: [],
       model: selectedModel,
       query: message,
       streamController,
       userId,
-      userIntent: ""
+      userIntent: "",
     }).catch(error => {
       console.error('Workflow error:', error);
       streamController.writeSystemMessage(`Error: ${error.message}`);

@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 
 // Define the shape of a single custom context item
-interface CustomContextItem {
+export interface CustomContextItem {
   id: string; // Unique identifier for each context item
-  type: string; // Type of context (e.g., 'text', 'file', 'embedding') - 'string' for now
   content: string; // The actual context content
+  type: string; // Type of context (e.g., 'text', 'file', 'embedding') - 'string' for now
   // Add other relevant properties as needed, e.g., source, metadata
 }
 
@@ -12,8 +12,8 @@ interface CustomContextItem {
 interface CustomContextValue {
   customContexts: CustomContextItem[];
   addCustomContext: (content: string, type?: string) => void;
-  removeCustomContext: (id: string) => void;
   clearCustomContexts: () => void;
+  removeCustomContext: (id: string) => void;
 }
 
 // Create the context
@@ -32,8 +32,8 @@ export const CustomContextProvider = ({ children }: CustomContextProviderProps) 
   const addCustomContext = useCallback((content: string, type: string = 'string') => {
     const newItem: CustomContextItem = {
       id: generateId(),
-      type,
       content,
+      type,
     };
     setCustomContexts(prevContexts => [...prevContexts, newItem]);
   }, []);
@@ -47,10 +47,10 @@ export const CustomContextProvider = ({ children }: CustomContextProviderProps) 
   }, []);
 
   const value = {
-    customContexts,
     addCustomContext,
-    removeCustomContext,
     clearCustomContexts,
+    customContexts,
+    removeCustomContext,
   };
 
   return <CustomContext.Provider value={value}>{children}</CustomContext.Provider>;

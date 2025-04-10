@@ -7,8 +7,8 @@ import { useSession } from 'next-auth/react';
 
 import { ChatMessageList } from '@/components/chat/chat-messaging-list';
 import { ChatSettings } from '@/components/chat/chat-settings';
-import { FileAttachmentList } from '@/components/chat/file-attachment-list';
 import { CustomContextDisplay } from '@/components/chat/custom-context'; // Added import
+import { FileAttachmentList } from '@/components/chat/file-attachment-list';
 import { appendChatSpecificFileIds } from '@/firebase/firestore-dao';
 import { useChatMessaging } from '@/hooks/use-chat-messaging';
 import { useDocumentIntegration } from '@/hooks/use-document-integration';
@@ -17,7 +17,7 @@ import { useChatSettings } from '@/providers/chat-settings-provider';
 import { useDocument } from '@/providers/document-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message } from '@/types';
-import { editorPromptTemplate } from '@/utils/editor-prompt-util';
+import { editorDocumentAndPromptTemplate } from '@/utils/editor-prompt-util';
 
 interface ContentProps {
   activeChatMessages: Message[];
@@ -192,7 +192,7 @@ const ChatContent = ({
 
     const editorPrompt = getEditorPrompt(editor, {
       prompt: newMessage,
-      promptTemplate: editorPromptTemplate,
+      promptTemplate: editorDocumentAndPromptTemplate,
     });
 
     return editorPrompt!;

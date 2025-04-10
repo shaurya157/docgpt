@@ -1,14 +1,16 @@
 import React from 'react';
-import { X } from 'lucide-react'; // Using lucide-react for the close icon
+import Markdown from 'react-markdown';
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@radix-ui/react-tooltip'; // Import Tooltip components
+import { X } from 'lucide-react'; // Using lucide-react for the close icon
 
-import { useCustomContext } from '@/providers/custom-context-provider';
 import { Button } from '@/components/plate-ui/button'; // Assuming Button component is available
+import { useCustomContext } from '@/providers/custom-context-provider';
 
 export const CustomContextDisplay = () => {
   const { customContexts, removeCustomContext } = useCustomContext();
@@ -20,7 +22,7 @@ export const CustomContextDisplay = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
+      <div className=" flex flex-wrap items-center gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
         {customContexts.map((context) => (
           <div
             key={context.id}
@@ -35,16 +37,16 @@ export const CustomContextDisplay = () => {
                 </span>
               </TooltipTrigger>
               <TooltipContent
+                className="max-w-xs overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
                 side="top"
                 sideOffset={4}
-                className="z-50 max-w-xs overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
               >
-                <p className="whitespace-pre-wrap break-words">{context.content}</p> {/* Ensure wrapping */}
+                <Markdown className="whitespace-pre-wrap break-words">{context.content}</Markdown> {/* Ensure wrapping */}
               </TooltipContent>
             </Tooltip>
             <Button
-              variant="ghost"
               size="xs" // Assuming an extra small size is available or can be added
+              variant="ghost"
               className="p-0 h-4 w-4 text-blue-600 hover:bg-blue-200 hover:text-blue-800 flex-shrink-0" // Added flex-shrink-0
               onClick={() => removeCustomContext(context.id)}
               aria-label={`Remove context: ${context.content}`}

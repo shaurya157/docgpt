@@ -1,10 +1,10 @@
 import { toast } from 'sonner';
 
+import { CustomContextItem } from '@/providers/custom-context-provider';
 import { StreamingState } from '@/types';
 
 import { StreamMessage } from './custom-stream';
 import { StreamParser } from './parse-stream';
-
 interface StreamCallbacks {
   onError: (error: Error) => void;
   onStateUpdate: (state: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'>) => void;
@@ -13,6 +13,7 @@ interface StreamCallbacks {
 }
 
 export const sendChatMessage = async (
+  customContexts: CustomContextItem[],
   chatId: string,
   messages: string,
   userId: string,
@@ -20,11 +21,11 @@ export const sendChatMessage = async (
   callbacks: StreamCallbacks
 ) => {
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
-  
   try {
     const result = await fetch('/api/ai/chat/agents', {
       body: JSON.stringify({
         chatId,
+        customContexts,
         messages,
         model,
         userId

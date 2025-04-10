@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Plate, useEditorSelection } from '@udecode/plate/react';
+import { Plate } from '@udecode/plate/react';
 import { AssistantStatus } from 'ai';
 import { useSession } from 'next-auth/react';
 import { redirect, useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -15,10 +15,10 @@ import {useCreateEditor} from "@/components/editor/use-create-editor";
 import DocumentHeader, { SaveStatus } from "@/components/site/document-header";
 import {createNewChat, getChatMessages, getDocumentById, saveCurrentDocumentState} from '@/firebase/firestore-dao';
 import { ChatSettingsProvider } from '@/providers/chat-settings-provider';
+import { CustomContextProvider } from '@/providers/custom-context-provider';
 import {useDocument} from "@/providers/document-provider";
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Document, Message, Template } from '@/types';
-import { CustomContextProvider } from '@/providers/custom-context-provider';
 
 export default function DocumentPage() {
   const params = useParams();
@@ -340,12 +340,12 @@ export default function DocumentPage() {
           >
             <div
               id="document-editor"
-              className='z-10 border bg-background shadow-lg h-fit min-h-full my-12'
+              className='border bg-background shadow-lg h-fit min-h-full my-12'
               style={{
+                  boxSizing: 'border-box', // Include padding in width calculation
+                  maxWidth: 'min(816px, 90vw)', // Max width, responsive
                   // Responsive width using max-w and viewport units
                   width: '100%',
-                  maxWidth: 'min(816px, 90vw)', // Max width, responsive
-                  boxSizing: 'border-box', // Include padding in width calculation
               }}
             >
               <PlateEditorComponent />

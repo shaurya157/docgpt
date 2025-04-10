@@ -104,7 +104,21 @@ const userBlockSelecting = `\
 </Selection>
 {prompt} about <Selection>`;
 
+const selectionBlock = `\
+Selection:
+{selection}
+`
+
+const documentAndPrompt = `\
+<Document>
+{editor}
+</Document>
+{prompt}
+`
+
 const PROMPT_TEMPLATES = {
+  documentAndPrompt,
+  selectionBlock,
   // systemBlockSelecting,
   // systemDefault,
   // systemSelecting,
@@ -119,4 +133,12 @@ export const editorPromptTemplate = ({ isBlockSelecting, isSelecting }) => {
     : isSelecting
       ? PROMPT_TEMPLATES.userSelecting
       : PROMPT_TEMPLATES.userDefault;
+};
+
+export const editorSelectionBlockTemplate = () => {
+  return PROMPT_TEMPLATES.selectionBlock;
+};
+
+export const editorDocumentAndPromptTemplate = () => {
+  return PROMPT_TEMPLATES.documentAndPrompt;
 };

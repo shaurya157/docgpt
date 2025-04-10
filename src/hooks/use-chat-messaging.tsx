@@ -5,6 +5,7 @@ import { useEditorRef, usePlateState } from '@udecode/plate/react';
 import { toast } from 'sonner';
 
 import { storeMessage } from '@/firebase/firestore-dao';
+import { useCustomContext } from '@/providers/custom-context-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message, StreamingState } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
@@ -18,7 +19,8 @@ interface UseChatMessagingProps {
 }
 
 export const useChatMessaging = ({ chatId, initialMessages, model, userId }: UseChatMessagingProps) => {
-  const { setUserChats, userChats } = useUserDataContext();
+  const { setUserChats } = useUserDataContext();
+  const { clearCustomContexts, customContexts } = useCustomContext();
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [status, setStatus] = useState<'awaiting_message' | 'in_progress'>('awaiting_message');
   const [readOnly, setReadOnly] = usePlateState('readOnly');
@@ -111,6 +113,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
 
     try {
       await sendChatMessage(
+        customContexts,
         chatId,
         serializedContent,
         userId,
@@ -159,6 +162,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             });
           },
           onStreamEnd: async (finalContent: string) => {
+            clearCustomContexts();
             const currentState = streamingStateRef.current; // Use ref for final reasoning
             const timestamp = Date.now();
             let finalDocumentContent = '';
@@ -256,7 +260,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
         reasoning: ''
       });
     }
-  }, [chatId, userId, model, setUserChats, editorRef]); // Added editorRef dependency
+  }, [chatId, userId, model, setUserChats, editorRef, customContexts, clearCustomContexts]);
 
   return {
     addMessage,

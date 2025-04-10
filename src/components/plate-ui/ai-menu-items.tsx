@@ -2,11 +2,10 @@ import React, { useEffect, useMemo } from 'react';
 
 import { type SlateEditor, NodeApi } from '@udecode/plate';
 // Removed incorrect import: import { getEditorString } from '@udecode/plate-common';
-import { AIChatPlugin, AIPlugin } from '@udecode/plate-ai/react';
+import { AIChatPlugin, AIPlugin, getEditorPrompt } from '@udecode/plate-ai/react';
 import { useIsSelecting } from '@udecode/plate-selection/react';
 import {
-  type PlateEditor,
-  useEditorString, // Use the suggested hook
+  type PlateEditor, // Use the suggested hook
   useEditorRef,
   usePluginOption,
 } from '@udecode/plate/react';
@@ -27,6 +26,8 @@ import {
 } from 'lucide-react';
 
 import { useCustomContext } from '@/providers/custom-context-provider'; // Added import
+import { editorSelectionBlockTemplate } from '@/utils/editor-prompt-util';
+
 import { CommandGroup, CommandItem } from './command';
 
 export type EditorChatState =
@@ -34,6 +35,18 @@ export type EditorChatState =
   | 'cursorSuggestion'
   | 'selectionCommand'
   | 'selectionSuggestion';
+
+// Define the structure for each item, including the optional onSelect
+interface AiChatItem {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  component?: React.ComponentType<{ menuState: EditorChatState }>;
+  filterItems?: boolean;
+  items?: { label: string; value: string }[];
+  onSelect?: AiChatItemOnSelect;
+  shortcut?: string;
+}
 
 // Define the type for onSelect more explicitly to satisfy TypeScript
 type AiChatItemOnSelect = ({
@@ -44,28 +57,16 @@ type AiChatItemOnSelect = ({
   editor: PlateEditor;
 }) => void;
 
-// Define the structure for each item, including the optional onSelect
-interface AiChatItem {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  component?: React.ComponentType<{ menuState: EditorChatState }>;
-  filterItems?: boolean;
-  items?: { label: string; value: string }[];
-  shortcut?: string;
-  onSelect?: AiChatItemOnSelect;
-}
-
 // Helper function to get the custom context hook within the component's render cycle
 const useAddToChatHandler = (editor: PlateEditor) => {
   const { addCustomContext } = useCustomContext();
   // Get selected text using the hook without arguments
-  const selectedText = useEditorString();
+  const formattedSelection = getEditorPrompt(editor, { promptTemplate: editorSelectionBlockTemplate })
 
   return () => {
     // selectedText is now derived from the hook call above
-    if (selectedText && selectedText.trim()) { // Check if text exists and is not just whitespace
-      addCustomContext(selectedText.trim());
+    if (formattedSelection && formattedSelection.trim()) { // Check if text exists and is not just whitespace
+      addCustomContext(formattedSelection.trim());
       editor.getApi(AIChatPlugin).aiChat.hide(); // Hide the menu after adding
     }
   };
@@ -81,6 +82,13 @@ export const aiChatItems: Record<string, AiChatItem> = {
       editor.getTransforms(AIChatPlugin).aiChat.accept();
       editor.tf.focus({ edge: 'end' });
     },
+  },
+  addToChat: { // Added new item definition
+    icon: <MessageSquarePlus />,
+    label: 'Add to chat',
+    value: 'addToChat',
+    // onSelect will be handled specially within the component
+    // to correctly use the hook context.
   },
   continueWrite: {
     icon: <PenLine />,
@@ -225,13 +233,6 @@ Start writing a new paragraph AFTER <Document> ONLY ONE SENTENCE`
       void editor.getApi(AIChatPlugin).aiChat.reload();
     },
   },
-  addToChat: { // Added new item definition
-    icon: <MessageSquarePlus />,
-    label: 'Add to chat',
-    value: 'addToChat',
-    // onSelect will be handled specially within the component
-    // to correctly use the hook context.
-  },
 };
 
 const menuStateItems: Record<
@@ -258,13 +259,13 @@ const menuStateItems: Record<
   selectionCommand: [
     {
       items: [
+        aiChatItems.addToChat,
         aiChatItems.improveWriting,
         aiChatItems.emojify,
         aiChatItems.makeLonger,
         aiChatItems.makeShorter,
         aiChatItems.fixSpelling,
         aiChatItems.simplifyLanguage,
-        aiChatItems.addToChat, // Added item to selection commands
       ],
     },
   ],
