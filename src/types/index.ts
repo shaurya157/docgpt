@@ -46,6 +46,7 @@ export interface StreamingState {
     isStreaming: boolean;
   };
   isProcessingDocument: boolean;
+  isProcessingEdit: boolean; // Add flag for edit processing
   message: Message;
   reasoning: string;
 }

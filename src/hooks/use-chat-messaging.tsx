@@ -31,6 +31,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       isStreaming: false
     },
     isProcessingDocument: false,
+    isProcessingEdit: false, // Initialize edit processing state
     message: {
       id: 'streaming',
       content: '',
@@ -127,17 +128,19 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             setStreamingState({
               document: { content: '', isStreaming: false }, // Stream ends
               isProcessingDocument: false,
+              isProcessingEdit: false, // Reset edit state on error
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
               reasoning: ''
             });
           },
-          // Use the extended state update type
-          onStateUpdate: (newStateUpdate: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'>) => {
+          // Update the state update type to include isProcessingEdit
+          onStateUpdate: (newStateUpdate: Pick<StreamingState, 'isProcessingDocument' | 'isProcessingEdit' | 'message' | 'reasoning'>) => {
             setStreamingState(prevState => {
               const nextState: StreamingState = {
                 // Update all parts based on the incoming update
                 document: prevState.document, // Keep document content until end
-                isProcessingDocument: newStateUpdate.isProcessingDocument, 
+                isProcessingDocument: newStateUpdate.isProcessingDocument,
+                isProcessingEdit: newStateUpdate.isProcessingEdit, // Update edit state
                 message: newStateUpdate.message,
                 reasoning: newStateUpdate.reasoning,
               };
@@ -223,11 +226,12 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
 
             // Final state reset
             setStreamingState({
-              document: { 
-                content: finalDocumentContent, 
+              document: {
+                content: finalDocumentContent,
                 isStreaming: false // Stream ended
               },
               isProcessingDocument: false,
+              isProcessingEdit: false, // Reset edit state on end
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
               reasoning: ''
             });
@@ -240,6 +244,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             setStreamingState({
               document: { content: '', isStreaming: true }, // Stream starts
               isProcessingDocument: false,
+              isProcessingEdit: false, // Reset edit state on start
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
               reasoning: ''
             });
@@ -256,6 +261,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       setStreamingState({
         document: { content: '', isStreaming: false }, // Stream ends
         isProcessingDocument: false,
+        isProcessingEdit: false, // Reset edit state on catch
         message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
         reasoning: ''
       });

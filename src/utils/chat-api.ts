@@ -2,12 +2,13 @@ import { toast } from 'sonner';
 
 import { CustomContextItem } from '@/providers/custom-context-provider';
 import { StreamingState } from '@/types';
-
+ 
 import { StreamMessage } from './custom-stream';
 import { StreamParser } from './parse-stream';
 interface StreamCallbacks {
   onError: (error: Error) => void;
-  onStateUpdate: (state: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'>) => void;
+  // Extend the state update type to include edit processing status
+  onStateUpdate: (state: Pick<StreamingState, 'isProcessingDocument' | 'isProcessingEdit' | 'message' | 'reasoning'>) => void;
   onStreamEnd: (finalContent: string) => void;
   onStreamStart: () => void;
 }
@@ -47,8 +48,10 @@ export const sendChatMessage = async (
     reader = result.body.getReader();
     const streamParser = new StreamParser();
     let accumulatedContent = '';
-    const internalState: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'> = {
+    // Include isProcessingEdit in the internal state
+    const internalState: Pick<StreamingState, 'isProcessingDocument' | 'isProcessingEdit' | 'message' | 'reasoning'> = {
       isProcessingDocument: false,
+      isProcessingEdit: false, // Initialize edit processing state
       message: {
         id: 'streaming',
         content: '',
@@ -94,7 +97,8 @@ export const sendChatMessage = async (
 
 function processMessages(
   messages: StreamMessage[],
-  state: Pick<StreamingState, 'isProcessingDocument' | 'message' | 'reasoning'>,
+  // Update state type to include isProcessingEdit
+  state: Pick<StreamingState, 'isProcessingDocument' | 'isProcessingEdit' | 'message' | 'reasoning'>,
   callbacks: StreamCallbacks,
   onContentUpdate?: (content: string) => void
 ) {
@@ -111,7 +115,10 @@ function processMessages(
           if (!state.isProcessingDocument && state.message.content.includes('<Document')) {
             state.isProcessingDocument = true;
           }
-          
+          // Detect start of edit processing
+          if (!state.isProcessingEdit && state.message.content.includes('<Edit>')) {
+            state.isProcessingEdit = true;
+          }
           hasUpdates = true;
           onContentUpdate?.(state.message.content);
           break;
@@ -137,11 +144,18 @@ function processMessages(
   if (hasUpdates) {
     callbacks.onStateUpdate({
       isProcessingDocument: state.isProcessingDocument,
+      isProcessingEdit: state.isProcessingEdit, // Pass edit state
       message: { ...state.message },
       reasoning: currentReasoning
     });
+    // Reset flags when closing tags appear
     if (state.isProcessingDocument && state.message.content.includes('</Document>')) {
         state.isProcessingDocument = false;
+    }
+    if (state.isProcessingEdit && state.message.content.includes('</Edit>')) {
+        // We might have multiple edits, so don't reset isProcessingEdit until the stream ends.
+        // It will be reset in use-chat-messaging onStreamEnd.
+        // We just need to know *if* edits were processed.
     }
   }
 } 
