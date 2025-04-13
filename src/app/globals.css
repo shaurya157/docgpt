@@ -515,3 +515,7 @@
 .react-markdown li {
   margin-top: 5px;
 }
+
+.react-markdown * {
+  margin-top: 5px;
+}
