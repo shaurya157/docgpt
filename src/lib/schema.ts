@@ -25,7 +25,8 @@ export const AgentState = z.object({
   query: z.string(),
   streamController: z.custom<CustomStreamController>(),
   userId: z.string(),
-  userIntent: z.string().default("")
+  userIntent: z.string().default(""),
+  synthesizedIntent: z.enum(['create', 'edit', 'general']).optional(),
 });
 
 export type TAgentState = z.infer<typeof AgentState>;
