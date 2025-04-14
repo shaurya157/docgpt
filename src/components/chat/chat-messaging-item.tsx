@@ -4,6 +4,7 @@ import Markdown from 'react-markdown';
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { useEditorRef } from '@udecode/plate/react';
 import { Check, FileText, X } from 'lucide-react'; // Import Check and X icons
+import { toast } from 'sonner'; // Import toast
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
@@ -80,53 +81,98 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
 
       // Only update state if necessary (new pending statuses added or count changed)
       if (changed) {
-          console.log("Effect: Updating statuses to:", newStatuses); // Debug log
           setEditStatuses(newStatuses);
       }
     } else {
       // Clear statuses if conditions are not met
       if (Object.keys(editStatuses).length > 0) {
-          console.log("Effect: Clearing statuses"); // Debug log
         setEditStatuses({});
       }
     }
     // Dependencies: Trigger when edit display conditions or edits themselves change
   }, [isLastMessage, message.role, isProcessingEdit, hasEdits, edits, editStatuses]); // Added editStatuses to dependencies carefully
 
-  const updateEditor = (edit: EditBlock) => {
-    const editorMarkdown = editor.getApi(MarkdownPlugin).markdown.serialize();
-    const updatedMarkdown = editorMarkdown.replace(edit.original, edit.newText);
-    const deserializedNodes = editor.getApi(MarkdownPlugin).markdown.deserialize(updatedMarkdown);
-    editor.tf.setValue(deserializedNodes);
+  // Attempts to apply a single edit block to the editor's current content.
+  // Returns true if successful, false otherwise.
+  const applySingleEdit = (edit: EditBlock): boolean => {
+    let editorMarkdown = editor.getApi(MarkdownPlugin).markdown.serialize();
+
+    if (editorMarkdown.includes(edit.original)) {
+      editorMarkdown = editorMarkdown.replace(edit.original, edit.newText);
+      const deserializedNodes = editor.getApi(MarkdownPlugin).markdown.deserialize(editorMarkdown);
+      editor.tf.setValue(deserializedNodes);
+      return true; // Edit applied successfully
+    } else {
+      console.warn("Edit could not be applied: Original content not found.", edit);
+      return false; // Original content not found
+    }
   }
 
   const handleAcceptChange = (index: number) => {
     if (!isLastMessage) return; // Only allow action on the last message
-    console.log("Accepting edit:", index + 1);
-    setEditStatuses(prev => ({ ...prev, [index]: 'accepted' }));
-    updateEditor(edits[index]);
+    const edit = edits[index];
+
+    if (applySingleEdit(edit)) {
+      setEditStatuses(prev => ({ ...prev, [index]: 'accepted' }));
+    } else {
+      toast.error(`Edit ${index + 1} could not be applied: Original content has changed.`);
+      // Do not change the status, keep it as 'pending' or 'rejected'
+    }
   };
 
   const handleRejectChange = (index: number) => {
     if (!isLastMessage) return; // Only allow action on the last message
-    console.log("Rejecting edit:", index + 1);
     setEditStatuses(prev => ({ ...prev, [index]: 'rejected' }));
-    updateEditor(edits[index]);
   };
 
   const handleAcceptAll = () => {
     if (!isLastMessage) return;
-    console.log("Accepting all edits");
-    const newStatuses: { [key: number]: EditStatus } = {};
-    edits.forEach((_, index) => {
-      newStatuses[index] = 'accepted';
+
+    let currentEditorMarkdown = editor.getApi(MarkdownPlugin).markdown.serialize();
+    const updatedStatuses = { ...editStatuses };
+    const successfullyAppliedIndices: number[] = [];
+    const failedEditIndices: number[] = [];
+    let markdownChanged = false;
+
+    edits.forEach((edit, index) => {
+      // Only attempt to accept pending edits
+      if (updatedStatuses[index] === 'pending') {
+        if (currentEditorMarkdown.includes(edit.original)) {
+          // Apply change to the temporary markdown string
+          currentEditorMarkdown = currentEditorMarkdown.replace(edit.original, edit.newText);
+          updatedStatuses[index] = 'accepted';
+          successfullyAppliedIndices.push(index + 1);
+          markdownChanged = true; // Mark that we need to update the editor
+        } else {
+          // Original content not found for this edit
+          failedEditIndices.push(index + 1);
+          // Status remains 'pending'
+          console.warn(`Accept All: Edit ${index + 1} original content not found.`);
+        }
+      }
     });
-    setEditStatuses(newStatuses);
+
+    // Update the editor content only if any changes were successfully applied
+    if (markdownChanged) {
+      const deserializedNodes = editor.getApi(MarkdownPlugin).markdown.deserialize(currentEditorMarkdown);
+      editor.tf.setValue(deserializedNodes);
+    }
+
+    // Update the status state
+    setEditStatuses(updatedStatuses);
+
+    // Show a toast message if any edits failed
+    if (failedEditIndices.length > 0) {
+      toast.error(`Edits ${failedEditIndices.join(', ')} could not be applied: Original content has changed.`);
+    } else if (successfullyAppliedIndices.length > 0) {
+        toast.success("Selected edits applied successfully."); // Optional success message
+    } else {
+        toast.info("No pending edits were applicable."); // Message if nothing could be done
+    }
   };
 
   const handleRejectAll = () => {
     if (!isLastMessage) return;
-    console.log("Rejecting all edits");
     const newStatuses: { [key: number]: EditStatus } = {};
     edits.forEach((_, index) => {
       newStatuses[index] = 'rejected';
