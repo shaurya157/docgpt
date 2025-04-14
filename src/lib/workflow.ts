@@ -3,8 +3,8 @@ import { Pinecone } from "@pinecone-database/pinecone";
 
 import { getChatHistory } from "./firebase-admin";
 import { ModelRouter } from "./models";
-import { TAgentState } from "./schema";
 import { createDocumentPrompt, editDocumentPrompt, generalQueryPrompt } from "./prompts";
+import { TAgentState } from "./schema";
 
 export class DocumentWorkflow {
   private model = new ModelRouter();
@@ -70,6 +70,35 @@ export class DocumentWorkflow {
     }
   }
 
+  // New node for handling general queries
+  private async generalQueryNode(state: TAgentState) {
+    const prompt = generalQueryPrompt(state);
+    try {
+      // Generate and stream the response directly
+      await this.model.generate(
+        state.model,
+        prompt,
+        state.query,
+        true,
+        state.streamController
+      );
+
+      // Close the stream as this node is terminal for this branch
+      state.streamController.close();
+
+      // Return the state, draft is not relevant here as output is streamed
+      return { ...state, draft: "" }; // Clear draft potentially set by previous nodes
+    } catch (error) {
+      console.error("Error in general query node:", error);
+      state.streamController.writeSystemMessage("Failed to answer query\\n");
+      state.streamController.close(); // Close stream on error
+      return {
+        ...state,
+        draft: "Error: Failed to answer query"
+      };
+    }
+  }
+
   private async retrieveChatHistoryNode(state: TAgentState) {
     try {
       const messages = await getChatHistory(state.chatId);
@@ -117,6 +146,20 @@ export class DocumentWorkflow {
         ...state,
         context: []
       };
+    }
+  }
+
+  // Function to decide the next step based on synthesized intent
+  private routeIntent(state: TAgentState): "createDocument" | "editDocument" | "generalQuery" {
+    const intent = state.synthesizedIntent;
+    if (intent === "create") {
+      return "createDocument";
+    } else if (intent === "edit") {
+      return "editDocument";
+    } else {
+      // Default to generalQuery if intent is missing or 'general'
+      console.log("Routing to general query node. Intent:", intent);
+      return "generalQuery";
     }
   }
 
@@ -207,6 +250,57 @@ export class DocumentWorkflow {
     }
   }
 
+  private async synthesizeIntentNode(state: TAgentState): Promise<Partial<TAgentState>> {
+    const { streamController, userIntent } = state;
+
+    // Default to 'general' if intent is missing or indicates an error
+    if (!userIntent || userIntent.startsWith("Error:")) {
+      return { ...state, synthesizedIntent: 'general' };
+    }
+
+    const synthesisPrompt = `
+      Based on the following user intent description, classify the primary goal into ONE of the following categories:
+      - "create": The user wants to generate a completely new document from scratch or with a template.
+      - "edit": The user wants to modify an existing document or a specific part of it (like a selection).
+      - "general": The user is asking for information, clarification, or performing an action not related to creating or editing document content directly.
+
+      User Intent Description:
+      ---
+      ${userIntent}
+      ---
+
+      Respond with only ONE word: "create", "edit", or "general".
+    `;
+
+    try {
+      // Use a non-streaming call as we expect a single word response
+      const classification = await this.model.generate(
+        "Open AI 4o", // Using the specified model
+        synthesisPrompt,
+        "Synthesize user intent",
+        false // Explicitly set stream to false
+        // No streamController needed here for a non-streaming call
+      );
+
+      const cleanClassification = classification.trim().toLowerCase();
+
+      console.log("Synthesized intent:", cleanClassification);
+      // Validate the response
+      if (['create', 'edit', 'general'].includes(cleanClassification)) {
+        return { ...state, synthesizedIntent: cleanClassification as 'create' | 'edit' | 'general' };
+      } else {
+        console.warn(`Unexpected classification result: '${classification}'. Defaulting to 'general'.`);
+        return { ...state, synthesizedIntent: 'general' };
+      }
+
+    } catch (error) {
+      console.error("Error in synthesize intent node:", error);
+      // Don't write to stream here as this node isn't streaming user-facing content
+      // streamController.writeSystemMessage("Failed to synthesize user intent\n");
+      return { ...state, synthesizedIntent: 'general' }; // Default on error
+    }
+  }
+
   private async userIntentClassificationNode(state: TAgentState) {
     const { chatHistory, customContexts, query } = state;
 
@@ -274,100 +368,6 @@ export class DocumentWorkflow {
     }
   }
 
-  private async synthesizeIntentNode(state: TAgentState): Promise<Partial<TAgentState>> {
-    const { userIntent, streamController } = state;
-
-    // Default to 'general' if intent is missing or indicates an error
-    if (!userIntent || userIntent.startsWith("Error:")) {
-      return { ...state, synthesizedIntent: 'general' };
-    }
-
-    const synthesisPrompt = `
-      Based on the following user intent description, classify the primary goal into ONE of the following categories:
-      - "create": The user wants to generate a completely new document from scratch or with a template.
-      - "edit": The user wants to modify an existing document or a specific part of it (like a selection).
-      - "general": The user is asking for information, clarification, or performing an action not related to creating or editing document content directly.
-
-      User Intent Description:
-      ---
-      ${userIntent}
-      ---
-
-      Respond with only ONE word: "create", "edit", or "general".
-    `;
-
-    try {
-      // Use a non-streaming call as we expect a single word response
-      const classification = await this.model.generate(
-        "Open AI 4o", // Using the specified model
-        synthesisPrompt,
-        "Synthesize user intent",
-        false // Explicitly set stream to false
-        // No streamController needed here for a non-streaming call
-      );
-
-      const cleanClassification = classification.trim().toLowerCase();
-
-      console.log("Synthesized intent:", cleanClassification);
-      // Validate the response
-      if (['create', 'edit', 'general'].includes(cleanClassification)) {
-        return { ...state, synthesizedIntent: cleanClassification as 'create' | 'edit' | 'general' };
-      } else {
-        console.warn(`Unexpected classification result: '${classification}'. Defaulting to 'general'.`);
-        return { ...state, synthesizedIntent: 'general' };
-      }
-
-    } catch (error) {
-      console.error("Error in synthesize intent node:", error);
-      // Don't write to stream here as this node isn't streaming user-facing content
-      // streamController.writeSystemMessage("Failed to synthesize user intent\n");
-      return { ...state, synthesizedIntent: 'general' }; // Default on error
-    }
-  }
-
-  // New node for handling general queries
-  private async generalQueryNode(state: TAgentState) {
-    const prompt = generalQueryPrompt(state);
-    try {
-      // Generate and stream the response directly
-      await this.model.generate(
-        state.model,
-        prompt,
-        state.query,
-        true,
-        state.streamController
-      );
-
-      // Close the stream as this node is terminal for this branch
-      state.streamController.close();
-
-      // Return the state, draft is not relevant here as output is streamed
-      return { ...state, draft: "" }; // Clear draft potentially set by previous nodes
-    } catch (error) {
-      console.error("Error in general query node:", error);
-      state.streamController.writeSystemMessage("Failed to answer query\\n");
-      state.streamController.close(); // Close stream on error
-      return {
-        ...state,
-        draft: "Error: Failed to answer query"
-      };
-    }
-  }
-
-  // Function to decide the next step based on synthesized intent
-  private routeIntent(state: TAgentState): "createDocument" | "editDocument" | "generalQuery" {
-    const intent = state.synthesizedIntent;
-    if (intent === "create") {
-      return "createDocument";
-    } else if (intent === "edit") {
-      return "editDocument";
-    } else {
-      // Default to generalQuery if intent is missing or 'general'
-      console.log("Routing to general query node. Intent:", intent);
-      return "generalQuery";
-    }
-  }
-
   async buildGraph() {
     const graph = new StateGraph<TAgentState>({
       channels: {
@@ -381,9 +381,9 @@ export class DocumentWorkflow {
         model: { value: (x) => x },
         query: { value: (x) => x },
         streamController: { value: (x) => x },
+        synthesizedIntent: { default: () => undefined, value: (x, y) => y || x },
         userId: { value: (x) => x },
-        userIntent: { default: () => "", value: (x, y) => y || x },
-        synthesizedIntent: { default: () => undefined, value: (x, y) => y || x }
+        userIntent: { default: () => "", value: (x, y) => y || x }
       }
     });
 

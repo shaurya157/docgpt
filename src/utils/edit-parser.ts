@@ -1,6 +1,6 @@
 export interface EditBlock {
-  original: string;
   newText: string;
+  original: string;
 }
 
 /**
@@ -15,8 +15,8 @@ export const parseEdits = (content: string): EditBlock[] => {
 
   while ((match = editRegex.exec(content)) !== null) {
     edits.push({
-      original: match[1].trim(),
       newText: match[2].trim(),
+      original: match[1].trim(),
     });
   }
 

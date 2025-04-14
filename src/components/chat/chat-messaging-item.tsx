@@ -1,34 +1,139 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react'; // Import useEffect and useMemo
 import Markdown from 'react-markdown';
 
-import { FileText } from 'lucide-react';
+import { MarkdownPlugin } from '@udecode/plate-markdown';
+import { useEditorRef } from '@udecode/plate/react';
+import { Check, FileText, X } from 'lucide-react'; // Import Check and X icons
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
+import { cn } from '@/lib/utils'; // Import cn for conditional classes
 import { Message, StreamingState } from '@/types';
 import { parseAssistantResponse } from '@/utils/document-parser';
 import { EditBlock, parseEdits } from '@/utils/edit-parser'; // Import edit parser
-import { useEditorRef } from '@udecode/plate/react';
  
 interface ChatMessageItemProps {
+  isLastMessage: boolean; // Add isLastMessage prop
   message: Message;
   onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
   streamingState?: StreamingState;
 }
 
-export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: ChatMessageItemProps) => {
+type EditStatus = 'accepted' | 'pending' | 'rejected';
+
+export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocumentUpdate }: ChatMessageItemProps) => {
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
   const editor = useEditorRef();
+  const [editStatuses, setEditStatuses] = useState<{ [key: number]: EditStatus }>({});
   
   const content = streamingState ? streamingState.message.content : message.content;
   const reasoning = streamingState ? streamingState.reasoning : message.reasoning;
   const isProcessingDocument = streamingState ? streamingState.isProcessingDocument : false;
   const isProcessingEdit = streamingState ? streamingState.isProcessingEdit : false; // Get edit processing state
-  // Parse edits from the content
-  const edits: EditBlock[] = content ? parseEdits(content) : [];
+
+  // Memoize the parsed edits to prevent unnecessary recalculations/effect triggers
+  const edits: EditBlock[] = useMemo(() => {
+      // Only parse if content exists and it's likely an assistant message with edits
+      // (or potentially during streaming)
+      if (content && (message.role === 'assistant' || streamingState)) {
+          try {
+              return parseEdits(content);
+          } catch (error) {
+              console.error("Error parsing edits:", error);
+              return []; // Return empty array on error
+          }
+      }
+      return []; // Return empty if no content or not applicable
+  }, [content, message.role, streamingState]); // Depend on content and role/streaming state
+
   const hasEdits = edits.length > 0;
 
-  console.log(edits)
+  // Revised useEffect for initializing/clearing statuses
+  useEffect(() => {
+    const shouldDisplayEdits = isLastMessage && message.role === 'assistant' && !isProcessingEdit && hasEdits;
+
+    if (shouldDisplayEdits) {
+      const newStatuses: { [key: number]: EditStatus } = {};
+      let changed = false;
+      edits.forEach((_, index) => {
+        // Preserve existing status, default to 'pending' if not set
+        const currentStatus = editStatuses[index];
+        newStatuses[index] = currentStatus ? currentStatus : 'pending';
+        // Detect if we are adding a new pending status where none existed
+        if (!currentStatus) {
+            changed = true;
+        }
+      });
+
+      // Also check if the number of edits has changed compared to statuses
+      if (Object.keys(editStatuses).length !== edits.length) {
+          changed = true;
+          // Adjust newStatuses keys if edits array shrank
+          Object.keys(newStatuses).forEach(keyStr => {
+              const keyIndex = parseInt(keyStr, 10);
+              if (keyIndex >= edits.length) {
+                  delete newStatuses[keyIndex];
+              }
+          });
+      }
+
+
+      // Only update state if necessary (new pending statuses added or count changed)
+      if (changed) {
+          console.log("Effect: Updating statuses to:", newStatuses); // Debug log
+          setEditStatuses(newStatuses);
+      }
+    } else {
+      // Clear statuses if conditions are not met
+      if (Object.keys(editStatuses).length > 0) {
+          console.log("Effect: Clearing statuses"); // Debug log
+        setEditStatuses({});
+      }
+    }
+    // Dependencies: Trigger when edit display conditions or edits themselves change
+  }, [isLastMessage, message.role, isProcessingEdit, hasEdits, edits, editStatuses]); // Added editStatuses to dependencies carefully
+
+  const updateEditor = (edit: EditBlock) => {
+    const editorMarkdown = editor.getApi(MarkdownPlugin).markdown.serialize();
+    const updatedMarkdown = editorMarkdown.replace(edit.original, edit.newText);
+    const deserializedNodes = editor.getApi(MarkdownPlugin).markdown.deserialize(updatedMarkdown);
+    editor.tf.setValue(deserializedNodes);
+  }
+
+  const handleAcceptChange = (index: number) => {
+    if (!isLastMessage) return; // Only allow action on the last message
+    console.log("Accepting edit:", index + 1);
+    setEditStatuses(prev => ({ ...prev, [index]: 'accepted' }));
+    updateEditor(edits[index]);
+  };
+
+  const handleRejectChange = (index: number) => {
+    if (!isLastMessage) return; // Only allow action on the last message
+    console.log("Rejecting edit:", index + 1);
+    setEditStatuses(prev => ({ ...prev, [index]: 'rejected' }));
+    updateEditor(edits[index]);
+  };
+
+  const handleAcceptAll = () => {
+    if (!isLastMessage) return;
+    console.log("Accepting all edits");
+    const newStatuses: { [key: number]: EditStatus } = {};
+    edits.forEach((_, index) => {
+      newStatuses[index] = 'accepted';
+    });
+    setEditStatuses(newStatuses);
+  };
+
+  const handleRejectAll = () => {
+    if (!isLastMessage) return;
+    console.log("Rejecting all edits");
+    const newStatuses: { [key: number]: EditStatus } = {};
+    edits.forEach((_, index) => {
+      newStatuses[index] = 'rejected';
+    });
+    setEditStatuses(newStatuses);
+  };
+
   const renderMessageContent = () => {
     // --- Handle Document Rendering ---
     if (message.role === 'assistant' && content.includes('<Document>')) {
@@ -106,31 +211,73 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
               <span className="font-medium text-sm">
                 {`${edits.length} edit${edits.length > 1 ? 's' : ''} suggested`}
               </span>
-              {/* Placeholder for Accept/Reject buttons */}
+              {/* Accept/Reject All buttons */}
               <div className="flex gap-1">
-                <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled>Accept All</Button>
-                <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled>Reject All</Button>
+                <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleAcceptAll}>Accept All</Button>
+                <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleRejectAll}>Reject All</Button>
               </div>
             </div>
 
             {/* Render individual edits */}
             <div className="space-y-2 pt-2">
-              {edits.map((edit, index) => (
-                <div key={index} className="border-t border-gray-200 pt-2">
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="font-semibold">Edit {index + 1}</span>
-                    {/* Placeholder for individual Accept/Reject */}
-                    <div className="flex gap-1 text-gray-400">
-                      <Icons.check className="size-3" />
-                      <Icons.close className="size-3" />
+              {edits.map((edit, index) => {
+                const status = editStatuses[index] || 'pending';
+                const isPending = status === 'pending';
+                const isAccepted = status === 'accepted';
+                const isRejected = status === 'rejected';
+
+                return (
+                  <div
+                    key={index}
+                    className={cn(
+                      "border-t border-gray-200 pt-2 pb-1 px-2 rounded", // Removed transition-colors
+                      isAccepted && "bg-green-100",
+                      isRejected && "bg-red-100"
+                    )}
+                  >
+                    <div className="flex justify-between items-center text-xs mb-1">
+                      <span className="font-semibold">Edit {index + 1}</span>
+                      {/* Individual Accept/Reject Buttons */}
+                      <div className="flex gap-1">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          className={cn(
+                            "p-0 h-5 w-5 text-gray-400 hover:bg-green-200 hover:text-green-700",
+                            !isLastMessage && "cursor-not-allowed opacity-50",
+                            isAccepted && "text-green-600 bg-green-200",
+                            isRejected && "opacity-50 cursor-not-allowed" // Dim if rejected
+                          )}
+                          disabled={!isLastMessage || isRejected} // Disable if not last or already rejected
+                          onClick={() => handleAcceptChange(index)}
+                          aria-label={`Accept edit ${index + 1}`}
+                        >
+                          <Check className="size-3" />
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          className={cn(
+                            "p-0 h-5 w-5 text-gray-400 hover:bg-red-200 hover:text-red-700",
+                            !isLastMessage && "cursor-not-allowed opacity-50",
+                            isRejected && "text-red-600 bg-red-200",
+                            isAccepted && "opacity-50 cursor-not-allowed" // Dim if accepted
+                          )}
+                          disabled={!isLastMessage || isAccepted} // Disable if not last or already accepted
+                          onClick={() => handleRejectChange(index)}
+                          aria-label={`Reject edit ${index + 1}`}
+                        >
+                          <X className="size-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <p className={cn("text-red-600 line-through", isAccepted && "opacity-50")}>{edit.original}</p>
+                      <p className={cn("text-green-600", isRejected && "opacity-50")}>{edit.newText}</p>
                     </div>
                   </div>
-                  <div className="text-xs space-y-1">
-                    <p className="text-red-600 line-through">{edit.original}</p>
-                    <p className="text-green-600">{edit.newText}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -155,10 +302,6 @@ export const ChatMessageItem = ({ message, streamingState, onDocumentUpdate }: C
       </div>
     );
   };
-
-  const updateEditor = () => {
-    
-  }
 
   return (
     <div

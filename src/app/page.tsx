@@ -373,7 +373,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#e6f2ff] flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-[#0070f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                       </svg>
                     </div>
                     <p className="text-[16px] text-[#494949]">
@@ -384,7 +384,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#e6f2ff] flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-[#0070f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                       </svg>
                     </div>
                     <p className="text-[16px] text-[#494949]">
@@ -395,7 +395,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#e6f2ff] flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-[#0070f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                       </svg>
                     </div>
                     <p className="text-[16px] text-[#494949]">
@@ -406,7 +406,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#e6f2ff] flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-[#0070f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                       </svg>
                     </div>
                     <p className="text-[16px] text-[#494949]">

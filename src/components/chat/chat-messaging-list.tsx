@@ -13,6 +13,7 @@ interface ChatMessageListProps {
   streamingState: StreamingState;
   onDocumentUpdate: (document: string, documentTitle: string) => () => Promise<void>;
   uploadInProgress?: boolean;
+  // No changes needed here, logic is handled during map
 }
 
 export const ChatMessageList = ({
@@ -47,14 +48,18 @@ export const ChatMessageList = ({
       className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap"
     >
       <div className="mx-auto w-full space-y-2">
-        {messages.map((message) => (
-          <ChatMessageItem
-            key={message.id}
-            onDocumentUpdate={onDocumentUpdate}
-            message={message}
-            streamingState={message.id === 'streaming' && status === 'in_progress' ? streamingState : undefined}
-          />
-        ))}
+        {messages.map((message, index) => {
+          const isLastMessage = index === messages.length - 1;
+          return (
+            <ChatMessageItem
+              key={message.id}
+              onDocumentUpdate={onDocumentUpdate}
+              isLastMessage={isLastMessage && status !== 'in_progress'} // Only enable buttons on the *final* last message
+              message={message}
+              streamingState={message.id === 'streaming' && status === 'in_progress' ? streamingState : undefined}
+            />
+          );
+        })}
 
         {status === 'in_progress' && (
           <div className="flex items-start">
