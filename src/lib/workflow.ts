@@ -11,7 +11,35 @@ export class DocumentWorkflow {
   private pinecone = new Pinecone();
 
   private async createDocumentNode(state: TAgentState) {
-    console.log("Creating document");
+    console.log("Executing createDocumentNode...");
+    let documentTitle: string | undefined = undefined;
+
+    // --- Generate Document Title ---
+    try {
+      const titlePrompt = `Based on the following user query, generate a concise and descriptive document title (max 5-7 words). Respond ONLY with the title itself, no extra text or quotes.
+
+User Query:
+---
+${state.query}
+---
+
+Document Title:`;
+
+      console.log("Generating document title...");
+      documentTitle = await this.model.generate(
+        "Open AI 4o", // Use a capable model for title generation
+        titlePrompt,
+        "Generate document title",
+        false // Non-streaming for a single title output
+      );
+      documentTitle = documentTitle.trim(); // Clean up potential whitespace
+      console.log("Generated document title:", documentTitle);
+    } catch (titleError) {
+      console.error("Error generating document title:", titleError);
+      // Proceed without a title if generation fails, don't block document creation
+    }
+    // --- End Generate Document Title ---
+
     const prompt = createDocumentPrompt(state);
     try {
       const output = await this.model.generate(
@@ -27,6 +55,7 @@ export class DocumentWorkflow {
       
       return {
         ...state,
+        documentTitle: documentTitle, // Add the generated title to the state
         draft: output
       };
     } catch (error) {
@@ -35,13 +64,15 @@ export class DocumentWorkflow {
       state.streamController.close(); // Close stream on error
       return {
         ...state,
+        documentTitle: documentTitle, // Also include title in error state if generated
         draft: "Error: Failed to generate document"
       };
     }
   }
 
   private async editDocumentNode(state: TAgentState) {
-    console.log("Editing document");
+    console.log("Executing editDocumentNode...");
+    // console.log("Editing document"); // Removing original log
     const prompt = editDocumentPrompt(state);
     try {
       const output = await this.model.generate(
@@ -72,6 +103,7 @@ export class DocumentWorkflow {
 
   // New node for handling general queries
   private async generalQueryNode(state: TAgentState) {
+    console.log("Executing generalQueryNode...");
     const prompt = generalQueryPrompt(state);
     try {
       // Generate and stream the response directly
@@ -99,7 +131,71 @@ export class DocumentWorkflow {
     }
   }
 
+  private async formatDocumentNode(state: TAgentState) {
+    console.log("Executing formatDocumentNode...");
+    const { draft, streamController } = state;
+
+    // Check if draft contains a document
+    const documentRegex = /<Document>([\s\S]*?)<\/Document>/;
+    const documentMatch = draft.match(documentRegex);
+
+    // If no document in draft, pass through
+    if (!documentMatch) {
+      console.log("[formatDocumentNode] Skipping: No document found in draft.");
+      return state;
+    }
+
+    const originalContent = documentMatch[1].trim();
+
+    // Avoid re-formatting if content is minimal or likely already formatted
+    if (originalContent.length < 50 || originalContent.includes('\n##')) {
+      console.log("[formatDocumentNode] Skipping: Content seems minimal or already formatted.");
+      return state;
+    }
+
+    streamController.writeSystemMessage("Formatting document...\n");
+
+    const formatPrompt = `
+      Format the document below to make it more readable, using markdown and headers where applicable.
+      Respond ONLY with the formatted Markdown content. Do not include any explanations or introductory text.
+
+      Original Content:
+      ---
+      ${originalContent}
+      ---
+
+      Formatted Content:
+    `;
+
+    try {
+      // Use a capable model for formatting, non-streaming as we need the full result
+      const formattedContent = await this.model.generate(
+        "Open AI 4o", // Or another suitable model
+        formatPrompt,
+        "Format document content",
+        false // We need the complete formatted content back
+        // No streamController needed here
+      );
+
+      const finalDraft = `<Document>\n${formattedContent.trim()}\n</Document>`;
+
+      console.log("[formatDocumentNode] Successfully applied formatting.");
+      return {
+        ...state,
+        draft: finalDraft
+      };
+
+    } catch (error) {
+      console.error("[formatDocumentNode] Error during formatting:", error);
+      streamController.writeSystemMessage("Failed to format document. Using original content.\n");
+      // Return original state on error, allowing workflow to continue
+      console.log("[formatDocumentNode] Failed: Error occurred during formatting attempt.");
+      return state;
+    }
+  }
+
   private async retrieveChatHistoryNode(state: TAgentState) {
+    console.log("Executing retrieveChatHistoryNode...");
     try {
       const messages = await getChatHistory(state.chatId);
       return {
@@ -117,6 +213,7 @@ export class DocumentWorkflow {
   }
 
   private async retrievePineconeContextNode(state: TAgentState) {
+    console.log("Executing retrievePineconeContextNode...");
     const index = this.pinecone.Index(process.env.PINECONE_INDEX || "");
     let results;
 
@@ -164,6 +261,7 @@ export class DocumentWorkflow {
   }
 
   private async sanitizeQueryNode(state: TAgentState) {
+    console.log("Executing sanitizeQueryNode...");
     const query = state.query;
     const tagRegex = /<(Document|Block|Selection|Reminder)>([\s\S]*?)<\/\1>/g;
     const result: Record<string, string> = {};
@@ -192,6 +290,7 @@ export class DocumentWorkflow {
   }
 
   private async summarizeChangesNode(state: TAgentState) {
+    console.log("Executing summarizeChangesNode...");
     // Check if draft contains a document
     const documentRegex = /<Document>([\s\S]*?)<\/Document>/;
     const documentMatch = state.draft.match(documentRegex);
@@ -251,6 +350,7 @@ export class DocumentWorkflow {
   }
 
   private async synthesizeIntentNode(state: TAgentState): Promise<Partial<TAgentState>> {
+    console.log("Executing synthesizeIntentNode...");
     const { streamController, userIntent } = state;
 
     // Default to 'general' if intent is missing or indicates an error
@@ -262,7 +362,7 @@ export class DocumentWorkflow {
       Based on the following user intent description, classify the primary goal into ONE of the following categories:
       - "create": The user wants to generate a completely new document from scratch or with a template.
       - "edit": The user wants to modify an existing document or a specific part of it (like a selection).
-      - "general": The user is asking for information, clarification, or performing an action not related to creating or editing document content directly.
+      - "general": The user is asking for information, providing you with clarification, or performing an action not related to creating or editing document content directly.
 
       User Intent Description:
       ---
@@ -302,6 +402,7 @@ export class DocumentWorkflow {
   }
 
   private async userIntentClassificationNode(state: TAgentState) {
+    console.log("Executing userIntentClassificationNode...");
     const { chatHistory, customContexts, query } = state;
 
     // Use the last message from chat history if available, otherwise use the query
@@ -311,13 +412,13 @@ export class DocumentWorkflow {
 
     const classificationPrompt = `
       Role:
-        - You are a helpful assistant that is linked to other assistants. Your job is to classify the user's intent in a human friendly, readable format. Your responsibility is to classify the user's intent and propose next steps for you to take.
+        - You are a helpful assistant interpreting the user's request. Your goal is to understand what the user wants to do and explain the next action *you* (the assistant) will take.
 
       Formatting instructions:
-       - Provide the classification in a concise format. 
-       - Always reply in markdown format. 
+       - Provide the classification in a concise, conversational format, addressing the user directly (e.g., "Okay, it looks like you want to...").
+       - Always reply in markdown format.
        - NEVER add triple backticks to the beginning or end of your response unless referring to code.
-       - Respond in a human friendly format, not a machine friendly format. E.g.: "The user is asking to create a new document." or "The user is asking to edit the active document."
+       - Respond in a human-friendly format. Example: "Okay, it looks like you want to edit the active document." or "Got it, you're asking to create a new document."
        - ALWAYS add a new line at the end of your response.
 
       Analyze the user's query and classify their intent. Consider the chat history for context.
@@ -330,15 +431,17 @@ export class DocumentWorkflow {
 
       Uploaded Files with this message: ${uploadedFiles.length > 0 ? uploadedFiles.join(', ') : 'None'}
 
-      Based on the query and any uploaded files, analyze the following questions and answer them in a concise, human friendly format:
-        1.  Is the user asking for information, requesting to create a new document, or asking to edit an existing document?
-        2.  Is the user referring to any specific files uploaded with this message? If yes, list the file names, if no do not acknowledge this.
-        3.  If the user is referring to something as "this" do they mean the file they uploaded or the active document, or some custom context added by the user? (If there is no "this" in the query following ambiguous references, you can ignore this question.)
-        4.  What is the custom context added by the user?
+      Based on the query and any uploaded files, explain what you understand the user wants to do. Address the user directly using "you". Incorporate answers to these points naturally into your explanation:
+        1.  Are you asking for information, requesting to create a new document, or asking to edit an existing document/selection?
+        2.  Are you referring to any specific files uploaded with this message? (Mention them if yes).
+        3.  If you used "this", does it refer to an uploaded file, the active document, or custom context?
+        4.  What custom context did you provide? (Mention if relevant).
 
-      Finally, propose next steps for the other assistants to take based on the user's intent. You can refer to other assistants as "I". Guidelines for next steps:
-        - CRITICAL: If the user is asking to create a new document, edit an existing document OR a selection (or multiple selections) provided by them via custom context, propose that a new document should be created with the active document content and the edits applied.
-        - If the user is asking for information, propose the other assistants to research and provide information.
+      Example explanation: "Okay, it looks like you want to edit the selection you provided from the active document, referring to the file 'report.docx' you uploaded."
+
+      Finally, clearly state the next steps *I* (the assistant) will take based on your request. Use a direct, first-person perspective. Guidelines for next steps:
+        - CRITICAL: If you are asking to create a new document, edit an existing document OR a selection, state that I will now proceed to generate the document with the requested changes. Example: "I will create a new version of the document with that section expanded."
+        - If you are asking for information, state that I will research and provide the information. Example: "I will look up that information for you."
 
       Considerations:
         - When the user is asking you to write something, assume that they are asking to make changes to the active document and try and understand their intent.
@@ -395,6 +498,7 @@ export class DocumentWorkflow {
     graph.addNode("synthesizeIntent", this.synthesizeIntentNode.bind(this));
     graph.addNode("createDocument", this.createDocumentNode.bind(this));
     graph.addNode("editDocument", this.editDocumentNode.bind(this));
+    graph.addNode("formatDocument", this.formatDocumentNode.bind(this)); // Add new node
     graph.addNode("summarizeChanges", this.summarizeChangesNode.bind(this));
     graph.addNode("generalQuery", this.generalQueryNode.bind(this));
 
@@ -417,8 +521,11 @@ export class DocumentWorkflow {
     );
 
     // Edges from conditional branches
-    graph.addEdge("createDocument" as any, "summarizeChanges" as any);
-    graph.addEdge("editDocument" as any, "summarizeChanges" as any);
+    // graph.addEdge("createDocument" as any, "summarizeChanges" as any); // Old edge
+    // graph.addEdge("editDocument" as any, "summarizeChanges" as any); // Old edge
+    graph.addEdge("createDocument" as any, "formatDocument" as any); // New edge
+    graph.addEdge("editDocument" as any, "formatDocument" as any); // New edge
+    graph.addEdge("formatDocument" as any, "summarizeChanges" as any); // New edge
     graph.addEdge("generalQuery" as any, END);
     graph.addEdge("summarizeChanges" as any, END);
 
