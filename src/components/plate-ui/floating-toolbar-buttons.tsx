@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { AIChatPlugin, getEditorPrompt } from '@udecode/plate-ai/react';
 
 import {
   BoldPlugin,
@@ -9,16 +10,19 @@ import {
   StrikethroughPlugin,
   UnderlinePlugin,
 } from '@udecode/plate-basic-marks/react';
-import { useEditorReadOnly } from '@udecode/plate/react';
+import { useEditorReadOnly, useEditorRef } from '@udecode/plate/react';
 import {
   BoldIcon,
   Code2Icon,
   ItalicIcon,
+  MessageSquarePlusIcon,
   StrikethroughIcon,
   UnderlineIcon,
   WandSparklesIcon,
 } from 'lucide-react';
 
+import { useCustomContext } from '@/providers/custom-context-provider';
+import { editorSelectionBlockTemplate } from '@/utils/editor-prompt-util';
 import { AIToolbarButton } from './ai-toolbar-button';
 import { CommentToolbarButton } from './comment-toolbar-button';
 import { InlineEquationToolbarButton } from './inline-equation-toolbar-button';
@@ -27,9 +31,22 @@ import { MarkToolbarButton } from './mark-toolbar-button';
 import { MoreDropdownMenu } from './more-dropdown-menu';
 import { ToolbarGroup } from './toolbar';
 import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
+import { Button } from '@/components/plate-ui/button';
 
 export function FloatingToolbarButtons() {
   const readOnly = useEditorReadOnly();
+  const editor = useEditorRef();
+  const { addCustomContext } = useCustomContext();
+
+  const handleAddToChat = () => {
+    const formattedSelection = getEditorPrompt(editor, {
+      promptTemplate: editorSelectionBlockTemplate,
+    });
+
+    if (formattedSelection && formattedSelection.trim()) {
+      addCustomContext(formattedSelection.trim());
+    }
+  };
 
   return (
     <>
@@ -40,6 +57,19 @@ export function FloatingToolbarButtons() {
               <WandSparklesIcon />
               Quick Edit
             </AIToolbarButton>
+            
+          </ToolbarGroup>
+
+          <ToolbarGroup>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-[100px] flex items-center gap-2"
+              onClick={handleAddToChat}
+            >
+              <MessageSquarePlusIcon />
+              Add to chat
+            </Button>
           </ToolbarGroup>
 
           <ToolbarGroup>

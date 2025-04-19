@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { type SlateEditor, NodeApi } from '@udecode/plate';
 // Removed incorrect import: import { getEditorString } from '@udecode/plate-common';
-import { AIChatPlugin, AIPlugin, getEditorPrompt } from '@udecode/plate-ai/react';
+import { AIChatPlugin, AIPlugin } from '@udecode/plate-ai/react';
 import { useIsSelecting } from '@udecode/plate-selection/react';
 import {
   type PlateEditor, // Use the suggested hook
@@ -24,9 +24,6 @@ import {
   Wand,
   X,
 } from 'lucide-react';
-
-import { useCustomContext } from '@/providers/custom-context-provider'; // Added import
-import { editorSelectionBlockTemplate } from '@/utils/editor-prompt-util';
 
 import { CommandGroup, CommandItem } from './command';
 
@@ -57,22 +54,6 @@ type AiChatItemOnSelect = ({
   editor: PlateEditor;
 }) => void;
 
-// Helper function to get the custom context hook within the component's render cycle
-const useAddToChatHandler = (editor: PlateEditor) => {
-  const { addCustomContext } = useCustomContext();
-  // Get selected text using the hook without arguments
-  const formattedSelection = getEditorPrompt(editor, { promptTemplate: editorSelectionBlockTemplate })
-
-  return () => {
-    // selectedText is now derived from the hook call above
-    if (formattedSelection && formattedSelection.trim()) { // Check if text exists and is not just whitespace
-      addCustomContext(formattedSelection.trim());
-      editor.getApi(AIChatPlugin).aiChat.hide(); // Hide the menu after adding
-    }
-  };
-};
-
-
 export const aiChatItems: Record<string, AiChatItem> = {
   accept: {
     icon: <Check />,
@@ -82,13 +63,6 @@ export const aiChatItems: Record<string, AiChatItem> = {
       editor.getTransforms(AIChatPlugin).aiChat.accept();
       editor.tf.focus({ edge: 'end' });
     },
-  },
-  addToChat: { // Added new item definition
-    icon: <MessageSquarePlus />,
-    label: 'Add to chat',
-    value: 'addToChat',
-    // onSelect will be handled specially within the component
-    // to correctly use the hook context.
   },
   continueWrite: {
     icon: <PenLine />,
@@ -259,7 +233,6 @@ const menuStateItems: Record<
   selectionCommand: [
     {
       items: [
-        aiChatItems.addToChat,
         aiChatItems.improveWriting,
         aiChatItems.emojify,
         aiChatItems.makeLonger,
@@ -290,7 +263,6 @@ export const AIMenuItems = ({
   const { messages } = usePluginOption(AIChatPlugin, 'chat');
   const aiEditor = usePluginOption(AIChatPlugin, 'aiEditor')!;
   const isSelecting = useIsSelecting();
-  const handleAddToChat = useAddToChatHandler(editor); // Get the handler function
 
   const menuState = useMemo(() => {
     if (messages && messages.length > 0) {
@@ -320,15 +292,10 @@ export const AIMenuItems = ({
               className="[&_svg]:text-muted-foreground"
               value={menuItem.value}
               onSelect={() => {
-                // Call the specific onSelect OR handle addToChat directly
-                if (menuItem.value === 'addToChat') {
-                  handleAddToChat(); // Call the handler from the hook
-                } else {
-                  menuItem.onSelect?.({ // Call the item's defined onSelect
-                    aiEditor,
-                    editor: editor,
-                  });
-                }
+                menuItem.onSelect?.({
+                  aiEditor,
+                  editor: editor,
+                });
               }}
             >
               {menuItem.icon}
