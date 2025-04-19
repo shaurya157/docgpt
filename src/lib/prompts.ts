@@ -44,14 +44,14 @@ const definitions = `
         - "Active Document" is the document that the user is currently working on. This is the document that the user will be editing. This may be a template, a blank document, or a document that the user has already started editing.  
         - "Chat History" is the conversation history between the user and the AI. Consider the conversation history when responding to the user.
         - "User Query" is the query that the user has entered.
-        - "Context from similar documents" is a list of documents that are similar to the user's query. This is a list of documents that the user has uploaded and the AI has found to be similar to the user's query.
+        - "Context from user uploaded documents" contains the documents that the user has uploaded split by chunks. This is a list of documents that the user has uploaded and the AI has found to be similar to the user's query.
         - "User Intent and Next Steps" is the intent of the user and the next steps for the you to take. This is provided to help you understand the user's intent in the prompt, and provide potential considerations you should take into account when responding to the user.
         - "Custom Context" is additional context provided by the user that should be considered when generating responses.
             - "Selection" is the selection of text that the user has currently highlighted. 
 `
 const createStatePrompt = (state: TAgentState) => {
     const contextSection = state.context.length > 0 
-    ? `Context from similar documents:\n${state.context.map(c => `- ${c.content}`).join("\n")}\n\n`
+    ? `Context from user uploaded documents:\n${state.context.map(c => `- ${c.content}`).join("\n")}\n\n`
     : '';
 
   const chatHistorySection = state.chatHistory.length > 0

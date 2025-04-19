@@ -3,7 +3,7 @@ import Markdown from 'react-markdown';
 
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { useEditorRef } from '@udecode/plate/react';
-import { Check, FileText, X } from 'lucide-react'; // Import Check and X icons
+import { ArrowRight, Check, FileText, LocateFixed, X } from 'lucide-react'; // Import Check and X icons
 import { toast } from 'sonner'; // Import toast
 
 import { Icons } from '@/components/icons';
@@ -198,14 +198,15 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
             // Only show button if document content exists after parsing
             document && (
               <Button
-                variant="roundedClear"
-                className="h-auto w-auto cursor-pointer rounded-lg bg-black bg-opacity-50 p-2"
+                variant="ghost"
+                className="h-auto w-full cursor-pointer rounded-lg bg-black bg-opacity-50 p-2 flex justify-between items-center"
                 onClick={onDocumentUpdate(document, documentTitle)}
               >
                 <div className="flex items-center">
-                  <FileText className='h-full w-auto'/>
-                  <div className="mx-1 truncate max-w-[200px] text-sm">{documentTitle || 'Document'}</div>
+                  <LocateFixed className='h-full w-auto'/>
+                  <div className="mx-1 text-sm ">Checkpoint</div>
                 </div>
+                <ArrowRight className='size-4' />
               </Button>
             )
           )}
