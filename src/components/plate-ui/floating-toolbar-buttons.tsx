@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { AIChatPlugin, getEditorPrompt } from '@udecode/plate-ai/react';
 
 import {
   BoldPlugin,
@@ -15,24 +14,25 @@ import {
   BoldIcon,
   Code2Icon,
   ItalicIcon,
-  MessageSquarePlusIcon,
   StrikethroughIcon,
   UnderlineIcon,
   WandSparklesIcon,
 } from 'lucide-react';
 
-import { useCustomContext } from '@/providers/custom-context-provider';
-import { editorSelectionBlockTemplate } from '@/utils/editor-prompt-util';
 import { AIToolbarButton } from './ai-toolbar-button';
 import { CommentToolbarButton } from './comment-toolbar-button';
 import { InlineEquationToolbarButton } from './inline-equation-toolbar-button';
 import { LinkToolbarButton } from './link-toolbar-button';
 import { MarkToolbarButton } from './mark-toolbar-button';
 import { MoreDropdownMenu } from './more-dropdown-menu';
+import { SuggestionToolbarButton } from './suggestion-toolbar-button';
 import { ToolbarGroup } from './toolbar';
 import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
+import { getEditorPrompt } from '@udecode/plate-ai/react';
+import { editorSelectionBlockTemplate } from '@/utils/editor-prompt-util';
+import { useCustomContext } from '@/providers/custom-context-provider';
 import { Button } from '@/components/plate-ui/button';
-
+import { MessageSquarePlusIcon } from 'lucide-react';
 export function FloatingToolbarButtons() {
   const readOnly = useEditorReadOnly();
   const editor = useEditorRef();
@@ -57,18 +57,12 @@ export function FloatingToolbarButtons() {
               <WandSparklesIcon />
               Quick Edit
             </AIToolbarButton>
-            
           </ToolbarGroup>
 
           <ToolbarGroup>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-[100px] flex items-center gap-2"
-              onClick={handleAddToChat}
-            >
+            <Button variant="ghost" onClick={handleAddToChat} className="flex items-center">
               <MessageSquarePlusIcon />
-              Add to chat
+              <span>Add to chat</span>
             </Button>
           </ToolbarGroup>
 
@@ -113,6 +107,7 @@ export function FloatingToolbarButtons() {
 
       <ToolbarGroup>
         <CommentToolbarButton />
+        <SuggestionToolbarButton />
 
         {!readOnly && <MoreDropdownMenu />}
       </ToolbarGroup>

@@ -65,6 +65,7 @@ import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
 
 export function FixedToolbarButtons() {
   const readOnly = useEditorReadOnly();
+
   return (
     <div className="flex w-full">
       {!readOnly && (

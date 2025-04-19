@@ -223,8 +223,8 @@ export const DropdownMenuShortcut = withCn(
   'ml-auto text-xs tracking-widest opacity-60'
 );
 
-export const useOpenState = (initiallyOpen?: boolean) => {
-  const [open, setOpen] = useState(initiallyOpen);
+export const useOpenState = () => {
+  const [open, setOpen] = useState(false);
 
   const onOpenChange = useCallback(
     (_value = !open) => {
@@ -235,7 +235,6 @@ export const useOpenState = (initiallyOpen?: boolean) => {
 
   return {
     open,
-    setOpen,
-    onOpenChange
+    onOpenChange,
   };
 };

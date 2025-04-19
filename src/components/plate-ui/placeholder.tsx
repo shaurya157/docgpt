@@ -3,6 +3,7 @@
 import React from 'react';
 
 import { cn } from '@udecode/cn';
+import { HEADING_KEYS } from '@udecode/plate-heading';
 import { ParagraphPlugin } from '@udecode/plate/react';
 import {
   type PlaceholderProps,
@@ -45,9 +46,9 @@ export const withPlaceholders = (components: any) =>
         maxLevel: 1,
       },
     },
-    // {
-    //   key: HEADING_KEYS.h1,
-    //   hideOnBlur: false,
-    //   placeholder: 'Untitled',
-    // },
+    {
+      key: HEADING_KEYS.h1,
+      hideOnBlur: false,
+      placeholder: 'Untitled',
+    },
   ]);

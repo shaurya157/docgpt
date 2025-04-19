@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo } from 'react';
+'use client';
+
+import { useEffect, useMemo } from 'react';
 
 import { type SlateEditor, NodeApi } from '@udecode/plate';
-// Removed incorrect import: import { getEditorString } from '@udecode/plate-common';
 import { AIChatPlugin, AIPlugin } from '@udecode/plate-ai/react';
 import { useIsSelecting } from '@udecode/plate-selection/react';
 import {
-  type PlateEditor, // Use the suggested hook
+  type PlateEditor,
   useEditorRef,
   usePluginOption,
 } from '@udecode/plate/react';
@@ -18,7 +19,6 @@ import {
   ListEnd,
   ListMinus,
   ListPlus,
-  MessageSquarePlus, // Added Icon
   PenLine,
   SmileIcon,
   Wand,
@@ -33,28 +33,7 @@ export type EditorChatState =
   | 'selectionCommand'
   | 'selectionSuggestion';
 
-// Define the structure for each item, including the optional onSelect
-interface AiChatItem {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  component?: React.ComponentType<{ menuState: EditorChatState }>;
-  filterItems?: boolean;
-  items?: { label: string; value: string }[];
-  onSelect?: AiChatItemOnSelect;
-  shortcut?: string;
-}
-
-// Define the type for onSelect more explicitly to satisfy TypeScript
-type AiChatItemOnSelect = ({
-  aiEditor,
-  editor,
-}: {
-  aiEditor: SlateEditor;
-  editor: PlateEditor;
-}) => void;
-
-export const aiChatItems: Record<string, AiChatItem> = {
+export const aiChatItems = {
   accept: {
     icon: <Check />,
     label: 'Accept',
@@ -207,12 +186,30 @@ Start writing a new paragraph AFTER <Document> ONLY ONE SENTENCE`
       void editor.getApi(AIChatPlugin).aiChat.reload();
     },
   },
-};
+} satisfies Record<
+  string,
+  {
+    icon: React.ReactNode;
+    label: string;
+    value: string;
+    component?: React.ComponentType<{ menuState: EditorChatState }>;
+    filterItems?: boolean;
+    items?: { label: string; value: string }[];
+    shortcut?: string;
+    onSelect?: ({
+      aiEditor,
+      editor,
+    }: {
+      aiEditor: SlateEditor;
+      editor: PlateEditor;
+    }) => void;
+  }
+>;
 
 const menuStateItems: Record<
   EditorChatState,
   {
-    items: AiChatItem[]; // Use the defined interface
+    items: (typeof aiChatItems)[keyof typeof aiChatItems][];
     heading?: string;
   }[]
 > = {
@@ -273,7 +270,9 @@ export const AIMenuItems = ({
   }, [isSelecting, messages]);
 
   const menuGroups = useMemo(() => {
-    return menuStateItems[menuState];
+    const items = menuStateItems[menuState];
+
+    return items;
   }, [menuState]);
 
   useEffect(() => {
