@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState, DragEvent } from 'react';
 
 import { getEditorPrompt } from '@udecode/plate-ai/react';
 import { PlateEditor } from '@udecode/plate/react';
@@ -44,6 +44,7 @@ const ChatContent = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false); // State for drag overlay
   
   // Add state and refs for draggable width functionality
   const [paneWidth, setPaneWidth] = useState(450);
@@ -69,6 +70,45 @@ const ChatContent = ({
     documentContainerRef.current = document.getElementById('document-container') as HTMLElement;
     documentEditorRef.current = document.getElementById('document-editor') as HTMLElement;
   }, []);
+
+  // --- Drag and Drop Handlers ---
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Check if files are being dragged
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDraggingOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Make sure we are leaving the actual container, not just moving over a child
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+        return;
+    }
+    setIsDraggingOver(false);
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Necessary to allow dropping
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // Pass files to the existing attachment handler
+      updateAttachments(e.dataTransfer.files);
+      // Clean up data transfer object
+      e.dataTransfer.clearData();
+    }
+  };
+  // --- End Drag and Drop Handlers ---
 
   // Function to calculate maximum chat pane width
   const calculateMaxChatWidth = (): number => {
@@ -287,6 +327,10 @@ const ChatContent = ({
         transition: isDragging ? 'none' : 'width 0.1s ease-out',
         width: `${paneWidth}px`
       }}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       {/* Drag handle */}
       <div 
@@ -382,6 +426,12 @@ const ChatContent = ({
           </div>
         </div>
       </div>
+      {/* Drag and Drop Overlay */}
+      {isDraggingOver && (
+        <div className="absolute inset-0 bg-gray-300 bg-opacity-30 flex items-center justify-center pointer-events-none z-10">
+          <span className="text-gray-700 font-semibold text-lg">Drop files here</span>
+        </div>
+      )}
     </motion.div>
   );
 };
