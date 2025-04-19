@@ -19,6 +19,7 @@ export const AgentState = z.object({
     content: z.string(),
     type: z.string(),
   })).default([]),
+  documentTitle: z.string().optional(), // Add optional title field
   draft: z.string().default(""),
   feedback: z.array(z.string()).default([]),
   model: z.string(),
