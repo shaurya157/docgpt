@@ -3,7 +3,7 @@ import Markdown from 'react-markdown';
 
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { useEditorRef } from '@udecode/plate/react';
-import { ArrowRight, Check, FileText, LocateFixed, X } from 'lucide-react'; // Import Check and X icons
+import { ArrowRight, Check, ChevronDown, ChevronRight, FileText, LocateFixed, X } from 'lucide-react'; // Import Check and X icons
 import { toast } from 'sonner'; // Import toast
 
 import { Icons } from '@/components/icons';
@@ -26,6 +26,7 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
   const editor = useEditorRef();
   const [editStatuses, setEditStatuses] = useState<{ [key: number]: EditStatus }>({});
+  const [isEditExpanded, setIsEditExpanded] = useState<{ [key: number]: boolean }>({}); // State for edit expansion
   
   const content = streamingState ? streamingState.message.content : message.content;
   const reasoning = streamingState ? streamingState.reasoning : message.reasoning;
@@ -49,48 +50,89 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
 
   const hasEdits = edits.length > 0;
 
-  // Revised useEffect for initializing/clearing statuses
+  // Revised useEffect for initializing/clearing statuses based ONLY on edits
   useEffect(() => {
-    const shouldDisplayEdits = isLastMessage && message.role === 'assistant' && !isProcessingEdit && hasEdits;
+    // Only proceed if we have edits and it's an assistant message (or streaming potentially adds edits)
+    if ((message.role === 'assistant' || streamingState) && hasEdits) {
+        const newStatuses: { [key: number]: EditStatus } = {};
+        let changed = false;
 
-    if (shouldDisplayEdits) {
-      const newStatuses: { [key: number]: EditStatus } = {};
-      let changed = false;
-      edits.forEach((_, index) => {
-        // Preserve existing status, default to 'pending' if not set
-        const currentStatus = editStatuses[index];
-        newStatuses[index] = currentStatus ? currentStatus : 'pending';
-        // Detect if we are adding a new pending status where none existed
-        if (!currentStatus) {
-            changed = true;
+        // Iterate through current edits
+        edits.forEach((_, index) => {
+            const currentStatus = editStatuses[index];
+            // Keep existing status, default to 'pending' only if it's truly new
+            if (currentStatus) {
+                newStatuses[index] = currentStatus;
+            } else {
+                newStatuses[index] = 'pending';
+                changed = true; // A new edit was added
+            }
+        });
+
+        // Ensure only valid keys remain by filtering newStatuses based on edits length
+        const currentKeysLength = Object.keys(editStatuses).length;
+        const newKeysLength = Object.keys(newStatuses).length;
+        Object.keys(newStatuses).forEach(keyStr => {
+            const keyIndex = parseInt(keyStr, 10);
+            if (keyIndex >= edits.length) {
+                delete newStatuses[keyIndex];
+                changed = true; // Mark changed as we removed a key
+            }
+        });
+        const finalKeysLength = Object.keys(newStatuses).length;
+
+        // Update state only if statuses were added or removed, or if keys were cleaned up
+        if (changed || currentKeysLength !== finalKeysLength ) {
+             setEditStatuses(newStatuses);
         }
-      });
-
-      // Also check if the number of edits has changed compared to statuses
-      if (Object.keys(editStatuses).length !== edits.length) {
-          changed = true;
-          // Adjust newStatuses keys if edits array shrank
-          Object.keys(newStatuses).forEach(keyStr => {
-              const keyIndex = parseInt(keyStr, 10);
-              if (keyIndex >= edits.length) {
-                  delete newStatuses[keyIndex];
-              }
-          });
-      }
-
-
-      // Only update state if necessary (new pending statuses added or count changed)
-      if (changed) {
-          setEditStatuses(newStatuses);
-      }
-    } else {
-      // Clear statuses if conditions are not met
-      if (Object.keys(editStatuses).length > 0) {
-        setEditStatuses({});
-      }
+    } else if (!hasEdits && Object.keys(editStatuses).length > 0) {
+      // If there are no edits anymore, clear the statuses
+      setEditStatuses({});
     }
-    // Dependencies: Trigger when edit display conditions or edits themselves change
-  }, [isLastMessage, message.role, isProcessingEdit, hasEdits, edits, editStatuses]); // Added editStatuses to dependencies carefully
+    // Depend primarily on the edits array content and whether it has edits
+  }, [edits, hasEdits, message.role, streamingState]); // Removed editStatuses, isLastMessage, isProcessingEdit
+
+
+  // Revised useEffect for initializing/resetting edit expansion state based ONLY on edits
+  useEffect(() => {
+    // Only proceed if we have edits and it's an assistant message (or streaming potentially adds edits)
+     if ((message.role === 'assistant' || streamingState) && hasEdits) {
+        const newExpansionStates: { [key: number]: boolean } = {};
+        let changed = false;
+
+        // Iterate through current edits
+        edits.forEach((_, index) => {
+            const currentExpansion = isEditExpanded[index];
+            // Keep existing state, default to false (collapsed) only if it's truly new
+            if (currentExpansion !== undefined) {
+                newExpansionStates[index] = currentExpansion;
+            } else {
+                newExpansionStates[index] = false; // Default new edits to collapsed
+                changed = true; // A new expansion state was added
+            }
+        });
+
+         // Ensure only valid keys remain
+        const currentKeysLength = Object.keys(isEditExpanded).length;
+        Object.keys(newExpansionStates).forEach(keyStr => {
+            const keyIndex = parseInt(keyStr, 10);
+            if (keyIndex >= edits.length) {
+                delete newExpansionStates[keyIndex];
+                changed = true; // Mark changed as we removed a key
+            }
+        });
+        const finalKeysLength = Object.keys(newExpansionStates).length;
+
+        // Update state only if expansion states were added or removed, or keys cleaned up
+        if (changed || currentKeysLength !== finalKeysLength ) {
+             setIsEditExpanded(newExpansionStates);
+        }
+    } else if (!hasEdits && Object.keys(isEditExpanded).length > 0) {
+        // If there are no edits anymore, clear the expansion states
+        setIsEditExpanded({});
+    }
+    // Depend primarily on the edits array content and whether it has edits
+  }, [edits, hasEdits, message.role, streamingState]); // Removed isEditExpanded, isLastMessage, isProcessingEdit
 
   // Attempts to apply a single edit block to the editor's current content.
   // Returns true if successful, false otherwise.
@@ -258,11 +300,13 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
               <span className="font-medium text-sm">
                 {`${edits.length} edit${edits.length > 1 ? 's' : ''} suggested`}
               </span>
-              {/* Accept/Reject All buttons */}
-              <div className="flex gap-1">
-                <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleAcceptAll}>Accept All</Button>
-                <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleRejectAll}>Reject All</Button>
-              </div>
+              {/* Accept/Reject All buttons - Only show if there are pending edits */}
+              {Object.values(editStatuses).some(status => status === 'pending') && (
+                <div className="flex gap-1">
+                  <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleAcceptAll}>Accept All</Button>
+                  <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleRejectAll}>Reject All</Button>
+                </div>
+              )}
             </div>
 
             {/* Render individual edits */}
@@ -272,6 +316,12 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
                 const isPending = status === 'pending';
                 const isAccepted = status === 'accepted';
                 const isRejected = status === 'rejected';
+                const expanded = !!isEditExpanded[index]; // Check if this edit is expanded
+
+                // Function to toggle expansion state for this edit
+                const toggleExpand = () => {
+                    setIsEditExpanded(prev => ({ ...prev, [index]: !expanded }));
+                };
 
                 return (
                   <div
@@ -283,45 +333,60 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
                     )}
                   >
                     <div className="flex justify-between items-center text-xs mb-1">
-                      <span className="font-semibold">Edit {index + 1}</span>
-                      {/* Individual Accept/Reject Buttons */}
-                      <div className="flex gap-1">
+                      {/* Edit Title and Toggle Button */}
+                      <div className="flex items-center gap-1">
                         <Button
-                          size="xs"
-                          variant="ghost"
-                          className={cn(
-                            "p-0 h-5 w-5 text-gray-400 hover:bg-green-200 hover:text-green-700",
-                            !isLastMessage && "cursor-not-allowed opacity-50",
-                            isAccepted && "text-green-600 bg-green-200",
-                            isRejected && "opacity-50 cursor-not-allowed" // Dim if rejected
-                          )}
-                          disabled={!isLastMessage || isRejected} // Disable if not last or already rejected
-                          onClick={() => handleAcceptChange(index)}
-                          aria-label={`Accept edit ${index + 1}`}
+                            variant="ghost"
+                            size="xs"
+                            className="p-0 h-4 w-4 text-gray-500 hover:bg-gray-200"
+                            onClick={toggleExpand}
+                            aria-label={expanded ? `Collapse edit ${index + 1}` : `Expand edit ${index + 1}`}
                         >
-                          <Check className="size-3" />
+                            {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
                         </Button>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          className={cn(
-                            "p-0 h-5 w-5 text-gray-400 hover:bg-red-200 hover:text-red-700",
-                            !isLastMessage && "cursor-not-allowed opacity-50",
-                            isRejected && "text-red-600 bg-red-200",
-                            isAccepted && "opacity-50 cursor-not-allowed" // Dim if accepted
-                          )}
-                          disabled={!isLastMessage || isAccepted} // Disable if not last or already accepted
-                          onClick={() => handleRejectChange(index)}
-                          aria-label={`Reject edit ${index + 1}`}
-                        >
-                          <X className="size-3" />
-                        </Button>
+                        <span className="font-semibold cursor-pointer" onClick={toggleExpand}>Edit {index + 1}</span>
                       </div>
+                      {/* Individual Accept/Reject Buttons - Only show if pending */}
+                      {isPending && (
+                        <div className="flex gap-1">
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            className={cn(
+                              "p-0 h-5 w-5 text-gray-400 hover:bg-green-200 hover:text-green-700",
+                              !isLastMessage && "cursor-not-allowed opacity-50"
+                              // Removed accepted/rejected specific styles as they are no longer needed when hidden
+                            )}
+                            disabled={!isLastMessage} // Disable only based on isLastMessage now
+                            onClick={() => handleAcceptChange(index)}
+                            aria-label={`Accept edit ${index + 1}`}
+                          >
+                            <Check className="size-3" />
+                          </Button>
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            className={cn(
+                              "p-0 h-5 w-5 text-gray-400 hover:bg-red-200 hover:text-red-700",
+                              !isLastMessage && "cursor-not-allowed opacity-50"
+                              // Removed accepted/rejected specific styles
+                            )}
+                            disabled={!isLastMessage} // Disable only based on isLastMessage now
+                            onClick={() => handleRejectChange(index)}
+                            aria-label={`Reject edit ${index + 1}`}
+                          >
+                            <X className="size-3" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-xs space-y-1">
-                      <p className={cn("text-red-600 line-through", isAccepted && "opacity-50")}>{edit.original}</p>
-                      <p className={cn("text-green-600", isRejected && "opacity-50")}>{edit.newText}</p>
-                    </div>
+                    {/* Collapsible Edit Content */}
+                    {expanded && (
+                      <div className="text-xs space-y-1 pl-5 pt-1"> {/* Indent content slightly */}
+                        <p className={cn("text-red-600 line-through", isAccepted && "opacity-50")}>{edit.original}</p>
+                        <p className={cn("text-green-600", isRejected && "opacity-50")}>{edit.newText}</p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
