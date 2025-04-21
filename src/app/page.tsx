@@ -12,7 +12,8 @@ import EditWithEaseImage from '@/assets/images/Editwithease.png';
 import GDriveLogo from '@/assets/images/GDrive logo.png';
 import GenerateDocumentsImage from '@/assets/images/generate documents.png';
 import GoogleLogo from '@/assets/images/Google_Logo_0.svg';
-import Heroimage from '@/assets/images/Heroimage.png';
+import HeroGif from '@/assets/images/xx1.gif';
+import HeroImage from '@/assets/images/z1.gif';
 import MetaLogo from '@/assets/images/Meta_lockup_positive primary_RGB.svg';
 import SlackLogo from '@/assets/images/Slack.png';
 import TemplatesImage from '@/assets/images/templates.png';
@@ -56,10 +57,10 @@ export default function Landing() {
           </div>
           
           <div className="container mx-auto px-4 pt-10 pb-16 md:pt-16 md:pb-24">
-            <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-8 md:gap-4">
+            <div className="flex flex-col-reverse md:flex-row md:items-start md:justify-between gap-8 md:gap-12">
               
               {/* Left Column - Copy & CTA */}
-              <div className="md:w-[45%] z-10 flex flex-col items-start">
+              <div className="md:w-[35%] z-10 flex flex-col items-start">
                 {/* Super Badge */}
                 <div className="inline-block bg-blue-50 border border-blue-100 rounded-full px-3 py-1 mb-5">
                   <p className="text-blue-600 text-sm font-medium flex items-center">
@@ -75,7 +76,7 @@ export default function Landing() {
                 
                 {/* Subheadline */}
                 <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-[550px]">
-                  DocGPT is the best way to create and edit PRDs with AI. Just tell DocGPT what you want to write a PRD about and watch it create a first draft for you in seconds. Edit your PRD using the side-by-side chat pane to rapidly incorporate changes. 
+                  Just tell DocGPT what you want to write a PRD about and watch it create a first draft in seconds. Make rapid edits using the side-by-side chat pane. 
                 </p>
                 
                 {/* CTA Stack */}
@@ -123,19 +124,19 @@ export default function Landing() {
               </div>
               
               {/* Right Column - App Preview */}
-              <div className="md:w-[55%] flex justify-center md:justify-end">
-                <div className="relative w-full max-w-2xl">
+              <div className="md:w-[75%] flex justify-center md:justify-end">
+                <div className="relative w-full max-w-4xl">
                   {/* Drop Shadow Effect */}
                   <div className="absolute -bottom-6 left-0 right-0 mx-auto w-[90%] h-12 bg-blue-900/20 blur-xl rounded-full z-0"></div>
                   
                   {/* Floating UI */}
-                  <div className="relative z-10 rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
+                  <div className="relative z-10 rounded-xl overflow-hidden border border-gray-200 shadow-2xl self-start">
                     <Image 
                       className="w-full h-auto object-cover" 
-                      src={Heroimage} 
+                      src={HeroImage} 
                       alt="DocGPT Interface"
-                      width={900}
-                      height={600}
+                      width={3600}
+                      height={2400}
                       priority
                     />
                   </div>
@@ -158,42 +159,44 @@ export default function Landing() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Benefit 1 */}
-              <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:border-blue-100">
-                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-6">
-                  <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">10x Faster Creation</h3>
-                <p className="text-gray-600">
-                  Create comprehensive PRDs, specs, and documentation in minutes instead of hours. Let AI handle the heavy lifting.
-                </p>
-              </div>
-              
-              {/* Benefit 2 */}
+              {/* Benefit 1 (Originally Benefit 2) */}
               <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:border-blue-100">
                 <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-6">
                   <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Chat with Your Document</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Create PRDs in minutes</h3>
                 <p className="text-gray-600">
-                  Our side-by-side chat interface lets you request changes and see them applied instantly as you work.
+                  Just tell DocGPT about what you want to create and watch it create a first draft in seconds. 
                 </p>
               </div>
-              
-              {/* Benefit 3 */}
+
+              {/* Benefit 2 (Originally Benefit 1) - Updated for Templates */}
               <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:border-blue-100">
                 <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-6">
                   <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> 
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Professional Quality</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Use your favorite PRD templates</h3>
                 <p className="text-gray-600">
-                  Our AI is fine-tuned to reduce "AI slop" - keeping your PRDs information dense. 
+                  Choose from our library of PRDs or import your own templates that you use at work everyday. 
+                </p>
+              </div>
+              
+              {/* Benefit 3 - Updated for Model Choice */}
+              <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:border-blue-100">
+                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-6">
+                  <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {/* Icon representing choices or settings */}
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Choose from the best AI models</h3>
+                <p className="text-gray-600">
+                  Use models from leading AI providers like OpenAI, Anthropic, Deepseek, and Google to best suit your specific needs.
                 </p>
               </div>
             </div>
@@ -203,9 +206,9 @@ export default function Landing() {
         {/* Feature Showcase - Side by Side */}
         <section className="py-24 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
+            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
               {/* Content */}
-              <div className="md:w-1/2">
+              <div className="md:w-[30%]">
                 <div className="inline-block bg-blue-100 rounded-full px-3 py-1 text-blue-800 text-sm font-medium mb-5">
                   Side-by-side editor
                 </div>
@@ -243,14 +246,14 @@ export default function Landing() {
               </div>
               
               {/* Image */}
-              <div className="md:w-1/2">
+              <div className="md:w-[70%]">
                 <div className="relative rounded-xl overflow-hidden shadow-2xl border border-gray-200">
                   <Image 
                     className="w-full h-auto"
-                    src={Heroimage}
+                    src={HeroGif}
                     alt="DocGPT Side-by-Side Interface"
-                    width={700}
-                    height={500}
+                    width={3200}
+                    height={2200}
                   />
                   
                   {/* Floating UI indicator */}
@@ -355,7 +358,7 @@ export default function Landing() {
                       />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Slack</h3>
-                    <div className="ml-auto py-1 px-2 bg-blue-100 rounded text-xs font-semibold text-blue-800">Q2 2023</div>
+                    <div className="ml-auto py-1 px-2 bg-blue-100 rounded text-xs font-semibold text-blue-800">Q2 2025</div>
                   </div>
                   
                   <p className="text-gray-600 mb-5">
@@ -389,7 +392,7 @@ export default function Landing() {
                       />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Google Drive</h3>
-                    <div className="ml-auto py-1 px-2 bg-blue-100 rounded text-xs font-semibold text-blue-800">Q3 2023</div>
+                    <div className="ml-auto py-1 px-2 bg-blue-100 rounded text-xs font-semibold text-blue-800">Q2 2025</div>
                   </div>
                   
                   <p className="text-gray-600 mb-5">
@@ -419,7 +422,7 @@ export default function Landing() {
                       </svg>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">GitHub</h3>
-                    <div className="ml-auto py-1 px-2 bg-blue-100 rounded text-xs font-semibold text-blue-800">Q4 2023</div>
+                    <div className="ml-auto py-1 px-2 bg-blue-100 rounded text-xs font-semibold text-blue-800">Q2 2025</div>
                   </div>
                   
                   <p className="text-gray-600 mb-5">

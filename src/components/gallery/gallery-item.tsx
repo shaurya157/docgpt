@@ -156,8 +156,8 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
             <div className="relative group cursor-pointer w-fit" onClick={handleClick}>
                 <div className="w-48 h-64 border rounded-t-lg bg-white hover:border-gray-400 transition-all duration-200 hover:scale-105 p-3 overflow-hidden relative">
                     {isBlank ? (
-                        <div className="flex items-center justify-center h-full">
-                            <span className="text-4xl text-gray-400">+</span>
+                        <div className="flex items-center justify-center h-full bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg">
+                            <span className="text-4xl text-blue-500 font-light">+</span>
                         </div>
                     ) : (
                         <div className="w-full h-full bg-white">
@@ -176,8 +176,13 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
                         Saved template
                     </div>
                 )}
+                {!isBlank && itemType === 'template' && !isOwner && (
+                    <div className="absolute -top-2 left-2 bg-gray-100 px-2 py-0.5 text-xs rounded text-gray-600">
+                        Template
+                    </div>
+                )}
                 <div className="bg-gray-100 p-2 w-48">
-                    <p className="text-sm text-center text-gray-600 truncate w-full">{title}</p>
+                    <p className={`text-sm text-center truncate w-full ${isBlank ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{title}</p>
                 </div>
             </div>
 
