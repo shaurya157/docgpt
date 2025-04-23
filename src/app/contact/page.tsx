@@ -21,8 +21,7 @@ export default function Contact() {
           Contact Us
         </h2>
         <p className="mb-8 text-center font-light text-gray-500 dark:text-gray-400 sm:text-xl lg:mb-16">
-          Got a technical issue? Want to send feedback about a beta feature?
-          Need details about our Business plan? Reach out to us at <u><a href="mailto:hello@docgpt.work">{docgptEmail}</a></u>
+          Reach out to us at <u><a href="mailto:hello@docgpt.work">{docgptEmail}</a></u>
         </p>
         <form className="space-y-8" onSubmit={handleSubmit}>
           {/* <div> */}

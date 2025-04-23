@@ -48,37 +48,48 @@ export const ChatMessageList = ({
       className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap"
     >
       <div className="mx-auto w-full space-y-2">
-        {messages.map((message, index) => {
-          const isLastMessage = index === messages.length - 1;
-          return (
-            <ChatMessageItem
-              key={message.id}
-              onDocumentUpdate={onDocumentUpdate}
-              isLastMessage={isLastMessage && status !== 'in_progress'} // Only enable buttons on the *final* last message
-              message={message}
-              streamingState={message.id === 'streaming' && status === 'in_progress' ? streamingState : undefined}
-            />
-          );
-        })}
+        {messages.length === 0 && status !== 'in_progress' && !uploadInProgress ? (
+          <div className="flex flex-col items-left justify-left h-full p-4 text-left">
+            <h2 className="text-xl font-semibold mb-1">What can I help you write?</h2>
+            <p className="text-muted-foreground">
+              Give me some context about the document you want to write and I will write a draft for your review.
+            </p>
+          </div>
+        ) : (
+          <>
+            {messages.map((message, index) => {
+              const isLastMessage = index === messages.length - 1;
+              return (
+                <ChatMessageItem
+                  key={message.id}
+                  onDocumentUpdate={onDocumentUpdate}
+                  isLastMessage={isLastMessage && status !== 'in_progress'} // Only enable buttons on the *final* last message
+                  message={message}
+                  streamingState={message.id === 'streaming' && status === 'in_progress' ? streamingState : undefined}
+                />
+              );
+            })}
 
-        {status === 'in_progress' && (
-          <div className="flex items-start">
-            <div className="rounded-xl px-4 py-2 bg-gray-100">
-              <div className="flex items-center space-x-2">
-                <Icons.spinner className="size-4 animate-spin" />
-                <span className="flex items-center text-xs">Thinking<DotAnimation /></span>
+            {status === 'in_progress' && (
+              <div className="flex items-start">
+                <div className="rounded-xl px-4 py-2 bg-gray-100">
+                  <div className="flex items-center space-x-2">
+                    <Icons.spinner className="size-4 animate-spin" />
+                    <span className="flex items-center text-xs">Thinking<DotAnimation /></span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {uploadInProgress && (
-          <div className="flex justify-start">
-            <Button variant="roundedClear" className="ml-2" disabled>
-              <Icons.spinner className="size-5 animate-spin text-black" />
-              <p className="text-xs">Uploading files...</p>
-            </Button>
-          </div>
+            {uploadInProgress && (
+              <div className="flex justify-start">
+                <Button variant="roundedClear" className="ml-2" disabled>
+                  <Icons.spinner className="size-5 animate-spin text-black" />
+                  <p className="text-xs">Uploading files...</p>
+                </Button>
+              </div>
+            )}
+          </>
         )}
 
         <div ref={messagesEndRef} />
