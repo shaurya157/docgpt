@@ -8,9 +8,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import AmazonLogo from '@/assets/images/amazon-logo-squid-ink-smile-orange.png';
-import EditWithEaseImage from '@/assets/images/Editwithease.png';
 import GDriveLogo from '@/assets/images/GDrive logo.png';
-import GenerateDocumentsImage from '@/assets/images/generate documents.png';
 import GoogleLogo from '@/assets/images/Google_Logo_0.svg';
 import HeroGif from '@/assets/images/xx1.gif';
 import HeroImage from '@/assets/images/z1.gif';
@@ -18,7 +16,6 @@ import MetaLogo from '@/assets/images/Meta_lockup_positive primary_RGB.svg';
 import SlackLogo from '@/assets/images/Slack.png';
 import TemplatesImage from '@/assets/images/templates.png';
 import UberLogo from '@/assets/images/Uber_Logo_Black_RGB.svg';
-import WhatToBuildImage from '@/assets/images/What do you want to build.png';
 import { SignIn } from '@/components/landing/auth';
 import PreLoginHeader from '@/components/landing/pre-login-header';
 
