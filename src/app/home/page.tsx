@@ -59,7 +59,7 @@ export default function Home() {
   return (
     <>
       <HomeHeader onSearch={setSearchQuery} />
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <TemplateGallery 
             providedTemplates={filteredProvidedTemplates}
             userTemplates={filteredUserTemplates}

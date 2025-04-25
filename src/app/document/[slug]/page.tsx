@@ -36,6 +36,7 @@ export default function DocumentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('Saved');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isChatVisible, setIsChatVisible] = useState(true);
 
   if (!session?.user) {
     redirect('/');
@@ -300,6 +301,11 @@ export default function DocumentPage() {
 
   }, [editor, activeUserDocument, isLoading, session, saveStatus]); // Dependencies for the editor change handler
 
+  // Function to toggle chat visibility
+  const toggleChatVisibility = () => {
+    setIsChatVisible(prev => !prev);
+  };
+
   // Loading state display
   if (isLoading) {
     return (
@@ -328,7 +334,8 @@ export default function DocumentPage() {
       <Plate onValueChange={handleEditorChange} editor={editor}>
       <ChatSettingsProvider>
       <div className="flex h-screen flex-col">
-        <DocumentHeader editor={editor} saveStatus={saveStatus} />
+        <DocumentHeader editor={editor} saveStatus={saveStatus} onToggleChat={toggleChatVisibility} />
+        
         <div className='relative flex flex-1 overflow-hidden bg-gray-200'>
           <div
             id="document-container"
@@ -340,7 +347,7 @@ export default function DocumentPage() {
           >
             <div
               id="document-editor"
-              className='border bg-background shadow-lg h-fit min-h-full my-12'
+              className='border bg-background shadow-lg h-fit min-h-full my-4 md:my-12'
               style={{
                   boxSizing: 'border-box', // Include padding in width calculation
                   maxWidth: 'min(816px, 90vw)', // Max width, responsive
@@ -358,6 +365,8 @@ export default function DocumentPage() {
             editor={editor}
             setStatus={setStatus}
             status={status}
+            isVisible={isChatVisible}
+            onToggleChat={toggleChatVisibility}
           />
         </div>
       </div>

@@ -19,7 +19,6 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 
 interface GalleryItemProps {
     title: string;
-    isBlank?: boolean;
     isOwner?: boolean;
     itemId?: string;
     itemType?: 'document' | 'template';
@@ -32,7 +31,7 @@ interface TemplateNode {
     type: string;
 }
 
-export default function GalleryItem({ isBlank, isOwner, itemId, itemType, template, title }: GalleryItemProps) {
+export default function GalleryItem({ isOwner, itemId, itemType, template, title }: GalleryItemProps) {
     const router = useRouter();
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const { setUserChats, setUserOwnedDocuments, setUserTemplates, userChats, userOwnedDocuments, userTemplates } = useUserDataContext();
@@ -120,9 +119,7 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
     };
 
     const handleClick = () => {
-        if (isBlank) {
-            router.push('/document/new');
-        } else if (itemType === 'document' && itemId) {
+        if (itemType === 'document' && itemId) {
             router.push(`/document/${itemId}`);
         } else if (itemType === 'template' && itemId) {
             router.push(`/document/new?templateId=${itemId}`);
@@ -138,13 +135,13 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
             
             switch (node.type) {
                 case 'h1':
-                    return <h1 key={node.id} className="text-[8px] font-bold mb-1 select-none">{text}</h1>;
+                    return <h1 key={node.id} className="text-[7px] md:text-[8px] font-bold mb-0.5 md:mb-1 select-none">{text}</h1>;
                 case 'h2':
-                    return <h2 key={node.id} className="text-[7px] font-semibold mb-0.5 ml-1 select-none">{text}</h2>;
+                    return <h2 key={node.id} className="text-[6px] md:text-[7px] font-semibold mb-0.5 ml-1 select-none">{text}</h2>;
                 case 'h3':
-                    return <h3 key={node.id} className="text-[6px] font-medium mb-0.5 ml-2 select-none">{text}</h3>;
+                    return <h3 key={node.id} className="text-[5px] md:text-[6px] font-medium mb-0.5 ml-2 select-none">{text}</h3>;
                 case 'p':
-                    return <p key={node.id} className="text-[6px] mb-0.5 ml-1 select-none">{text}</p>;
+                    return <p key={node.id} className="text-[5px] md:text-[6px] mb-0.5 ml-1 select-none">{text}</p>;
                 default:
                     return null;
             }
@@ -153,36 +150,30 @@ export default function GalleryItem({ isBlank, isOwner, itemId, itemType, templa
 
     return (
         <>
-            <div className="relative group cursor-pointer w-fit" onClick={handleClick}>
-                <div className="w-48 h-64 border rounded-t-lg bg-white hover:border-gray-400 transition-all duration-200 hover:scale-105 p-3 overflow-hidden relative">
-                    {isBlank ? (
-                        <div className="flex items-center justify-center h-full bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg">
-                            <span className="text-4xl text-blue-500 font-light">+</span>
-                        </div>
-                    ) : (
-                        <div className="w-full h-full bg-white">
-                            {renderPreview()}
-                            {isOwner && (
-                                <Trash2 
-                                    className="absolute bottom-2 right-2 w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all cursor-pointer" 
-                                    onClick={handleDelete}
-                                />
-                            )}
-                        </div>
-                    )}
+            <div className="relative group cursor-pointer" onClick={handleClick}>
+                <div className="w-40 md:w-48 h-56 md:h-64 border rounded-t-lg bg-white hover:border-gray-400 transition-all duration-200 hover:scale-105 p-2 md:p-3 overflow-hidden relative">
+                    <div className="w-full h-full bg-white">
+                        {renderPreview()}
+                        {isOwner && (
+                            <Trash2 
+                                className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-5 h-5 md:w-6 md:h-6 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all cursor-pointer"
+                                onClick={handleDelete}
+                            />
+                        )}
+                    </div>
                 </div>
                 {isOwner && itemType === 'template' && (
                     <div className="absolute -top-2 left-2 bg-gray-100 px-2 py-0.5 text-xs rounded">
                         Saved template
                     </div>
                 )}
-                {!isBlank && itemType === 'template' && !isOwner && (
+                {itemType === 'template' && !isOwner && (
                     <div className="absolute -top-2 left-2 bg-gray-100 px-2 py-0.5 text-xs rounded text-gray-600">
                         Template
                     </div>
                 )}
-                <div className="bg-gray-100 p-2 w-48">
-                    <p className={`text-sm text-center truncate w-full ${isBlank ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{title}</p>
+                <div className="bg-gray-100 p-2 w-40 md:w-48 rounded-b-lg">
+                    <p className={`text-xs md:text-sm text-center truncate w-full text-gray-600`}>{title}</p>
                 </div>
             </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { type PlateEditor } from '@udecode/plate/react';
-import { AlertTriangle, CheckCircle, Loader2, PenIcon } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2, MessageSquare, PenIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -18,18 +18,32 @@ import { SignOut } from '../landing/auth';
 
 export type SaveStatus = 'Error' | 'Loading...' | 'Saved' | 'Saving' | 'Unsaved';
 
+// Define the mobile breakpoint (reuse or define locally)
+const MOBILE_BREAKPOINT = 768;
+
 const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
   const { activeUserDocument, setActiveUserDocument } = useDocument();
   const { setUserOwnedDocuments } = useUserDataContext();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(activeUserDocument?.documentName || 'Untitled');
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isMobile, setIsMobile] = useState(false); // State for mobile view
 
   useEffect(() => {
     if (activeUserDocument?.documentName) {
       setName(activeUserDocument.documentName);
     }
   }, [activeUserDocument]);
+
+  // --- Mobile View Detection ---
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    checkMobile(); // Initial check
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleNameChange = async () => {
     if (!activeUserDocument || name === activeUserDocument.documentName) {
@@ -78,7 +92,10 @@ const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
         {isEditing ? (
           <input
             ref={inputRef}
-            className="bg-transparent border-b border-gray-300 focus:border-black focus:outline-none w-48 text-lg font-medium -ml-1"
+            // Adjust input width on mobile
+            className={`bg-transparent border-b border-gray-300 focus:border-black focus:outline-none text-lg font-medium -ml-1 ${
+              isMobile ? 'w-36' : 'w-48' 
+            }`}
             value={name}
             onBlur={handleNameChange}
             onChange={(e) => setName(e.target.value)}
@@ -94,7 +111,13 @@ const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
           />
         ) : (
           <div className="flex items-center group" onClick={() => setIsEditing(true)}>
-            <h1 className="text-lg font-medium cursor-pointer group-hover:border-b group-hover:border-gray-400">
+            {/* Apply truncate and max-width on mobile */}
+            <h1 
+              className={`text-lg font-medium cursor-pointer group-hover:border-b group-hover:border-gray-400 ${
+                isMobile ? 'truncate max-w-[150px]' : ''
+              }`}
+              title={name} // Show full name on hover (useful even on desktop)
+            >
                 {name}
             </h1>
             {renderSaveStatusIcon()}
@@ -110,9 +133,10 @@ const EditableDocumentName = ({ saveStatus }: { saveStatus: SaveStatus }) => {
 interface DocumentHeaderProps {
   editor: PlateEditor;
   saveStatus: SaveStatus;
+  onToggleChat: () => void;
 }
 
-const DocumentHeader = ({ editor, saveStatus }: DocumentHeaderProps) => {
+const DocumentHeader = ({ editor, saveStatus, onToggleChat }: DocumentHeaderProps) => {
   const router = useRouter();
   const { data: session } = useSession();
   const { activeUserDocument } = useDocument();
@@ -216,7 +240,10 @@ const DocumentHeader = ({ editor, saveStatus }: DocumentHeaderProps) => {
 
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          <button onClick={onToggleChat} className="p-1.5 rounded hover:bg-gray-100" aria-label="Toggle chat panel">
+            <MessageSquare className="w-5 h-5 text-gray-600" />
+          </button>
           <div className="flex items-center">
             {session?.user?.image && (
                 <Image

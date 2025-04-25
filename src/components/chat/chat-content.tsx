@@ -4,6 +4,7 @@ import { getEditorPrompt } from '@udecode/plate-ai/react';
 import { PlateEditor } from '@udecode/plate/react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
+import { X } from 'lucide-react';
 
 import { ChatMessageList } from '@/components/chat/chat-messaging-list';
 import { ChatSettings } from '@/components/chat/chat-settings';
@@ -19,12 +20,17 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message } from '@/types';
 import { editorDocumentAndPromptTemplate } from '@/utils/editor-prompt-util';
 
+// Define the mobile breakpoint
+const MOBILE_BREAKPOINT = 768; // Corresponds to Tailwind's 'md'
+
 interface ContentProps {
   activeChatMessages: Message[];
   editor: PlateEditor;
   setStatus: Dispatch<SetStateAction<string>>;
   status: 'awaiting_message' | 'in_progress';
   changeEditorContent: (content: any) => void;
+  isVisible: boolean;
+  onToggleChat: () => void;
 }
 
 const ChatContent = ({
@@ -32,7 +38,9 @@ const ChatContent = ({
   changeEditorContent,
   editor,
   setStatus,
-  status
+  status,
+  isVisible,
+  onToggleChat
 }: ContentProps) => {
   
   const { activeUserDocument } = useDocument();
@@ -54,6 +62,7 @@ const ChatContent = ({
   const startWidthRef = useRef(0);
   const documentContainerRef = useRef<HTMLElement | null>(null);
   const documentEditorRef = useRef<HTMLElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false); // State for mobile view
 
   const { attachments, removeAttachment, updateAttachments, uploadFiles, uploadInProgress } = 
     useFileAttachments(session?.user?.email || '');
@@ -71,6 +80,16 @@ const ChatContent = ({
     documentEditorRef.current = document.getElementById('document-editor') as HTMLElement;
   }, []);
 
+  // --- Mobile View Detection ---
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    checkMobile(); // Initial check
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   // --- Drag and Drop Handlers ---
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -211,11 +230,31 @@ const ChatContent = ({
   
   // Initial setup and changes to pane width
   useEffect(() => {
-    // Initialize document padding based on chat pane width
-    if (documentContainerRef.current && !isDragging) {
-      documentContainerRef.current.style.paddingRight = `${calculateDocumentPadding(paneWidth)}px`;
+    // Ensure we have the reference to the document container
+    if (!documentContainerRef.current) {
+      documentContainerRef.current = document.getElementById('document-container') as HTMLElement;
     }
-  }, [paneWidth, isDragging]);
+
+    // Apply padding based on chat pane width, visibility, and mobile status
+    if (documentContainerRef.current) {
+      let targetPadding = 0;
+      // Only apply padding if not mobile AND chat is visible AND not dragging
+      if (!isMobile && isVisible && !isDragging) {
+        targetPadding = calculateDocumentPadding(paneWidth);
+      }
+      
+      documentContainerRef.current.style.paddingRight = `${targetPadding}px`;
+      // Apply transition only if not dragging
+      documentContainerRef.current.style.transition = isDragging ? 'none' : 'padding-right 0.2s ease-out';
+    }
+    // Cleanup transition on unmount or if dragging starts
+    // return () => {
+    //   if (documentContainerRef.current) {
+    //     documentContainerRef.current.style.transition = 'none'; 
+    //   }
+    // };
+
+  }, [paneWidth, isDragging, isVisible, isMobile]); // Add isMobile dependency
 
   const { updateEditorWithNewDocument } = useDocumentIntegration({
     changeEditorContent,
@@ -321,36 +360,69 @@ const ChatContent = ({
   return (
     <motion.div
       ref={chatContainerRef}
-      className="flex flex-col h-[calc(100vh-105px)] bg-white border-l border-gray-200 overflow-hidden fixed top-[105px] right-0 group"
+      className={`flex flex-col bg-white border-gray-200 overflow-hidden absolute top-0 h-full group z-10 ${
+        isVisible ? (isMobile ? 'border-l-0' : 'border-l') : 'border-l-0'
+      } ${ 
+        isMobile && isVisible ? 'left-0 right-0' : 'right-0'
+      }`}
       style={{
-        minWidth: '280px',
-        transition: isDragging ? 'none' : 'width 0.1s ease-out',
-        width: `${paneWidth}px`
+        // Conditional width and minWidth based on mobile view
+        minWidth: isVisible ? (isMobile ? '100%' : '280px') : '0px',
+        width: isVisible ? (isMobile ? '100%' : `${paneWidth}px`) : '0px',
+        // Existing styles
+        transition: isDragging ? 'none' : 'width 0.2s ease-out, opacity 0.2s ease-out',
+        opacity: isVisible ? 1 : 0,
+        pointerEvents: isVisible ? 'auto' : 'none',
+      }}
+      initial={false} // Disable initial animation based on initial state
+      animate={{ // Animate width and opacity based on isVisible and isMobile
+        width: isVisible ? (isMobile ? '100%' : `${paneWidth}px`) : '0px',
+        opacity: isVisible ? 1 : 0,
       }}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Drag handle */}
-      <div 
-        ref={dragHandleRef}
-        className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-gray-200 hover:opacity-40 z-50 flex items-center justify-center"
-        onMouseDown={(e) => {
-          e.stopPropagation();
-          handleDragStart(e);
-        }}
-      >
-        <div className="h-20 w-[3px] bg-gray-300 rounded-full opacity-0 group-hover:opacity-100" />
-      </div>
+      {/* Drag handle - Hidden on mobile */}
+      {!isMobile && (
+        <div 
+          ref={dragHandleRef}
+          className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-gray-200 hover:opacity-40 z-50 flex items-center justify-center"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            handleDragStart(e);
+          }}
+        >
+          <div className="h-20 w-[3px] bg-gray-300 rounded-full opacity-0 group-hover:opacity-100" />
+        </div>
+      )}
       
-      <div className="w-full py-2 px-3 flex justify-between items-center border-b border-gray-200 bg-gray-50">
-        <h2 className="font-medium text-sm">Chat</h2>
-        <button className="text-gray-500 hover:bg-gray-200 rounded w-6 h-6 flex items-center justify-center">
-          —
-        </button>
-      </div>
-      <div className="w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap px-2 py-2">
+      {/* Mobile Close Button - Visible only when mobile and chat is visible */}
+      {isMobile && isVisible && (
+        <div className="absolute top-2 right-2 z-70">
+          <button 
+            onClick={onToggleChat} 
+            className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+            aria-label="Close chat panel"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Conditionally render the Chat Header only if not mobile */}
+      {!isMobile && (
+        <div className="w-full py-2 px-3 flex justify-between items-center border-b border-gray-200 bg-gray-50">
+          <h2 className="font-medium text-sm">Chat</h2>
+          <button className="text-gray-500 hover:bg-gray-200 rounded w-6 h-6 flex items-center justify-center">
+            —
+          </button>
+        </div>
+      )}
+
+      {/* Adjust padding for mobile when header is hidden */}
+      <div className={`w-full flex-1 overflow-y-auto scroll-smooth whitespace-pre-wrap px-2 ${isMobile ? 'pt-2' : 'py-2'}`}> {/* Removed py-2, added pt-2 on mobile */}
         <div className="w-full space-y-2">
           <ChatMessageList
             onDocumentUpdate={updateEditorWithNewDocument}

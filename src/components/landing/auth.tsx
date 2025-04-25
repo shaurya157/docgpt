@@ -2,6 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { signOut as nextAuthSignOut } from 'next-auth/react';
+import { LogOut } from 'lucide-react';
 
 import { Button } from '@/components/plate-ui/button';
 
@@ -24,11 +25,12 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
   return (
     <Button 
       variant="ghost" 
-      className="w-full p-0" 
+      className="p-1.5 rounded-md hover:bg-gray-100"
+      aria-label="Sign out"
       {...props}
       onClick={() => nextAuthSignOut({ callbackUrl: '/' })}
     >
-      Sign Out
+      <LogOut className="w-5 h-5 text-gray-600" />
     </Button>
   );
 }

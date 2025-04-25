@@ -1,4 +1,3 @@
-
 import { Document } from '@/types';
 
 import GalleryItem from './gallery-item';
@@ -8,9 +7,9 @@ interface DocumentGalleryProps {
 
 export default function DocumentGallery({ documents }: DocumentGalleryProps) {
     return (
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
             <h2 className="text-2xl font-semibold mb-6">Your Documents</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8">
                 {documents?.map((doc, index) => (
                     <GalleryItem 
                         key={`doc-${index}`}
