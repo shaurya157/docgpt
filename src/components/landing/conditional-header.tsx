@@ -7,8 +7,9 @@ import PreLoginHeader from './pre-login-header';
 export default function ConditionalHeader() {
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
+  const isSignInPage = pathname === '/signin';
   
-  if (isLandingPage) {
+  if (isLandingPage || isSignInPage) {
     return null;
   }
   

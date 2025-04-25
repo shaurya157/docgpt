@@ -2,6 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { signOut as nextAuthSignOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 
 import { Button } from '@/components/plate-ui/button';
@@ -10,10 +11,12 @@ interface SignInButtonProps {
     displayText: string;
 }
 export function SignIn({ displayText, provider, ...props}: { provider?: string } & React.ComponentPropsWithRef<typeof Button> & SignInButtonProps) {
+  const router = useRouter();
+  
   return (
     <Button 
       className="mr-4"
-      onClick={() => signIn('google', { callbackUrl: '/home' })}
+      onClick={() => router.push('/signin')}
       {...props}
     >
       {displayText}
