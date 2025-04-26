@@ -334,7 +334,7 @@ export default function DocumentPage() {
       <Plate onValueChange={handleEditorChange} editor={editor}>
       <ChatSettingsProvider>
       <div className="flex h-screen flex-col">
-        <DocumentHeader onToggleChat={toggleChatVisibility} editor={editor} saveStatus={saveStatus} />
+        <DocumentHeader editor={editor} saveStatus={saveStatus} onToggleChat={toggleChatVisibility} />
         
         <div className='relative flex flex-1 overflow-hidden bg-gray-200'>
           <div
@@ -360,13 +360,13 @@ export default function DocumentPage() {
           </div>
 
           <ChatContent
-            onToggleChat={toggleChatVisibility}
             activeChatMessages={activeChatMessages}
             changeEditorContent={changeEditorContent}
             editor={editor}
-            isVisible={isChatVisible}
             setStatus={setStatus}
             status={status}
+            isVisible={isChatVisible}
+            onToggleChat={toggleChatVisibility}
           />
         </div>
       </div>

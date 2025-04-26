@@ -2,7 +2,6 @@
 
 import React from 'react';
 
-import { getEditorPrompt } from '@udecode/plate-ai/react';
 import {
   BoldPlugin,
   CodePlugin,
@@ -19,11 +18,6 @@ import {
   UnderlineIcon,
   WandSparklesIcon,
 } from 'lucide-react';
-import { MessageSquarePlusIcon } from 'lucide-react';
-
-import { Button } from '@/components/plate-ui/button';
-import { useCustomContext } from '@/providers/custom-context-provider';
-import { editorSelectionBlockTemplate } from '@/utils/editor-prompt-util';
 
 import { AIToolbarButton } from './ai-toolbar-button';
 import { CommentToolbarButton } from './comment-toolbar-button';
@@ -34,6 +28,11 @@ import { MoreDropdownMenu } from './more-dropdown-menu';
 import { SuggestionToolbarButton } from './suggestion-toolbar-button';
 import { ToolbarGroup } from './toolbar';
 import { TurnIntoDropdownMenu } from './turn-into-dropdown-menu';
+import { getEditorPrompt } from '@udecode/plate-ai/react';
+import { editorSelectionBlockTemplate } from '@/utils/editor-prompt-util';
+import { useCustomContext } from '@/providers/custom-context-provider';
+import { Button } from '@/components/plate-ui/button';
+import { MessageSquarePlusIcon } from 'lucide-react';
 export function FloatingToolbarButtons() {
   const readOnly = useEditorReadOnly();
   const editor = useEditorRef();
@@ -61,7 +60,7 @@ export function FloatingToolbarButtons() {
           </ToolbarGroup>
 
           <ToolbarGroup>
-            <Button variant="ghost" className="flex items-center" onClick={handleAddToChat}>
+            <Button variant="ghost" onClick={handleAddToChat} className="flex items-center">
               <MessageSquarePlusIcon />
               <span>Add to chat</span>
             </Button>

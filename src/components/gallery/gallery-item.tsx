@@ -173,7 +173,7 @@ export default function GalleryItem({ isOwner, itemId, itemType, template, title
                     </div>
                 )}
                 <div className="bg-gray-100 p-2 w-40 md:w-48 rounded-b-lg">
-                    <p className="text-xs md:text-sm text-center truncate w-full text-gray-600">{title}</p>
+                    <p className={`text-xs md:text-sm text-center truncate w-full text-gray-600`}>{title}</p>
                 </div>
             </div>
 

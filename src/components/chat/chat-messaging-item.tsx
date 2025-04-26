@@ -336,8 +336,8 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
                       {/* Edit Title and Toggle Button */}
                       <div className="flex items-center gap-1">
                         <Button
-                            size="xs"
                             variant="ghost"
+                            size="xs"
                             className="p-0 h-4 w-4 text-gray-500 hover:bg-gray-200"
                             onClick={toggleExpand}
                             aria-label={expanded ? `Collapse edit ${index + 1}` : `Expand edit ${index + 1}`}

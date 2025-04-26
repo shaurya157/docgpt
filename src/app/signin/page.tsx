@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
-
+import { Button } from '@/components/plate-ui/button';
+import { Icons } from '@/components/icons';
 
 export default function SignInPage() {
   const handleGoogleSignIn = () => {
@@ -14,7 +14,7 @@ export default function SignInPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 bg-gradient-to-b from-white to-blue-50">
       <div className="absolute top-8 left-8">
-        <Link className="flex items-center space-x-2 group" href="/">
+        <Link href="/" className="flex items-center space-x-2 group">
           <div className="w-12 h-12 bg-[#2563EB] rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm">D</div>
           <span className="font-bold text-xl tracking-tight text-gray-900">DocGPT</span>
         </Link>

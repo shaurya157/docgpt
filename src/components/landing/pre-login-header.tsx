@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-
 import Link from 'next/link';
+import { useState } from 'react';
 
 import {SignIn} from "@/components/landing/auth";
 import { Button } from '@/components/plate-ui/button';
@@ -41,8 +40,8 @@ export default function PreLoginHeader() {
             displayText="Sign In" 
           />
           <Link 
-            className="hidden md:flex text-gray-700 hover:text-blue-600 font-medium text-[15px] px-4 py-2.5 transition-colors" 
-            href="/contact"
+            href="/contact" 
+            className="hidden md:flex text-gray-700 hover:text-blue-600 font-medium text-[15px] px-4 py-2.5 transition-colors"
           >
             Contact
           </Link>
@@ -55,12 +54,12 @@ export default function PreLoginHeader() {
           >
             {/* Hamburger/Close Icon based on state */}
             {isMobileMenuOpen ? (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             )}
             <span className="sr-only">Toggle menu</span>
@@ -82,9 +81,9 @@ export default function PreLoginHeader() {
               displayText="Sign In" 
             />
             <Link 
-              className="w-full text-center text-gray-700 hover:text-blue-600 font-medium text-[15px] px-4 py-2.5 transition-colors rounded-lg hover:bg-gray-100" 
+              href="/contact" 
+              className="w-full text-center text-gray-700 hover:text-blue-600 font-medium text-[15px] px-4 py-2.5 transition-colors rounded-lg hover:bg-gray-100"
               onClick={() => setIsMobileMenuOpen(false)}
-              href="/contact"
             >
               Contact
             </Link>

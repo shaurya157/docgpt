@@ -1,8 +1,9 @@
 'use client';
 
-import { LogOut } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import { signOut as nextAuthSignOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 
 import { Button } from '@/components/plate-ui/button';
 
