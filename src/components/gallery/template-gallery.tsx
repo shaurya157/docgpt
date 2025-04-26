@@ -1,7 +1,8 @@
-import { Template } from '@/types';
 import { useRouter } from 'next/navigation';
-import { Button } from '../plate-ui/button';
 
+import { Template } from '@/types';
+
+import { Button } from '../plate-ui/button';
 import GalleryItem from './gallery-item';
 
 interface TemplateGalleryProps {

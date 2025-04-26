@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+
 import { createPlatePlugin } from '@udecode/plate/react';
 
 import { FixedToolbar } from '@/components/plate-ui/fixed-toolbar';
