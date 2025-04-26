@@ -1,10 +1,10 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState, DragEvent } from 'react';
+import { Dispatch, DragEvent, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import { getEditorPrompt } from '@udecode/plate-ai/react';
 import { PlateEditor } from '@udecode/plate/react';
 import { motion } from 'framer-motion';
-import { useSession } from 'next-auth/react';
 import { X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 import { ChatMessageList } from '@/components/chat/chat-messaging-list';
 import { ChatSettings } from '@/components/chat/chat-settings';
@@ -26,10 +26,10 @@ const MOBILE_BREAKPOINT = 768; // Corresponds to Tailwind's 'md'
 interface ContentProps {
   activeChatMessages: Message[];
   editor: PlateEditor;
+  isVisible: boolean;
   setStatus: Dispatch<SetStateAction<string>>;
   status: 'awaiting_message' | 'in_progress';
   changeEditorContent: (content: any) => void;
-  isVisible: boolean;
   onToggleChat: () => void;
 }
 
@@ -37,9 +37,9 @@ const ChatContent = ({
   activeChatMessages,
   changeEditorContent,
   editor,
+  isVisible,
   setStatus,
   status,
-  isVisible,
   onToggleChat
 }: ContentProps) => {
   
@@ -368,21 +368,21 @@ const ChatContent = ({
       style={{
         // Conditional width and minWidth based on mobile view
         minWidth: isVisible ? (isMobile ? '100%' : '280px') : '0px',
-        width: isVisible ? (isMobile ? '100%' : `${paneWidth}px`) : '0px',
-        // Existing styles
-        transition: isDragging ? 'none' : 'width 0.2s ease-out, opacity 0.2s ease-out',
         opacity: isVisible ? 1 : 0,
         pointerEvents: isVisible ? 'auto' : 'none',
-      }}
-      initial={false} // Disable initial animation based on initial state
-      animate={{ // Animate width and opacity based on isVisible and isMobile
+        // Existing styles
+        transition: isDragging ? 'none' : 'width 0.2s ease-out, opacity 0.2s ease-out',
         width: isVisible ? (isMobile ? '100%' : `${paneWidth}px`) : '0px',
-        opacity: isVisible ? 1 : 0,
       }}
       onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
       onDrop={handleDrop}
+      animate={{ // Animate width and opacity based on isVisible and isMobile
+        opacity: isVisible ? 1 : 0,
+        width: isVisible ? (isMobile ? '100%' : `${paneWidth}px`) : '0px',
+      }}
+      initial={false} // Disable initial animation based on initial state
     >
       {/* Drag handle - Hidden on mobile */}
       {!isMobile && (
@@ -402,8 +402,8 @@ const ChatContent = ({
       {isMobile && isVisible && (
         <div className="absolute top-2 right-2 z-70">
           <button 
-            onClick={onToggleChat} 
-            className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+            className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" 
+            onClick={onToggleChat}
             aria-label="Close chat panel"
           >
             <X className="w-4 h-4" />

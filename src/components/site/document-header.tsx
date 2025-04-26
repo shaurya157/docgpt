@@ -241,7 +241,7 @@ const DocumentHeader = ({ editor, saveStatus, onToggleChat }: DocumentHeaderProp
         </div>
 
         <div className="flex items-center space-x-4">
-          <button onClick={onToggleChat} className="p-1.5 rounded hover:bg-gray-100" aria-label="Toggle chat panel">
+          <button className="p-1.5 rounded hover:bg-gray-100" onClick={onToggleChat} aria-label="Toggle chat panel">
             <MessageSquare className="w-5 h-5 text-gray-600" />
           </button>
           <div className="flex items-center">

@@ -10,12 +10,12 @@ import { redirect } from 'next/navigation';
 import AmazonLogo from '@/assets/images/amazon-logo-squid-ink-smile-orange.png';
 import GDriveLogo from '@/assets/images/GDrive logo.png';
 import GoogleLogo from '@/assets/images/Google_Logo_0.svg';
-import HeroGif from '@/assets/images/xx1.gif';
-import HeroImage from '@/assets/images/z1.gif';
 import MetaLogo from '@/assets/images/Meta_lockup_positive primary_RGB.svg';
 import SlackLogo from '@/assets/images/Slack.png';
 import TemplatesImage from '@/assets/images/templates.png';
 import UberLogo from '@/assets/images/Uber_Logo_Black_RGB.svg';
+import HeroGif from '@/assets/images/xx1.gif';
+import HeroImage from '@/assets/images/z1.gif';
 import { SignIn } from '@/components/landing/auth';
 import PreLoginHeader from '@/components/landing/pre-login-header';
 
@@ -48,7 +48,7 @@ export default function Landing() {
         {/* Hero Section - High-converting split layout */}
         <section className="relative bg-gradient-to-br from-white to-blue-50 overflow-hidden">
           <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
-            <svg className="absolute right-0 top-0 h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <svg className="absolute right-0 top-0 h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
               <path d="M0,0 L100,0 L100,100 Z" fill="#0070f3" />
             </svg>
           </div>
@@ -91,29 +91,29 @@ export default function Landing() {
                     <Image 
                       className="h-8 w-auto opacity-100 transition-all hover:scale-105 mt-3" 
                       alt="Amazon" 
-                      src={AmazonLogo}
                       height={32}
+                      src={AmazonLogo}
                       width={120}
                     />
                     <Image 
                       className="h-16 w-auto opacity-100 transition-all hover:scale-105" 
                       alt="Meta" 
-                      src={MetaLogo}
                       height={64}
+                      src={MetaLogo}
                       width={200}
                     />
                     <Image 
                       className="h-8 w-auto opacity-100 transition-all hover:scale-105" 
                       alt="Google" 
-                      src={GoogleLogo}
                       height={32}
+                      src={GoogleLogo}
                       width={120}
                     />
                     <Image 
                       className="h-16 w-auto opacity-100 transition-all hover:scale-105" 
                       alt="Uber" 
-                      src={UberLogo}
                       height={64}
+                      src={UberLogo}
                       width={160}
                     />
                   </div>
@@ -130,10 +130,10 @@ export default function Landing() {
                   <div className="relative z-10 rounded-xl overflow-hidden border border-gray-200 shadow-2xl self-start">
                     <Image 
                       className="w-full h-auto object-cover" 
-                      src={HeroImage} 
-                      alt="DocGPT Interface"
-                      width={3600}
+                      alt="DocGPT Interface" 
                       height={2400}
+                      src={HeroImage}
+                      width={3600}
                       priority
                     />
                   </div>
@@ -160,7 +160,7 @@ export default function Landing() {
               <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:border-blue-100">
                 <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-6">
                   <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Create PRDs in minutes</h3>
@@ -173,7 +173,7 @@ export default function Landing() {
               <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:border-blue-100">
                 <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-6">
                   <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> 
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /> 
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Use your favorite PRD templates</h3>
@@ -187,8 +187,8 @@ export default function Landing() {
                 <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-6">
                   <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {/* Icon representing choices or settings */}
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Choose from the best AI models</h3>
@@ -218,7 +218,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd" />
                       </svg>
                     </div>
                     <p className="text-gray-700">Request specific changes in natural language</p>
@@ -226,7 +226,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd" />
                       </svg>
                     </div>
                     <p className="text-gray-700">See changes highlighted in real-time</p>
@@ -234,7 +234,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd" />
                       </svg>
                     </div>
                     <p className="text-gray-700">Accept or reject suggestions with one click</p>
@@ -247,10 +247,10 @@ export default function Landing() {
                 <div className="relative rounded-xl overflow-hidden shadow-2xl border border-gray-200">
                   <Image 
                     className="w-full h-auto"
-                    src={HeroGif}
                     alt="DocGPT Side-by-Side Interface"
-                    width={3200}
                     height={2200}
+                    src={HeroGif}
+                    width={3200}
                   />
                   
                   {/* Floating UI indicator */}
@@ -284,7 +284,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd" />
                       </svg>
                     </div>
                     <p className="text-gray-700">Professional PRD templates</p>
@@ -292,7 +292,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd" />
                       </svg>
                     </div>
                     <p className="text-gray-700">Upload your existing documents as templates</p>
@@ -300,7 +300,7 @@ export default function Landing() {
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center mt-1 mr-3">
                       <svg className="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path clipRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fillRule="evenodd" />
                       </svg>
                     </div>
                     <p className="text-gray-700">Save your custom templates for future use</p>
@@ -313,10 +313,10 @@ export default function Landing() {
                 <div className="relative rounded-xl overflow-hidden shadow-2xl border border-gray-200">
                   <Image 
                     className="w-full h-auto"
-                    src={TemplatesImage}
                     alt="DocGPT Templates Showcase"
-                    width={700}
                     height={500}
+                    src={TemplatesImage}
+                    width={700}
                   />
                 </div>
               </div>
@@ -347,11 +347,11 @@ export default function Landing() {
                   <div className="flex items-center mb-4">
                     <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center mr-3 overflow-hidden">
                       <Image 
-                        src={SlackLogo} 
+                        className="object-contain" 
                         alt="Slack Logo"
-                        width={32}
                         height={32}
-                        className="object-contain"
+                        src={SlackLogo}
+                        width={32}
                       />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Slack</h3>
@@ -363,12 +363,12 @@ export default function Landing() {
                   </p>
                   
                   <Link 
-                    href="/contact"
                     className="text-blue-600 font-medium hover:text-blue-800 transition-colors flex items-center"
+                    href="/contact"
                   >
                     Join waitlist
-                    <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                     </svg>
                   </Link>
                 </div>
@@ -381,11 +381,11 @@ export default function Landing() {
                   <div className="flex items-center mb-4">
                     <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center mr-3 overflow-hidden">
                       <Image 
-                        src={GDriveLogo} 
+                        className="object-contain" 
                         alt="Google Drive Logo" 
-                        width={32}
                         height={32}
-                        className="object-contain"
+                        src={GDriveLogo}
+                        width={32}
                       />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Google Drive</h3>
@@ -397,12 +397,12 @@ export default function Landing() {
                   </p>
                   
                   <Link 
-                    href="/contact"
                     className="text-blue-600 font-medium hover:text-blue-800 transition-colors flex items-center"
+                    href="/contact"
                   >
                     Join waitlist
-                    <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                     </svg>
                   </Link>
                 </div>
@@ -414,7 +414,7 @@ export default function Landing() {
                 <div className="p-6">
                   <div className="flex items-center mb-4">
                     <div className="w-10 h-10 rounded-lg bg-[#24292e] flex items-center justify-center mr-3">
-                      <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 0a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2 0 1.9 1.2 1.9 1.2 1 1.8 2.8 1.3 3.4 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.4-.5-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 0z" />
                       </svg>
                     </div>
@@ -427,12 +427,12 @@ export default function Landing() {
                   </p>
                   
                   <Link 
-                    href="/contact"
                     className="text-blue-600 font-medium hover:text-blue-800 transition-colors flex items-center"
+                    href="/contact"
                   >
                     Join waitlist
-                    <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                     </svg>
                   </Link>
                 </div>
@@ -445,13 +445,13 @@ export default function Landing() {
         <section className="py-24 bg-gradient-to-br from-blue-500 to-blue-700 text-white relative overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10">
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
               <defs>
-                <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <pattern id="grid" height="10" patternUnits="userSpaceOnUse" width="10">
                   <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5"/>
                 </pattern>
               </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
+              <rect fill="url(#grid)" height="100%" width="100%" />
             </svg>
           </div>
           
@@ -475,7 +475,7 @@ export default function Landing() {
             {/* Satisfaction Guarantee */}
             <div className="mt-16 max-w-sm mx-auto bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center space-x-4">
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <path clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" fillRule="evenodd" />
               </svg>
               <div>
                 <p className="text-white font-medium">100% satisfaction guarantee</p>
