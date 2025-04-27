@@ -1,5 +1,4 @@
 import React from 'react';
-import PreLoginHeader from '@/components/landing/pre-login-header';
 import PreLoginFooter from '@/components/landing/pre-login-footer';
 
 export default function PrivacyPage() {
