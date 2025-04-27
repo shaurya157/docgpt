@@ -342,7 +342,7 @@ export async function updateUserLastLoginTimestamp(userId: string) {
     return { success: true };
   } catch (error) {
     console.error('Error updating Firestore timestamp:', error);
-    return { success: false, error };
+    return { error, success: false };
   }
 }
 
@@ -358,7 +358,7 @@ export async function getUserIntegrations(userId: string): Promise<{ integration
       // Extract only the status information for the frontend
       if (backendIntegrations?.slack) {
         const slackData: SlackIntegration = backendIntegrations.slack;
-        frontendIntegrations = { slack: { integrated: true, expiresAt: slackData.expiresAt ?? null } };
+        frontendIntegrations = { slack: { expiresAt: slackData.expiresAt ?? null, integrated: true } };
       }
       return { integrations: frontendIntegrations };
     } else {
@@ -366,6 +366,6 @@ export async function getUserIntegrations(userId: string): Promise<{ integration
     }
   } catch (error) {
     console.error('Error fetching user integrations:', error);
-    return { integrations: null, error };
+    return { error, integrations: null };
   }
 }

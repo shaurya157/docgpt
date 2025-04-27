@@ -9,10 +9,10 @@ import { getValidSlackToken } from "./slack-auth-helper";
 
 // Define expected message structure from Slack conversations.history
 interface SlackHistoryMessage {
-    type: string;
-    user?: string; // User ID might not always be present (e.g., bot messages)
-    text?: string; // Message content
     ts: string;   // Timestamp
+    type: string;
+    text?: string; // Message content
+    user?: string; // User ID might not always be present (e.g., bot messages)
     // Add other fields if needed
 }
 
@@ -160,7 +160,7 @@ export class DocumentWorkflow {
   }
 
   private async retrieveSlackMessagesNode(state: TAgentState): Promise<Partial<TAgentState>> {
-      const { customContexts, userId, streamController } = state;
+      const { customContexts, streamController, userId } = state;
       const slackContexts = customContexts.filter(
           (ctx) => ctx.type === 'slack_channel' && ctx.metadata?.channelId
       );
@@ -195,12 +195,12 @@ export class DocumentWorkflow {
               try {
                 const joinParams = new URLSearchParams({ channel: channelId });
                 const joinResponse = await fetch(`https://slack.com/api/conversations.join`, {
-                   method: 'POST', // Use POST for joining
+                   body: joinParams.toString(),
                    headers: {
                        'Authorization': `Bearer ${accessToken}`,
                        'Content-Type': 'application/x-www-form-urlencoded' // Required for join
                    },
-                   body: joinParams.toString()
+                   method: 'POST' // Use POST for joining
                 });
                 const joinData = await joinResponse.json();
                 if (!joinData.ok && joinData.error !== 'already_in_channel') {
@@ -223,8 +223,8 @@ export class DocumentWorkflow {
               });
 
               const response = await fetch(`https://slack.com/api/conversations.history?${params.toString()}`, {
-                  method: 'GET',
                   headers: { 'Authorization': `Bearer ${accessToken}` },
+                  method: 'GET',
               });
 
               const data = await response.json();

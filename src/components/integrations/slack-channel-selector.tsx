@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Button } from '@/components/plate-ui/button';
 import { Checkbox } from '@/components/plate-ui/checkbox';
@@ -7,19 +7,19 @@ import { Checkbox } from '@/components/plate-ui/checkbox';
 import { useCustomContext } from '@/providers/custom-context-provider';
 import { useUserDataContext } from '@/providers/user-data-provider';
 
-interface SlackChannelSelectorProps {
-  onClose: () => void;
-}
-
 // Mock Slack channel data structure
 interface SlackChannel {
   id: string;
   name: string;
 }
 
+interface SlackChannelSelectorProps {
+  onClose: () => void;
+}
+
 export const SlackChannelSelector: React.FC<SlackChannelSelectorProps> = ({ onClose }) => {
   const { addCustomContext } = useCustomContext();
-  const { userIntegrations, setUserIntegrations } = useUserDataContext();
+  const { setUserIntegrations, userIntegrations } = useUserDataContext();
 
   // Local state specifically for this component's UI interactions
   const [isLoading, setIsLoading] = useState(false); // For auth redirect or channel fetching
@@ -133,7 +133,7 @@ export const SlackChannelSelector: React.FC<SlackChannelSelectorProps> = ({ onCl
           Connect your Slack account to select channels.
         </p>
         {error && <p className="text-red-600 text-xs">{error}</p>}
-        <Button onClick={handleAuthenticate} disabled={isLoading}>
+        <Button disabled={isLoading} onClick={handleAuthenticate}>
           {isLoading ? 'Connecting...' : 'Connect to Slack'}
         </Button>
       </div>
@@ -158,8 +158,8 @@ export const SlackChannelSelector: React.FC<SlackChannelSelectorProps> = ({ onCl
                 onCheckedChange={(checked) => handleCheckboxChange(channel.id, checked)}
               />
               <span
-                onClick={() => handleCheckboxChange(channel.id, !selectedChannels.has(channel.id))}
                 className="font-normal cursor-pointer text-sm flex-grow"
+                onClick={() => handleCheckboxChange(channel.id, !selectedChannels.has(channel.id))}
               >
                 #{channel.name}
               </span>
@@ -168,7 +168,7 @@ export const SlackChannelSelector: React.FC<SlackChannelSelectorProps> = ({ onCl
        </div>
        <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleConfirmSelection} disabled={selectedChannels.size === 0 || isLoading}>
+          <Button disabled={selectedChannels.size === 0 || isLoading} onClick={handleConfirmSelection}>
             Add Selected ({selectedChannels.size})
           </Button>
        </div>

@@ -2,8 +2,8 @@ import {Session} from "next-auth";
 
 import {
     getOwnedTemplates,
-    getUserOwnedDocuments,
     getUserIntegrations,
+    getUserOwnedDocuments,
     getUserUploadedFilesData,
 } from "@/firebase/firestore-dao";
 import {FileInfo} from "@/providers/user-data-provider";

@@ -40,6 +40,25 @@ export interface PopoverPosition {
   top: number;
 }
 
+// Represents the FULL data stored for a Slack integration in Firestore (Backend Use)
+export interface SlackIntegration {
+  accessToken: string;
+  expiresAt: number | null;    // Can be null if rotation wasn't enabled initially
+  refreshToken: string | null; // Can be null if rotation wasn't enabled initially
+  scope: string;
+  type: 'slack';
+  botUserId?: string;
+  teamId?: string;
+  // Add other fields if stored, like teamName etc.
+}
+
+// --- Added Interface for Frontend Status ---
+// Represents the non-sensitive status information safe for the frontend context
+export interface SlackIntegrationStatus {
+  integrated: boolean;
+  expiresAt?: number | null; // Optional: useful for UI hints, but backend handles actual expiry check
+}
+
 export interface StreamingState {
   document: {
     content: string;
@@ -56,25 +75,6 @@ export interface Template {
   template: any[];
   templateName: string;
   templateOwnerId: string;
-}
-
-// Represents the FULL data stored for a Slack integration in Firestore (Backend Use)
-export interface SlackIntegration {
-  type: 'slack';
-  accessToken: string;
-  refreshToken: string | null; // Can be null if rotation wasn't enabled initially
-  expiresAt: number | null;    // Can be null if rotation wasn't enabled initially
-  scope: string;
-  teamId?: string;
-  botUserId?: string;
-  // Add other fields if stored, like teamName etc.
-}
-
-// --- Added Interface for Frontend Status ---
-// Represents the non-sensitive status information safe for the frontend context
-export interface SlackIntegrationStatus {
-  integrated: boolean;
-  expiresAt?: number | null; // Optional: useful for UI hints, but backend handles actual expiry check
 }
 
 // Represents the map of all possible integrations for a user

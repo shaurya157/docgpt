@@ -9,17 +9,17 @@ import {
 } from '@/components/plate-ui/dialog'; // Adjust import path if needed
 
 interface IntegrationSelectionModalProps {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  serviceName: string;
   children: React.ReactNode;
+  isOpen: boolean;
+  serviceName: string;
+  onOpenChange: (isOpen: boolean) => void;
 }
 
 export const IntegrationSelectionModal: React.FC<IntegrationSelectionModalProps> = ({
-  isOpen,
-  onOpenChange,
-  serviceName,
   children,
+  isOpen,
+  serviceName,
+  onOpenChange,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

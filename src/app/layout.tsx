@@ -13,15 +13,15 @@ import { getUserChats } from '@/firebase/firestore-dao';
 import DocumentProvider from '@/providers/document-provider';
 import {ThemeProvider} from "@/providers/theme-provider";
 import UserDataContextProvider from '@/providers/user-data-provider';
+import { UserIntegrations } from '@/types';
 import {fontSans} from "@/utils/fonts";
 import {
   getExistingUserUploadedFiles,
   getTemplates,
-  getUserIntegrationStatus,
-  getUserDocs
+  getUserDocs,
+  getUserIntegrationStatus
 } from "@/utils/on-user-signin-fetch";
 import { TailwindIndicator } from '@/utils/tailwind-indicator';
-import { UserIntegrations } from '@/types';
 
 import {auth} from "../../auth";
 

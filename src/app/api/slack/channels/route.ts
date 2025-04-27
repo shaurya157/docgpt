@@ -6,11 +6,11 @@ import { getValidSlackToken } from '@/lib/slack-auth-helper';
 // Define expected channel structure from Slack API
 interface SlackChannelInfo {
     id: string;
-    name: string;
     is_channel: boolean; // true for public channels
     is_group: boolean;   // true for private channels
     is_im: boolean;      // true for direct messages
     is_mpim: boolean;    // true for multi-person direct messages
+    name: string;
     // Add other fields if needed, e.g., is_member
 }
 
@@ -47,19 +47,19 @@ export async function GET(request: NextRequest) {
 
         do {
             const params = new URLSearchParams({
+                exclude_archived: 'true', // Usually don't want archived channels
                 limit: limit.toString(),
                 types: types,
-                exclude_archived: 'true', // Usually don't want archived channels
             });
             if (cursor) {
                 params.append('cursor', cursor);
             }
 
             const response = await fetch(`https://slack.com/api/conversations.list?${params.toString()}`, {
-                method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
                 },
+                method: 'GET',
             });
 
             const data = await response.json();

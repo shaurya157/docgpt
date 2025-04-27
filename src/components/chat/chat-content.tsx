@@ -1,12 +1,6 @@
 import { Dispatch, DragEvent, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import { getEditorPrompt } from '@udecode/plate-ai/react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/plate-ui/dropdown-menu';
 import { PlateEditor } from '@udecode/plate/react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -14,10 +8,16 @@ import { useSession } from 'next-auth/react';
 
 import { ChatMessageList } from '@/components/chat/chat-messaging-list';
 import { ChatSettings } from '@/components/chat/chat-settings';
-import { IntegrationSelectionModal } from '@/components/integrations/integration-selection-modal';
-import { SlackChannelSelector } from '@/components/integrations/slack-channel-selector';
 import { CustomContextDisplay } from '@/components/integrations/custom-context';
 import { FileAttachmentList } from '@/components/integrations/file-attachment-list';
+import { IntegrationSelectionModal } from '@/components/integrations/integration-selection-modal';
+import { SlackChannelSelector } from '@/components/integrations/slack-channel-selector';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/plate-ui/dropdown-menu';
 import { appendChatSpecificFileIds } from '@/firebase/firestore-dao';
 import { useChatMessaging } from '@/hooks/use-chat-messaging';
 import { useDocumentIntegration } from '@/hooks/use-document-integration';
@@ -524,8 +524,8 @@ const ChatContent = ({
       )}
       {/* Render Slack Integration Modal */}
       <IntegrationSelectionModal
-        isOpen={isSlackModalOpen}
         onOpenChange={setIsSlackModalOpen}
+        isOpen={isSlackModalOpen}
         serviceName="Slack">
         <SlackChannelSelector onClose={() => setIsSlackModalOpen(false)} />
       </IntegrationSelectionModal>

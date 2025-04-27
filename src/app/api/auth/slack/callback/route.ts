@@ -38,9 +38,9 @@ export async function GET(request: NextRequest) {
 
     // --- Alternative way to build form body (based on SO suggestion) ---
     const details = {
-        code: code,
         client_id: clientId,
         client_secret: clientSecret,
+        code: code,
         redirect_uri: redirectUri
     };
     const formBody = Object.entries(details)
@@ -57,11 +57,11 @@ export async function GET(request: NextRequest) {
     // --- End Detailed Logging ---
 
     const response = await fetch(tokenUrl, {
-      method: 'POST',
+      body: formBody, // Use manually constructed form body
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: formBody, // Use manually constructed form body
+      method: 'POST',
     });
 
     const data = await response.json();
@@ -90,13 +90,13 @@ export async function GET(request: NextRequest) {
         await userDocRef.set({
             integrations: {
                 slack: {
-                    type: 'slack',
                     accessToken: accessToken,
-                    refreshToken: refreshToken,
+                    botUserId: botUserId,
                     expiresAt: expiresAt,
+                    refreshToken: refreshToken,
                     scope: scope,
                     teamId: teamId,
-                    botUserId: botUserId,
+                    type: 'slack',
                 }
             }
         }, { merge: true });
@@ -115,13 +115,13 @@ export async function GET(request: NextRequest) {
         await userDocRef.set({
             integrations: {
                 slack: {
-                    type: 'slack',
                     accessToken: accessToken, // Store the long-lived token
-                    refreshToken: null,       // No refresh token available
+                    botUserId: botUserId,
                     expiresAt: null,          // No expiry
+                    refreshToken: null,       // No refresh token available
                     scope: scope,
                     teamId: teamId,
-                    botUserId: botUserId,
+                    type: 'slack',
                 }
             }
         }, { merge: true });
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     // Check for User token (less likely needed here, but possible)
     } else if (data.authed_user?.access_token && data.authed_user?.refresh_token && data.authed_user?.expires_in && data.authed_user?.scope) {
         // Handle User token case
-        console.warn("Received Slack User token. Storing but may not have needed scopes.", { userId: data.authed_user.id, scope: data.authed_user.scope });
+        console.warn("Received Slack User token. Storing but may not have needed scopes.", { scope: data.authed_user.scope, userId: data.authed_user.id });
         const userAccessToken = data.authed_user.access_token;
         const userRefreshToken = data.authed_user.refresh_token;
         const userExpiresIn = data.authed_user.expires_in;

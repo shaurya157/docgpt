@@ -52,9 +52,9 @@ export async function getValidSlackToken(userId: string): Promise<GetValidSlackT
             params.append('refresh_token', slackData.refreshToken);
 
             const response = await fetch(tokenUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params.toString(),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                method: 'POST',
             });
 
             const refreshData = await response.json();
@@ -75,8 +75,8 @@ export async function getValidSlackToken(userId: string): Promise<GetValidSlackT
             const updatedSlackData: SlackIntegration = {
                 ...slackData, // Preserve existing fields like type, teamId etc.
                 accessToken: newAccessToken,
-                refreshToken: newRefreshToken,
                 expiresAt: newExpiresAt,
+                refreshToken: newRefreshToken,
                 scope: newScope || slackData.scope, // Use new scope if provided
             };
 

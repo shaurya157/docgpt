@@ -34,8 +34,8 @@ export const CustomContextProvider = ({ children }: CustomContextProviderProps) 
     const newItem: CustomContextItem = {
       id: generateId(),
       content,
-      type,
       metadata,
+      type,
     };
     setCustomContexts(prevContexts => [...prevContexts, newItem]);
   }, []);

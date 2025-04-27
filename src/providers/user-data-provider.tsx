@@ -8,13 +8,13 @@ type UserDataContext = {
   files: FileInfo[] | null;
   setFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
   setUserChats: React.Dispatch<React.SetStateAction<any[] | null | undefined>>;
+  setUserIntegrations: React.Dispatch<React.SetStateAction<UserIntegrations | null | undefined>>;
   setUserOwnedDocuments: React.Dispatch<React.SetStateAction<Document[] | null | undefined>>;
   setUserTemplates: React.Dispatch<React.SetStateAction<Template[] | null | undefined>>;
   userChats?: any[] | null;
+  userIntegrations?: UserIntegrations | null;
   userOwnedDocuments?: Document[] | null;
   userTemplates?: Template[] | null;
-  userIntegrations?: UserIntegrations | null;
-  setUserIntegrations: React.Dispatch<React.SetStateAction<UserIntegrations | null | undefined>>;
 };
 export const UserDataContext = createContext<UserDataContext | null>(null);
 
@@ -54,13 +54,13 @@ export default function UserDataContextProvider({
         files,
         setFiles,
         setUserChats,
+        setUserIntegrations,
         setUserOwnedDocuments,
         setUserTemplates,
         userChats,
+        userIntegrations,
         userOwnedDocuments,
         userTemplates,
-        userIntegrations,
-        setUserIntegrations,
       }}
     >
       {children}
