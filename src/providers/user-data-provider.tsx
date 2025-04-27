@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState } from 'react';
 
-import { Document, Template } from '@/types';
+import { Document, Template, UserIntegrations } from '@/types';
+
 type UserDataContext = {
   files: FileInfo[] | null;
   setFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
@@ -12,6 +13,8 @@ type UserDataContext = {
   userChats?: any[] | null;
   userOwnedDocuments?: Document[] | null;
   userTemplates?: Template[] | null;
+  userIntegrations?: UserIntegrations | null;
+  setUserIntegrations: React.Dispatch<React.SetStateAction<UserIntegrations | null | undefined>>;
 };
 export const UserDataContext = createContext<UserDataContext | null>(null);
 
@@ -28,6 +31,7 @@ interface UserDataProviderProps {
   userChats?: any[] | null;
   userDefinedTemplates?: Template[] | null;
   userDocuments?: Document[] | null;
+  userIntegrationsData?: UserIntegrations | null;
 }
 
 export default function UserDataContextProvider({
@@ -36,11 +40,13 @@ export default function UserDataContextProvider({
   userChats: initialUserChats,
   userDefinedTemplates,
   userDocuments,
+  userIntegrationsData,
 }: UserDataProviderProps) {
   const [files, setFiles] = useState(filesData);
   const [userTemplates, setUserTemplates] = useState(userDefinedTemplates);
   const [userOwnedDocuments, setUserOwnedDocuments] = useState(userDocuments);
   const [userChats, setUserChats] = useState(initialUserChats);
+  const [userIntegrations, setUserIntegrations] = useState(userIntegrationsData);
 
   return (
     <UserDataContext.Provider
@@ -53,6 +59,8 @@ export default function UserDataContextProvider({
         userChats,
         userOwnedDocuments,
         userTemplates,
+        userIntegrations,
+        setUserIntegrations,
       }}
     >
       {children}

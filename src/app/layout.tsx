@@ -17,9 +17,11 @@ import {fontSans} from "@/utils/fonts";
 import {
   getExistingUserUploadedFiles,
   getTemplates,
+  getUserIntegrationStatus,
   getUserDocs
 } from "@/utils/on-user-signin-fetch";
 import { TailwindIndicator } from '@/utils/tailwind-indicator';
+import { UserIntegrations } from '@/types';
 
 import {auth} from "../../auth";
 
@@ -38,10 +40,12 @@ export default async function RootLayout({
   const session = await auth();
   let userChats,
       userDocuments;
+  let userIntegrationsStatus: UserIntegrations | null = null;
   if (session?.user) {
     userDocuments = await getUserDocs(session);
     const chatsRes = await getUserChats(session.user.email!);
     userChats = chatsRes.error ? [] : chatsRes.result;
+    userIntegrationsStatus = await getUserIntegrationStatus(session);
   }
 
   return (
@@ -74,6 +78,7 @@ export default async function RootLayout({
                       : null
                 }
                 userDocuments={userDocuments}
+                userIntegrationsData={userIntegrationsStatus}
             >
               <DocumentProvider
                   docgptProvidedTemplates={

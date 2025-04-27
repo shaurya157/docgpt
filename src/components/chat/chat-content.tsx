@@ -1,6 +1,12 @@
 import { Dispatch, DragEvent, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import { getEditorPrompt } from '@udecode/plate-ai/react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/plate-ui/dropdown-menu';
 import { PlateEditor } from '@udecode/plate/react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -8,8 +14,10 @@ import { useSession } from 'next-auth/react';
 
 import { ChatMessageList } from '@/components/chat/chat-messaging-list';
 import { ChatSettings } from '@/components/chat/chat-settings';
-import { CustomContextDisplay } from '@/components/chat/custom-context'; // Added import
-import { FileAttachmentList } from '@/components/chat/file-attachment-list';
+import { IntegrationSelectionModal } from '@/components/integrations/integration-selection-modal';
+import { SlackChannelSelector } from '@/components/integrations/slack-channel-selector';
+import { CustomContextDisplay } from '@/components/integrations/custom-context';
+import { FileAttachmentList } from '@/components/integrations/file-attachment-list';
 import { appendChatSpecificFileIds } from '@/firebase/firestore-dao';
 import { useChatMessaging } from '@/hooks/use-chat-messaging';
 import { useDocumentIntegration } from '@/hooks/use-document-integration';
@@ -63,6 +71,7 @@ const ChatContent = ({
   const documentContainerRef = useRef<HTMLElement | null>(null);
   const documentEditorRef = useRef<HTMLElement | null>(null);
   const [isMobile, setIsMobile] = useState(false); // State for mobile view
+  const [isSlackModalOpen, setIsSlackModalOpen] = useState(false); // State for Slack modal
 
   const { attachments, removeAttachment, updateAttachments, uploadFiles, uploadInProgress } = 
     useFileAttachments(session?.user?.email || '');
@@ -476,13 +485,22 @@ const ChatContent = ({
             <ChatSettings />
             <div className="flex items-center gap-2">
               <button
-                className="cursor-pointer rounded-lg p-2 hover:bg-gray-200"
-                onClick={() => fileInputRef.current?.click()}
+                className="cursor-pointer rounded-lg p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
               >
-                <svg className="text-gray-500" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                </svg>
-              </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                     {/* Attachment Icon */}
+                    <svg fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                    </svg>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>Upload from computer</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setIsSlackModalOpen(true)}>Attach from Slack</DropdownMenuItem>
+                    {/* Add Google Drive option here later */}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+               </button>
               <button
                 className={`rounded-md px-3 py-1 ${
                   inputValue
@@ -504,6 +522,13 @@ const ChatContent = ({
           <span className="text-gray-700 font-semibold text-lg">Drop files here</span>
         </div>
       )}
+      {/* Render Slack Integration Modal */}
+      <IntegrationSelectionModal
+        isOpen={isSlackModalOpen}
+        onOpenChange={setIsSlackModalOpen}
+        serviceName="Slack">
+        <SlackChannelSelector onClose={() => setIsSlackModalOpen(false)} />
+      </IntegrationSelectionModal>
     </motion.div>
   );
 };

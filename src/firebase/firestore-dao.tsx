@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 
 import firebase_app from '@/firebase/config';
+import { SlackIntegration, UserIntegrations } from '@/types';
 
 const db = getFirestore(firebase_app);
 
@@ -329,4 +330,42 @@ export async function getDocumentById(documentId: string) {
   }
 
   return { error, result };
+}
+
+export async function updateUserLastLoginTimestamp(userId: string) {
+  const usersRef = collection(db, 'users');
+  const userDocRef = doc(usersRef, userId);
+  const now = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+
+  try {
+    await setDoc(userDocRef, { lastLoginTimestamp: now }, { merge: true });
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating Firestore timestamp:', error);
+    return { success: false, error };
+  }
+}
+
+// New function to get user's integrations data
+export async function getUserIntegrations(userId: string): Promise<{ integrations: UserIntegrations | null, error?: any }> {
+  const userDocRef = doc(db, 'users', userId);
+  let frontendIntegrations: UserIntegrations | null = null;
+  try {
+    const docSnap = await getDoc(userDocRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const backendIntegrations = data?.integrations;
+      // Extract only the status information for the frontend
+      if (backendIntegrations?.slack) {
+        const slackData: SlackIntegration = backendIntegrations.slack;
+        frontendIntegrations = { slack: { integrated: true, expiresAt: slackData.expiresAt ?? null } };
+      }
+      return { integrations: frontendIntegrations };
+    } else {
+      return { integrations: null };
+    }
+  } catch (error) {
+    console.error('Error fetching user integrations:', error);
+    return { integrations: null, error };
+  }
 }

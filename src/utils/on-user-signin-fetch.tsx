@@ -3,6 +3,7 @@ import {Session} from "next-auth";
 import {
     getOwnedTemplates,
     getUserOwnedDocuments,
+    getUserIntegrations,
     getUserUploadedFilesData,
 } from "@/firebase/firestore-dao";
 import {FileInfo} from "@/providers/user-data-provider";
@@ -55,4 +56,13 @@ export async function getUserDocs(session: Session) {
         result.push(res);
     });
     return result;
+}
+
+// New function to get integration status on sign-in
+export async function getUserIntegrationStatus(session: Session) {
+    if (!session?.user?.email) {
+        return null;
+    }
+    const { integrations } = await getUserIntegrations(session.user.email);
+    return integrations;
 }
