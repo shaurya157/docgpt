@@ -19,7 +19,7 @@ export default function Pricing() {
             <ol className="list-inside list-decimal space-y-4 ">
               <li>
                 <b>
-                  Am I allowed to use Leo at work? How can I get it cleared by
+                  Am I allowed to use DocGPT at work? How can I get it cleared by
                   IT?
                 </b>
                 <ul className="mt-2 list-inside list-disc space-y-1 ps-5">
@@ -171,7 +171,7 @@ export default function Pricing() {
                 <span>Access to community slack channel</span>
               </li>
             </ul>
-            <Button className="mt-auto">Get Started</Button>
+            <Button className="mt-auto  bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium rounded-lg px-5 py-2.5 text-[15px] transition-all duration-300 shadow-sm hover:shadow-blue-100/50 hover:shadow-lg">Get Started</Button>
           </div>
           <div className="mx-auto flex max-w-lg flex-col rounded-lg border border-gray-100 bg-white p-6 text-center text-gray-900 shadow dark:border-gray-600 dark:bg-gray-800 dark:text-white xl:p-8">
             <h3 className="mb-4 text-2xl font-semibold">Enterprise</h3>
@@ -230,7 +230,7 @@ export default function Pricing() {
                 </span>
               </li>
             </ul>
-            <Button className="mt-auto">
+            <Button className="mt-auto  bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium rounded-lg px-5 py-2.5 text-[15px] transition-all duration-300 shadow-sm hover:shadow-blue-100/50 hover:shadow-lg">
               <Link href="/contact">
                 Get In Touch
               </Link>

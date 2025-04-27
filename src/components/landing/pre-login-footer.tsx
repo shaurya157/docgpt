@@ -1,5 +1,7 @@
-
+'use client';
+import { useRouter } from 'next/navigation';
 export default function PreLoginFooter() {
+  const router = useRouter();
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
@@ -34,16 +36,16 @@ export default function PreLoginFooter() {
             <h3 className="text-sm font-semibold text-gray-900">Product</h3>
             <ul className="mt-4 space-y-2">
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Features</span>
+                <span className="text-sm text-gray-600 cursor-pointer">Features</span>
               </li>
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Pricing</span>
+                <span className="text-sm text-gray-600 cursor-pointer" onClick={() => router.push('/pricing')}>Pricing</span>
               </li>
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Templates</span>
+                <span className="text-sm text-gray-600 cursor-pointer">Templates</span>
               </li>
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Integrations</span>
+                <span className="text-sm text-gray-600 cursor-pointer">Integrations</span>
               </li>
             </ul>
           </div>
@@ -51,16 +53,13 @@ export default function PreLoginFooter() {
             <h3 className="text-sm font-semibold text-gray-900">Resources</h3>
             <ul className="mt-4 space-y-2">
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Blog</span>
+                <span className="text-sm text-gray-600 cursor-pointer">Blog</span>
               </li>
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Tutorials</span>
+                <span className="text-sm text-gray-600 cursor-pointer">Tutorials</span>
               </li>
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Documentation</span>
-              </li>
-              <li>
-                <span className="text-sm text-gray-600 cursor-default">API</span>
+                <span className="text-sm text-gray-600 cursor-pointer">Documentation</span>
               </li>
             </ul>
           </div>
@@ -68,16 +67,16 @@ export default function PreLoginFooter() {
             <h3 className="text-sm font-semibold text-gray-900">Company</h3>
             <ul className="mt-4 space-y-2">
               <li>
-                <span className="text-sm text-gray-600 cursor-default">About</span>
+                <span className="text-sm text-gray-600 cursor-pointer">About</span>
               </li>
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Contact</span>
+                <span className="text-sm text-gray-600 cursor-pointer" onClick={() => router.push('/contact')}>Contact</span>
               </li>
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Privacy Policy</span>
+                <span className="text-sm text-gray-600 cursor-pointer" onClick={() => router.push('/privacy')}>Privacy Policy</span>
               </li>
               <li>
-                <span className="text-sm text-gray-600 cursor-default">Terms of Service</span>
+                <span className="text-sm text-gray-600 cursor-pointer" onClick={() => router.push('/terms')}>Terms of Service</span>
               </li>
             </ul>
           </div>
