@@ -76,7 +76,7 @@ export const SlackChannelSelector: React.FC<SlackChannelSelectorProps> = ({ onCl
 
     const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID;
     const redirectUri = process.env.NEXT_PUBLIC_SLACK_REDIRECT_URI;
-    const scopes = 'channels:read,groups:read,im:read,mpim:read'; // Scopes needed to list channels
+    const scopes = 'channels:read,groups:read,im:read,mpim:read,channels:history,groups:history,im:history,mpim:history,channels:join';
 
     if (!clientId || !redirectUri) {
       console.error('Slack environment variables (NEXT_PUBLIC_SLACK_CLIENT_ID, NEXT_PUBLIC_SLACK_REDIRECT_URI) are not set.');
@@ -113,8 +113,12 @@ export const SlackChannelSelector: React.FC<SlackChannelSelectorProps> = ({ onCl
         selectedChannels.forEach(channelId => {
             const channel = channels.find(ch => ch.id === channelId);
             if (channel) {
-                // Add context with specific type and maybe more metadata later
-                addCustomContext(`Slack Channel: #${channel.name}`, 'slack_channel');
+                // Pass channel name as content, type as 'slack_channel', and ID in metadata
+                addCustomContext(
+                    `#${channel.name}`, // Display name
+                    'slack_channel',
+                    { channelId: channel.id } // Pass ID in metadata
+                );
             }
         });
         setSelectedChannels(new Set()); // Clear selection

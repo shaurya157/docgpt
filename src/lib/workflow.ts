@@ -5,6 +5,16 @@ import { getChatHistory } from "./firebase-admin";
 import { ModelRouter } from "./models";
 import { createDocumentPrompt, editDocumentPrompt, generalQueryPrompt } from "./prompts";
 import { TAgentState } from "./schema";
+import { getValidSlackToken } from "./slack-auth-helper";
+
+// Define expected message structure from Slack conversations.history
+interface SlackHistoryMessage {
+    type: string;
+    user?: string; // User ID might not always be present (e.g., bot messages)
+    text?: string; // Message content
+    ts: string;   // Timestamp
+    // Add other fields if needed
+}
 
 export class DocumentWorkflow {
   private model = new ModelRouter();
@@ -147,6 +157,114 @@ export class DocumentWorkflow {
         context: []
       };
     }
+  }
+
+  private async retrieveSlackMessagesNode(state: TAgentState): Promise<Partial<TAgentState>> {
+      const { customContexts, userId, streamController } = state;
+      const slackContexts = customContexts.filter(
+          (ctx) => ctx.type === 'slack_channel' && ctx.metadata?.channelId
+      );
+
+      if (slackContexts.length === 0) {
+          console.log("No Slack channels found in custom context.");
+          return { ...state, slackMessages: [] }; // No Slack context to process
+      }
+
+      console.log(`Found ${slackContexts.length} Slack channel(s) in context. Fetching messages...`);
+      streamController.writeSystemMessage(`Fetching messages from ${slackContexts.length} Slack channel(s)...`);
+
+      const allFetchedMessages: { channelName: string; messages: string[] }[] = [];
+      let fetchErrorOccurred = false;
+
+      for (const context of slackContexts) {
+          const channelId = context.metadata!.channelId as string;
+          const channelName = context.content; // Use the display name from context
+
+          try {
+              // 1. Get valid token (handles refresh)
+              const tokenResult = await getValidSlackToken(userId);
+              if (!tokenResult.accessToken) {
+                  console.error(`Failed to get valid Slack token for user ${userId} to fetch channel ${channelId}: ${tokenResult.error}`);
+                  streamController.writeSystemMessage(`Error: Could not get authorization for Slack to fetch #${channelName}. ${tokenResult.needsReAuth ? 'Please reconnect Slack.' : ''}`);
+                  fetchErrorOccurred = true;
+                  continue; // Skip this channel
+              }
+              const accessToken = tokenResult.accessToken;
+
+              // 2. Attempt to join the channel first
+              try {
+                const joinParams = new URLSearchParams({ channel: channelId });
+                const joinResponse = await fetch(`https://slack.com/api/conversations.join`, {
+                   method: 'POST', // Use POST for joining
+                   headers: {
+                       'Authorization': `Bearer ${accessToken}`,
+                       'Content-Type': 'application/x-www-form-urlencoded' // Required for join
+                   },
+                   body: joinParams.toString()
+                });
+                const joinData = await joinResponse.json();
+                if (!joinData.ok && joinData.error !== 'already_in_channel') {
+                    console.warn(`Bot couldn't join channel ${channelId} (${channelName}): ${joinData.error}. Skipping history fetch.`);
+                    streamController.writeSystemMessage(`Warning: Could not join #${channelName} (${joinData.error}). Skipping messages.`);
+                    continue; // Skip this channel if join failed for reasons other than already being there
+                }
+              } catch (joinError) {
+                  console.error(`Exception trying to join channel ${channelId} (${channelName}):`, joinError);
+                  streamController.writeSystemMessage(`Error: Exception while trying to join #${channelName}. Skipping messages.`);
+                  fetchErrorOccurred = true;
+                  continue; // Skip on exception
+              }
+
+              // 3. Fetch channel history (if join succeeded or was already member)
+              const limit = 20; // Fetch latest X messages
+              const params = new URLSearchParams({
+                  channel: channelId,
+                  limit: limit.toString(),
+              });
+
+              const response = await fetch(`https://slack.com/api/conversations.history?${params.toString()}`, {
+                  method: 'GET',
+                  headers: { 'Authorization': `Bearer ${accessToken}` },
+              });
+
+              const data = await response.json();
+
+              if (!data.ok) {
+                  console.error(`Slack API error fetching history for channel ${channelId} (${channelName}):`, data.error);
+                   streamController.writeSystemMessage(`Error fetching messages from #${channelName}: ${data.error}`);
+                   fetchErrorOccurred = true;
+                   if (data.error === 'invalid_auth' || data.error === 'token_revoked') {
+                       // Optionally clear token here too, though getValidSlackToken might handle it on next try
+                   }
+                  continue; // Skip this channel
+              }
+
+              // 4. Extract and store messages
+              const messages = (data.messages as SlackHistoryMessage[] || [])
+                  .map(msg => msg.text || '') // Get text content, default to empty string
+                  .filter(text => text.trim() !== ''); // Filter out empty messages
+
+              if (messages.length > 0) {
+                   allFetchedMessages.push({ channelName: channelName, messages: messages.reverse() }); // Reverse to get chronological order (oldest first)
+                   console.log(`Fetched ${messages.length} messages from Slack channel ${channelId} (${channelName})`);
+              } else {
+                  console.log(`No messages found or fetched from Slack channel ${channelId} (${channelName})`);
+                  streamController.writeSystemMessage(`No recent messages found in #${channelName}.`);
+              }
+
+          } catch (error) {
+              console.error(`Exception fetching messages for channel ${channelId} (${channelName}):`, error);
+              streamController.writeSystemMessage(`Error: An exception occurred while fetching messages from #${channelName}.`);
+              fetchErrorOccurred = true;
+          }
+      }
+       if (!fetchErrorOccurred && allFetchedMessages.length > 0) {
+            streamController.writeSystemMessage("Finished fetching Slack messages.");
+       } else if (fetchErrorOccurred) {
+            streamController.writeSystemMessage("Finished fetching Slack messages (some channels might have failed).");
+       }
+
+      return { ...state, slackMessages: allFetchedMessages };
   }
 
   // Function to decide the next step based on synthesized intent
@@ -380,6 +498,7 @@ export class DocumentWorkflow {
         feedback: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
         model: { value: (x) => x },
         query: { value: (x) => x },
+        slackMessages: { default: () => [], value: (x, y) => y ?? x },
         streamController: { value: (x) => x },
         synthesizedIntent: { default: () => undefined, value: (x, y) => y || x },
         userId: { value: (x) => x },
@@ -391,6 +510,7 @@ export class DocumentWorkflow {
     graph.addNode("sanitizeQuery", this.sanitizeQueryNode.bind(this));
     graph.addNode("retrievePineconeContext", this.retrievePineconeContextNode.bind(this));
     graph.addNode("retrieveChatHistory", this.retrieveChatHistoryNode.bind(this));
+    graph.addNode("retrieveSlackMessages", this.retrieveSlackMessagesNode.bind(this));
     graph.addNode("userIntentClassification", this.userIntentClassificationNode.bind(this));
     graph.addNode("synthesizeIntent", this.synthesizeIntentNode.bind(this));
     graph.addNode("createDocument", this.createDocumentNode.bind(this));
@@ -401,7 +521,8 @@ export class DocumentWorkflow {
     // Edges (Using 'any' to bypass potential typing issues)
     graph.addEdge(START, "sanitizeQuery" as any);
     graph.addEdge("sanitizeQuery" as any, "retrieveChatHistory" as any);
-    graph.addEdge("retrieveChatHistory" as any, "userIntentClassification" as any);
+    graph.addEdge("retrieveChatHistory" as any, "retrieveSlackMessages" as any);
+    graph.addEdge("retrieveSlackMessages" as any, "userIntentClassification" as any);
     graph.addEdge("userIntentClassification" as any, "synthesizeIntent" as any);
     graph.addEdge("synthesizeIntent" as any, "retrievePineconeContext" as any);
 

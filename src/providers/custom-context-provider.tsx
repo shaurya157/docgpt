@@ -5,13 +5,14 @@ export interface CustomContextItem {
   id: string; // Unique identifier for each context item
   content: string; // The actual context content
   type: string; // Type of context (e.g., 'text', 'file', 'embedding') - 'string' for now
+  metadata?: Record<string, any>; // Add optional metadata field
   // Add other relevant properties as needed, e.g., source, metadata
 }
 
 // Define the context value shape
 interface CustomContextValue {
   customContexts: CustomContextItem[];
-  addCustomContext: (content: string, type?: string) => void;
+  addCustomContext: (content: string, type?: string, metadata?: Record<string, any>) => void;
   clearCustomContexts: () => void;
   removeCustomContext: (id: string) => void;
 }
@@ -29,11 +30,12 @@ const generateId = () => `ctx-${Date.now()}-${Math.random().toString(36).substri
 export const CustomContextProvider = ({ children }: CustomContextProviderProps) => {
   const [customContexts, setCustomContexts] = useState<CustomContextItem[]>([]);
 
-  const addCustomContext = useCallback((content: string, type: string = 'string') => {
+  const addCustomContext = useCallback((content: string, type: string = 'string', metadata?: Record<string, any>) => {
     const newItem: CustomContextItem = {
       id: generateId(),
       content,
       type,
+      metadata,
     };
     setCustomContexts(prevContexts => [...prevContexts, newItem]);
   }, []);

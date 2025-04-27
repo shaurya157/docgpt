@@ -48,6 +48,7 @@ const definitions = `
         - "User Intent and Next Steps" is the intent of the user and the next steps for the you to take. This is provided to help you understand the user's intent in the prompt, and provide potential considerations you should take into account when responding to the user.
         - "Custom Context" is additional context provided by the user that should be considered when generating responses.
             - "Selection" is the selection of text that the user has currently highlighted. 
+        - "Slack Channel Messages" contains messages fetched from Slack channels provided as custom context. A user picks a channel to add as additional context, these are messages within each channel picked.
 `
 const createStatePrompt = (state: TAgentState) => {
     const contextSection = state.context.length > 0 
@@ -65,12 +66,20 @@ const createStatePrompt = (state: TAgentState) => {
   const activeDocumentSection = state.activeDocument ? `Active Document:\n${state.activeDocument}\n\n` : '';
   const userIntentSection = state.userIntent ? `User Intent and Next Steps:\n${state.userIntent}\n\n` : '';
 
+  // Add Slack Messages section
+  const slackMessagesSection = state.slackMessages.length > 0
+    ? `Slack Channel Messages:\n${state.slackMessages.map(sm =>
+        `--- Channel: ${sm.channelName} ---\n${sm.messages.join("\n")}`
+      ).join("\n\n")}\n\n`
+    : '';
+
   return `
     ${contextSection}
     ${chatHistorySection}
     ${activeDocumentSection}
     ${customContextSection}
     ${userIntentSection}
+    ${slackMessagesSection}
   `
 }
 

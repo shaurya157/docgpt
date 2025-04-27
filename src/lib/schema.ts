@@ -18,6 +18,8 @@ export const AgentState = z.object({
   customContexts: z.array(z.object({
     content: z.string(),
     type: z.string(),
+    id: z.string().default(""),
+    metadata: z.record(z.any()).optional()
   })).default([]),
   draft: z.string().default(""),
   feedback: z.array(z.string()).default([]),
@@ -27,6 +29,10 @@ export const AgentState = z.object({
   synthesizedIntent: z.enum(['create', 'edit', 'general']).optional(),
   userId: z.string(),
   userIntent: z.string().default(""),
+  slackMessages: z.array(z.object({
+    channelName: z.string(),
+    messages: z.array(z.string()),
+  })).default([])
 });
 
 export type TAgentState = z.infer<typeof AgentState>;
