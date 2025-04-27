@@ -15,8 +15,11 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
-  // Optional: Get and verify state parameter if you implement CSRF protection
-  // const state = searchParams.get('state');
+  const state = searchParams.get('state'); // Get the state parameter
+
+  // Basic validation: Check if state is a valid path starting with '/'
+  // More robust validation might be needed depending on expected paths
+  const redirectPath = state && state.startsWith('/') ? state : '/home'; // Fallback to /home
 
   if (!code) {
     console.error('Slack OAuth Callback: No code provided.');
@@ -150,8 +153,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Redirect user back to the app if token handling was successful
-    const appUrl = process.env.NEXTAUTH_URL || '/'; // Get base URL from env or default
-    return NextResponse.redirect(new URL('/home', appUrl)); // Adjust redirect destination as needed
+    const appUrl = process.env.NEXTAUTH_URL || ''; // Get base URL from env (remove default '/')
+    console.log(`Slack OAuth Callback: Redirecting to: ${appUrl}${redirectPath}`);
+    return NextResponse.redirect(new URL(redirectPath, appUrl || request.url)); // Use redirectPath and ensure base URL
 
     // --- End Restructured Response Handling ---
 

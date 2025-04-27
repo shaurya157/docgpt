@@ -85,8 +85,12 @@ export const SlackChannelSelector: React.FC<SlackChannelSelectorProps> = ({ onCl
       return;
     }
 
-    // Construct the Slack authorization URL
-    const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}`; // Use bot scopes by default
+    // Get current path to redirect back to
+    const currentPath = window.location.pathname;
+
+    // Construct the Slack authorization URL, adding the current path as state
+    const stateValue = encodeURIComponent(currentPath); // Encode the path for the URL
+    const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${stateValue}`;
 
     // Redirect the user to Slack's authorization page
     window.location.href = authUrl;
