@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'; // Import useEffect and useMemo
-import Markdown from 'react-markdown';
+import { useEffect, useMemo, useState, useRef } from 'react'; // Import useEffect, useMemo, and useRef
+import Markdown from 'react-markdown'; // Keep original import if used elsewhere
+import ReactMarkdown from 'react-markdown'; // Add import for reasoning section
 
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { useEditorRef } from '@udecode/plate/react';
@@ -24,6 +25,7 @@ type EditStatus = 'accepted' | 'pending' | 'rejected';
 
 export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocumentUpdate }: ChatMessageItemProps) => {
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
+  const hasAutoCollapsedReasoning = useRef(false); // Ref to track auto-collapse
   const editor = useEditorRef();
   const [editStatuses, setEditStatuses] = useState<{ [key: number]: EditStatus }>({});
   const [isEditExpanded, setIsEditExpanded] = useState<{ [key: number]: boolean }>({}); // State for edit expansion
@@ -32,6 +34,11 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
   const reasoning = streamingState ? streamingState.reasoning : message.reasoning;
   const isProcessingDocument = streamingState ? streamingState.isProcessingDocument : false;
   const isProcessingEdit = streamingState ? streamingState.isProcessingEdit : false; // Get edit processing state
+
+  // Determine if the main content stream has started (after reasoning)
+  const mainContentStreamingStarted = !!streamingState?.message?.content || 
+                                        isProcessingDocument || 
+                                        isProcessingEdit;
 
   // Memoize the parsed edits to prevent unnecessary recalculations/effect triggers
   const edits: EditBlock[] = useMemo(() => {
@@ -134,6 +141,20 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
     // Depend primarily on the edits array content and whether it has edits
   }, [edits, hasEdits, message.role, streamingState]); // Removed isEditExpanded, isLastMessage, isProcessingEdit
 
+  // --- Auto-collapse Reasoning Effect ---
+  useEffect(() => {
+    // Only run if reasoning exists, main content has started streaming, and we haven't already auto-collapsed
+    if (reasoning && mainContentStreamingStarted && !hasAutoCollapsedReasoning.current) {
+      setIsReasoningExpanded(false); // Collapse the section
+      hasAutoCollapsedReasoning.current = true; // Mark as auto-collapsed for this instance
+    }
+    // Reset the ref if the reasoning disappears (e.g., for a new message without reasoning)
+    if (!reasoning) {
+        hasAutoCollapsedReasoning.current = false;
+    }
+  }, [reasoning, mainContentStreamingStarted]); // Dependencies
+  // --- End Auto-collapse Effect ---
+
   // Attempts to apply a single edit block to the editor's current content.
   // Returns true if successful, false otherwise.
   const applySingleEdit = (edit: EditBlock): boolean => {
@@ -225,23 +246,27 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
   const renderMessageContent = () => {
     // --- Handle Document Rendering ---
     if (message.role === 'assistant' && content.includes('<Document>')) {
-      // This logic remains the same as it correctly handles document streaming/display
       const messageToUse = { ...message, content };
       const { appending, document, documentTitle, prepending } = parseAssistantResponse(messageToUse);
       return (
         <div className="space-y-4">
+          {/* Render text BEFORE document tag */}
           {prepending && <Markdown className="react-markdown text-sm whitespace-normal">{prepending}</Markdown>}
+          
+          {/* Render text AFTER document tag (including the final summary) FIRST */}
+          {appending && <Markdown className="react-markdown text-sm whitespace-normal">{appending}</Markdown>}
+          
+          {/* THEN Render the Checkpoint button if document exists */}
           {isProcessingDocument ? (
             <div className="flex items-center text-xs text-gray-500 mt-1">
               <Icons.spinner className="size-3 animate-spin mr-1" />
               <span>Creating document...</span>
             </div>
           ) : (
-            // Only show button if document content exists after parsing
             document && (
               <Button
                 variant="ghost"
-                className="h-auto w-full cursor-pointer rounded-lg bg-black bg-opacity-50 p-2 flex justify-between items-center"
+                className="h-auto w-full cursor-pointer rounded-lg bg-black bg-opacity-50 p-2 flex justify-between items-center mt-2" // Added mt-2 for spacing
                 onClick={onDocumentUpdate(document, documentTitle)}
               >
                 <div className="flex items-center">
@@ -252,7 +277,6 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
               </Button>
             )
           )}
-          {appending && <Markdown className="react-markdown text-sm whitespace-normal">{appending}</Markdown>}
         </div>
       );
     }
@@ -403,7 +427,7 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
         {/* Render raw content only if it doesn't contain incomplete/unhandled tags */}
         {/* A simple check, might need refinement depending on edge cases */}
         {!content.includes('<Document>') && !content.includes('<Edit>') &&
-          <Markdown className="react-markdown text-sm">{content}</Markdown>
+           <Markdown className="react-markdown text-sm">{content}</Markdown>
         }
         {message.fileNames && message.fileNames.map((fileName) => (
           <div key={fileName} className="flex items-center gap-2">
@@ -414,6 +438,25 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
       </div>
     );
   };
+
+  // Define the reasoning block JSX separately
+  const reasoningBlock = reasoning && typeof reasoning === 'string' && reasoning.trim() !== '' && (
+    <div className="mt-2">
+      <Button
+        variant="ghost"
+        className="flex w-full items-center justify-between p-2 text-sm"
+        onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
+      >
+        <span>View Reasoning</span>
+        <Icons.chevronDown className={`size-3 transform transition-transform ${isReasoningExpanded ? 'rotate-180' : ''}`} />
+      </Button>
+      {isReasoningExpanded && (
+        <div className="space-y-2 rounded-md bg-gray-50 p-2 text-sm text-gray-500 leading-tight">
+          <ReactMarkdown>{reasoning}</ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -426,24 +469,11 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
           streamingState ? 'rounded-xl' : (message.role === 'user' ? 'bg-gray-200 text-black rounded-[5px]' : 'rounded-xl')
         }`}
       >
+        {/* Render Reasoning First */} 
+        {reasoningBlock} 
+        
+        {/* Then Render Core Message Content (which includes edits if present) */} 
         {renderMessageContent()}
-        {reasoning && typeof reasoning === 'string' && reasoning.trim() !== '' && (
-          <div className="mt-2">
-            <Button
-              variant="ghost"
-              className="flex w-full items-center justify-between p-2 text-sm"
-              onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
-            >
-              <span>View Reasoning</span>
-              <Icons.chevronDown className={`size-3 transform transition-transform ${isReasoningExpanded ? 'rotate-180' : ''}`} />
-            </Button>
-            {isReasoningExpanded && (
-              <div className="space-y-2 rounded-md bg-gray-50 p-2 text-sm text-gray-500">
-                {reasoning}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

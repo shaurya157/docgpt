@@ -2,7 +2,15 @@ import { ModelType, useChatSettings } from '@/providers/chat-settings-provider';
 
 export const ChatSettings = () => {
   const { selectedModel, setSelectedModel } = useChatSettings();
-  const models: ModelType[] = ['Open AI 4o', 'Open AI O1', 'DeepSeek R1', 'DeepSeek Chat'];
+  const models: ModelType[] = [
+    'Open AI 4o', 
+    'Open AI O1', 
+    'DeepSeek R1', 
+    'DeepSeek Chat',
+    'Google Gemini-2.5-pro-exp-03-25',
+    'Google Gemini 1.5 Pro',
+    'Google Gemini 1.5 Flash'
+  ];
 
   return (
     <div className="flex items-center relative">

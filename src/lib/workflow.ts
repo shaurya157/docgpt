@@ -3,7 +3,14 @@ import { Pinecone } from "@pinecone-database/pinecone";
 
 import { getChatHistory } from "./firebase-admin";
 import { ModelRouter } from "./models";
-import { createDocumentPrompt, editDocumentPrompt, generalQueryPrompt } from "./prompts";
+import { 
+  createDocumentPrompt, 
+  editDocumentPrompt, 
+  generalQueryPrompt, 
+  createThinkingPrompt, 
+  summarizeCreationPrompt,
+  summarizeEditPrompt
+} from "./prompts";
 import { TAgentState } from "./schema";
 import { getValidSlackToken } from "./slack-auth-helper";
 
@@ -22,90 +29,140 @@ export class DocumentWorkflow {
 
   private async createDocumentNode(state: TAgentState) {
     console.log("Creating document");
-    const prompt = createDocumentPrompt(state);
+    const { streamController } = state;
+
     try {
+      // === Generate and Send Thinking Step ===
+      const thinkingPrompt = createThinkingPrompt(state);
+      // streamController.writeSystemMessage("Generating detailed plan..."); // Removing optional system messages for cleaner flow
+      const thinkingText = await this.model.generate(
+        state.model, // Use the designated model 
+        thinkingPrompt,
+        "Generate detailed thinking for document creation",
+        false, // Non-streaming
+        // No stream controller needed here
+      );
+      streamController.writeReasoning(thinkingText, 'DocumentWriter');
+      // === End Thinking Step ===
+
+      // === Send Intermediate Summary ===
+      const summaryMessage = `Okay, based on the plan, I'll now generate the document content you requested.`;
+      streamController.writePartialResult(summaryMessage);
+      // === End Intermediate Summary ===
+
+      // === Generate and Stream Final Document ===
+      const finalPrompt = createDocumentPrompt(state);
+      // streamController.writeSystemMessage("Generating document content..."); // Removing optional system messages
       const output = await this.model.generate(
         state.model,
-        prompt,
-        state.query,
-        true,
-        state.streamController
+        finalPrompt,
+        state.query, // Keep original query context if needed by model
+        true, // Streaming
+        streamController
       );
+      // === End Final Document Generation ===
       
-      // Don't close the stream here as we might need it for summarizeChanges
-      // state.streamController.close();
+      // Don't close stream here; summarizeChanges might need it.
       
-      return {
-        ...state,
-        draft: output
-      };
+      return { ...state, draft: output }; // Store potentially incomplete streamed output in draft
+
     } catch (error) {
       console.error("Error in create document node:", error);
-      state.streamController.writeSystemMessage("Failed to generate document\n");
-      state.streamController.close(); // Close stream on error
-      return {
-        ...state,
-        draft: "Error: Failed to generate document"
-      };
+      streamController.writeSystemMessage("Failed to generate document\n");
+      streamController.close(); // Close stream on error
+      return { ...state, draft: "Error: Failed to generate document" };
     }
   }
 
   private async editDocumentNode(state: TAgentState) {
     console.log("Editing document");
-    const prompt = editDocumentPrompt(state);
+    const { streamController } = state;
+    
     try {
+      // === Generate and Send Thinking Step ===
+      const thinkingPrompt = createThinkingPrompt(state);
+      streamController.writeSystemMessage("Generating detailed plan for edits..."); // Optional feedback
+      const thinkingText = await this.model.generate(
+        state.model,
+        thinkingPrompt,
+        "Generate detailed thinking for document edits",
+        false, // Non-streaming
+      );
+      streamController.writeReasoning(thinkingText, 'DocumentEditor'); // Send thinking
+      // === End Thinking Step ===
+
+      // === Send Intermediate Summary ===
+      let editFocus = state.customContexts.some(c => c.type === 'Selection') ? "the selection" : "the document";
+      const summaryMessage = `Understood. I'll now apply the edits to ${editFocus} based on the plan.`;
+      streamController.writePartialResult(summaryMessage);
+      // === End Intermediate Summary ===
+
+      // === Generate and Stream Final Edits ===
+      const finalPrompt = editDocumentPrompt(state);
+      streamController.writeSystemMessage("Generating edits..."); // Optional feedback
       const output = await this.model.generate(
         state.model,
-        prompt,
+        finalPrompt,
         state.query,
-        true,
-        state.streamController
+        true, // Streaming
+        streamController
       );
+      // === End Final Edit Generation ===
       
-      // Don't close the stream here as we might need it for summarizeChanges
-      // state.streamController.close();
-      
-      return {
-        ...state,
-        draft: output
-      };
+      // Don't close stream here; summarizeChanges might need it.
+
+      return { ...state, draft: output };
+
     } catch (error) {
       console.error("Error in edit document node:", error);
-      state.streamController.writeSystemMessage("Failed to edit document\n");
-      state.streamController.close(); // Close stream on error
-      return {
-        ...state,
-        draft: "Error: Failed to edit document"
-      };
+      streamController.writeSystemMessage("Failed to edit document\n");
+      streamController.close(); // Close stream on error
+      return { ...state, draft: "Error: Failed to edit document" };
     }
   }
 
   // New node for handling general queries
   private async generalQueryNode(state: TAgentState) {
-    const prompt = generalQueryPrompt(state);
+    const { streamController } = state;
+
     try {
-      // Generate and stream the response directly
+      // === Generate and Send Thinking Step ===
+      const thinkingPrompt = createThinkingPrompt(state);
+      streamController.writeSystemMessage("Generating plan for query..."); // Optional feedback
+      const thinkingText = await this.model.generate(
+        state.model,
+        thinkingPrompt,
+        "Generate detailed thinking for general query",
+        false, // Non-streaming
+      );
+      streamController.writeReasoning(thinkingText, 'QueryHandler'); // Send thinking
+      // === End Thinking Step ===
+
+      // === Send Intermediate Summary ===
+      const summaryMessage = `Right, proceeding to answer your query based on the plan.`;
+      streamController.writePartialResult(summaryMessage);
+      // === End Intermediate Summary ===
+      
+      // === Generate and Stream Final Answer ===
+      const finalPrompt = generalQueryPrompt(state);
+      streamController.writeSystemMessage("Generating answer..."); // Optional feedback
       await this.model.generate(
         state.model,
-        prompt,
+        finalPrompt,
         state.query,
-        true,
-        state.streamController
+        true, // Streaming
+        streamController
       );
+      // === End Final Answer Generation ===
 
-      // Close the stream as this node is terminal for this branch
-      state.streamController.close();
+      streamController.close();
+      return { ...state, draft: "" }; 
 
-      // Return the state, draft is not relevant here as output is streamed
-      return { ...state, draft: "" }; // Clear draft potentially set by previous nodes
     } catch (error) {
       console.error("Error in general query node:", error);
-      state.streamController.writeSystemMessage("Failed to answer query\\n");
-      state.streamController.close(); // Close stream on error
-      return {
-        ...state,
-        draft: "Error: Failed to answer query"
-      };
+      streamController.writeSystemMessage("Failed to answer query\n");
+      streamController.close(); // Close stream on error
+      return { ...state, draft: "Error: Failed to answer query" };
     }
   }
 
@@ -309,118 +366,60 @@ export class DocumentWorkflow {
     };
   }
 
-  private async summarizeChangesNode(state: TAgentState) {
-    // Check if draft contains a document
-    const documentRegex = /<Document>([\s\S]*?)<\/Document>/;
-    const documentMatch = state.draft.match(documentRegex);
+  // Renamed from summarizeChangesNode
+  private async finalizeActionNode(state: TAgentState) {
+    const { streamController, draft, synthesizedIntent } = state;
+    
+    // Determine if the previous action produced a valid output for summary
+    // For edit, just check if intent was edit. For create, check for <Document> tag.
+    const documentRegex = /<Document>[\s\S]*?<\/Document>/;
+    const canSummarizeCreate = synthesizedIntent === 'create' && draft && !draft.startsWith("Error:") && documentRegex.test(draft);
+    const canSummarizeEdit = synthesizedIntent === 'edit' && draft && !draft.startsWith("Error:"); // Simpler check for edits
 
-    // If no document in draft or no existing document to compare, return state unchanged
-    if (!documentMatch || !state.activeDocument) {
-      state.streamController.close(); // Close the stream as we're done
-      return state;
+    if (!canSummarizeCreate && !canSummarizeEdit) {
+        console.log("FinalizeActionNode: No summary needed or previous step failed, closing stream.");
+        streamController.close();
+        return state;
     }
 
-    const newDocument = documentMatch[1].trim();
-    const oldDocument = state.activeDocument.trim();
+    let summaryPrompt: string | null = null;
+    let summaryLog = "";
 
-    // If documents are identical, no need for summary
-    if (newDocument === oldDocument) {
-      state.streamController.close(); // Close the stream as we're done
-      return state;
+    if (canSummarizeCreate) {
+        summaryPrompt = summarizeCreationPrompt(state);
+        summaryLog = "Generating creation summary";
+    } else if (canSummarizeEdit) {
+        summaryPrompt = summarizeEditPrompt(state);
+        summaryLog = "Generating edit summary";
     }
 
-    try {
-      // Prepare prompt for summarizing changes
-      const summaryPrompt = `
-        Compare the original document and the new version, then create a concise summary of all changes made:
-
-        Original document:
-        ${oldDocument}
-
-        New document:
-        ${newDocument}
-
-        Provide a concise bullet point list of all modifications, additions, and deletions.
-        Your summary should be written from the perspective of the one making the changes. E.g.: I've made the following changes: 1)In section XYZ I changed \n - A -\n to \n - B -\n.
-        Reply in markdown format. Use ordered lists for the bullet points.
-        Never add triple backticks to the beginning or end of your response unless referring to code.
-        `;
-
-      // Use Open AI 4o to generate summary
-      const summary = await this.model.generate(
-        "Open AI 4o",
-        summaryPrompt,
-        "Generate a summary of document changes",
-        true,
-        state.streamController
-      );
-
-      // Close the stream when we're done with everything
-      state.streamController.close();
-      
-      // Return state (summary is already streamed to the client)
-      return state;
-    } catch (error) {
-      console.error("Error in summarize changes node:", error);
-      state.streamController.writeSystemMessage("Failed to generate change summary\n");
-      state.streamController.close(); // Close stream on error
-      return state;
+    // If we have a valid prompt string, generate and stream the summary
+    if (summaryPrompt !== null) {
+        try {
+            console.log(`FinalizeActionNode: ${summaryLog}`);
+            await this.model.generate(
+                state.model,
+                summaryPrompt,
+                summaryLog,
+                true, 
+                streamController
+            );
+        } catch (error) {
+             console.error(`Error in finalizeActionNode (${summaryLog}):`, error);
+             streamController.writeSystemMessage("Failed to generate final summary\n");
+        }
+    } else {
+        console.log("FinalizeActionNode: Conditions met, but no appropriate summary prompt found (should not happen).");
     }
+
+    console.log("FinalizeActionNode: Closing stream.");
+    streamController.close(); 
+    return state;
   }
 
-  private async synthesizeIntentNode(state: TAgentState): Promise<Partial<TAgentState>> {
-    const { streamController, userIntent } = state;
-
-    // Default to 'general' if intent is missing or indicates an error
-    if (!userIntent || userIntent.startsWith("Error:")) {
-      return { ...state, synthesizedIntent: 'general' };
-    }
-
-    const synthesisPrompt = `
-      Based on the following user intent description, classify the primary goal into ONE of the following categories:
-      - "create": The user wants to generate a completely new document from scratch or with a template.
-      - "edit": The user wants to modify an existing document or a specific part of it (like a selection).
-      - "general": The user is asking for information, clarification, or performing an action not related to creating or editing document content directly.
-
-      User Intent Description:
-      ---
-      ${userIntent}
-      ---
-
-      Respond with only ONE word: "create", "edit", or "general".
-    `;
-
-    try {
-      // Use a non-streaming call as we expect a single word response
-      const classification = await this.model.generate(
-        "Open AI 4o", // Using the specified model
-        synthesisPrompt,
-        "Synthesize user intent",
-        false // Explicitly set stream to false
-        // No streamController needed here for a non-streaming call
-      );
-
-      const cleanClassification = classification.trim().toLowerCase();
-
-      console.log("Synthesized intent:", cleanClassification);
-      // Validate the response
-      if (['create', 'edit', 'general'].includes(cleanClassification)) {
-        return { ...state, synthesizedIntent: cleanClassification as 'create' | 'edit' | 'general' };
-      } else {
-        console.warn(`Unexpected classification result: '${classification}'. Defaulting to 'general'.`);
-        return { ...state, synthesizedIntent: 'general' };
-      }
-
-    } catch (error) {
-      console.error("Error in synthesize intent node:", error);
-      // Don't write to stream here as this node isn't streaming user-facing content
-      // streamController.writeSystemMessage("Failed to synthesize user intent\n");
-      return { ...state, synthesizedIntent: 'general' }; // Default on error
-    }
-  }
-
-  private async userIntentClassificationNode(state: TAgentState) {
-    const { chatHistory, customContexts, query } = state;
+  // Renamed and modified from userIntentClassificationNode
+  private async classifyIntentNode(state: TAgentState): Promise<Partial<TAgentState>> {
+    const { chatHistory, customContexts, query, streamController } = state; // Keep streamController for potential error messages
 
     // Use the last message from chat history if available, otherwise use the query
     const lastUserMessage = chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
@@ -428,61 +427,56 @@ export class DocumentWorkflow {
     const uploadedFiles = lastUserMessage?.fileNames ?? [];
 
     const classificationPrompt = `
-      Role:
-        - You are a helpful assistant that is linked to other assistants. Your job is to classify the user's intent in a human friendly, readable format. Your responsibility is to classify the user's intent and propose next steps for you to take.
-
-      Formatting instructions:
-       - Provide the classification in a concise format. 
-       - Always reply in markdown format. 
-       - NEVER add triple backticks to the beginning or end of your response unless referring to code.
-       - Respond in a human friendly format, not a machine friendly format. E.g.: "The user is asking to create a new document." or "The user is asking to edit the active document."
-       - ALWAYS add a new line at the end of your response.
-
-      Analyze the user's query and classify their intent. Consider the chat history for context.
+      Analyze the user's query, considering chat history, custom context, and uploaded files, and classify the primary goal into ONE of the following categories:
+      - "create": The user wants to generate a completely new document.
+      - "edit": The user wants to modify an existing document or a specific part of it (like a selection or using uploaded files as reference/input for edits).
+      - "general": The user is asking for information, clarification, or performing an action not directly related to creating or editing document content (e.g., asking about capabilities, summarizing history, general questions).
 
       User Query:
+      ---
       ${queryToAnalyze}
+      ---
 
       Custom context added by the user:
+      ---
       ${customContexts.length > 0 ? customContexts.map(c => `- [${c.type}] ${c.content}`).join("\n") : 'None'}
-
+      ---
+      
       Uploaded Files with this message: ${uploadedFiles.length > 0 ? uploadedFiles.join(', ') : 'None'}
 
-      Based on the query and any uploaded files, analyze the following questions and answer them in a concise, human friendly format:
-        1.  Is the user asking for information, requesting to create a new document, or asking to edit an existing document?
-        2.  Is the user referring to any specific files uploaded with this message? If yes, list the file names, if no do not acknowledge this.
-        3.  If the user is referring to something as "this" do they mean the file they uploaded or the active document, or some custom context added by the user? (If there is no "this" in the query following ambiguous references, you can ignore this question.)
-        4.  What is the custom context added by the user?
+      Chat History (Last few messages):
+      ---
+      ${chatHistory.slice(-3).map(m => `${m.role}: ${m.content}`).join("\n")}
+      ---
 
-      Finally, propose next steps for the other assistants to take based on the user's intent. You can refer to other assistants as "I". Guidelines for next steps:
-        - CRITICAL: If the user is asking to create a new document, edit an existing document OR a selection (or multiple selections) provided by them via custom context, propose that a new document should be created with the active document content and the edits applied.
-        - If the user is asking for information, propose the other assistants to research and provide information.
-
-      Considerations:
-        - When the user is asking you to write something, assume that they are asking to make changes to the active document and try and understand their intent.
+      Respond with only ONE word: "create", "edit", or "general".
     `;
 
     try {
-      const intentClassification = await this.model.generate(
-        "Open AI 4o",
+      const classification = await this.model.generate(
+        "Open AI 4o", // Or a faster/cheaper model if suitable for simple classification
         classificationPrompt,
-        "Classify user intent",
-        true, // Stream the response
-        state.streamController
+        "Classify user intent internally",
+        false // Non-streaming
+        // No streamController needed here unless we add system messages on failure
       );
 
-      return {
-        ...state,
-        userIntent: intentClassification,
-      };
+      const cleanClassification = classification.trim().toLowerCase();
+
+      console.log("Internal classification:", cleanClassification);
+      // Validate the response
+      if (['create', 'edit', 'general'].includes(cleanClassification)) {
+        return { ...state, synthesizedIntent: cleanClassification as 'create' | 'edit' | 'general' };
+      } else {
+        console.warn(`Unexpected classification result: '${classification}'. Defaulting to 'general'.`);
+        streamController.writeSystemMessage("Warning: Could not reliably determine intent, proceeding with general query."); // Inform user about fallback
+        return { ...state, synthesizedIntent: 'general' };
+      }
+
     } catch (error) {
-      console.error("Error in user intent classification node:", error);
-      state.streamController.writeSystemMessage("Failed to classify user intent\n");
-      // Don't close stream here, let subsequent nodes handle it or the final error handler
-      return {
-        ...state,
-        userIntent: "Error: Failed to classify intent",
-      };
+      console.error("Error in classify intent node:", error);
+      streamController.writeSystemMessage("Error: Failed to classify user intent. Proceeding with general query."); // Inform user
+      return { ...state, synthesizedIntent: 'general' }; // Default on error
     }
   }
 
@@ -511,26 +505,24 @@ export class DocumentWorkflow {
     graph.addNode("retrievePineconeContext", this.retrievePineconeContextNode.bind(this));
     graph.addNode("retrieveChatHistory", this.retrieveChatHistoryNode.bind(this));
     graph.addNode("retrieveSlackMessages", this.retrieveSlackMessagesNode.bind(this));
-    graph.addNode("userIntentClassification", this.userIntentClassificationNode.bind(this));
-    graph.addNode("synthesizeIntent", this.synthesizeIntentNode.bind(this));
+    graph.addNode("classifyIntent", this.classifyIntentNode.bind(this));
     graph.addNode("createDocument", this.createDocumentNode.bind(this));
     graph.addNode("editDocument", this.editDocumentNode.bind(this));
-    graph.addNode("summarizeChanges", this.summarizeChangesNode.bind(this));
+    graph.addNode("finalizeAction", this.finalizeActionNode.bind(this));
     graph.addNode("generalQuery", this.generalQueryNode.bind(this));
 
-    // Edges (Using 'any' to bypass potential typing issues)
+    // Edges
     graph.addEdge(START, "sanitizeQuery" as any);
     graph.addEdge("sanitizeQuery" as any, "retrieveChatHistory" as any);
     graph.addEdge("retrieveChatHistory" as any, "retrieveSlackMessages" as any);
-    graph.addEdge("retrieveSlackMessages" as any, "userIntentClassification" as any);
-    graph.addEdge("userIntentClassification" as any, "synthesizeIntent" as any);
-    graph.addEdge("synthesizeIntent" as any, "retrievePineconeContext" as any);
+    graph.addEdge("retrieveSlackMessages" as any, "classifyIntent" as any);
+    graph.addEdge("classifyIntent" as any, "retrievePineconeContext" as any);
 
-    // Add conditional routing after retrieving context
+    // Conditional routing starts AFTER retrievePineconeContext now
     graph.addConditionalEdges(
-      "retrievePineconeContext" as any, // Source node
-      this.routeIntent.bind(this),      // Function to determine the route
-      {                                  // Mapping from function output to target node names
+      "retrievePineconeContext" as any,
+      this.routeIntent.bind(this),
+      {
         "createDocument": "createDocument" as any,
         "editDocument": "editDocument" as any,
         "generalQuery": "generalQuery" as any
@@ -538,10 +530,10 @@ export class DocumentWorkflow {
     );
 
     // Edges from conditional branches
-    graph.addEdge("createDocument" as any, "summarizeChanges" as any);
-    graph.addEdge("editDocument" as any, "summarizeChanges" as any);
+    graph.addEdge("createDocument" as any, "finalizeAction" as any);
+    graph.addEdge("editDocument" as any, "finalizeAction" as any);
     graph.addEdge("generalQuery" as any, END);
-    graph.addEdge("summarizeChanges" as any, END);
+    graph.addEdge("finalizeAction" as any, END);
 
     return graph.compile();
   }

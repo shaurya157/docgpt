@@ -1,6 +1,13 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-export type ModelType = 'DeepSeek Chat' | 'DeepSeek R1' | 'Open AI 4o' | 'Open AI O1';
+export type ModelType = 
+  | 'DeepSeek Chat' 
+  | 'DeepSeek R1' 
+  | 'Open AI 4o' 
+  | 'Open AI O1'
+  | 'Google Gemini-2.5-pro-exp-03-25'
+  | 'Google Gemini 1.5 Pro'
+  | 'Google Gemini 1.5 Flash';
 
 interface ChatSettingsContextType {
   selectedModel: ModelType;
