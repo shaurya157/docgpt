@@ -2,6 +2,7 @@ import { ModelRouter } from "../models";
 import { createThinkingPrompt } from "../prompts"; // Assuming prompts.ts is in the parent directory
 import { TAgentState } from "../schema";
 import { IGraphNode } from "./base";
+import { updateAccumulatedTokens } from "./token_usage_updater"; // Import helper
 
 export class PlanningContainer implements IGraphNode {
     private modelRouter: ModelRouter;
@@ -14,6 +15,7 @@ export class PlanningContainer implements IGraphNode {
     async execute(state: TAgentState): Promise<Partial<TAgentState>> {
         console.log(`--- Executing ${this.getName()} ---`);
         const { streamController, synthesizedIntent } = state;
+        let updatedState: Partial<TAgentState> = {};
 
         const thinkingContext = synthesizedIntent === 'create'
             ? "Generate detailed thinking for document creation"
@@ -22,23 +24,33 @@ export class PlanningContainer implements IGraphNode {
         try {
             const thinkingPrompt = createThinkingPrompt(state);
             streamController.writeSystemMessage("Generating detailed plan...");
-            await this.modelRouter.generate(
+            
+            const generationResult = await this.modelRouter.generate(
                 "Open AI 4o", // Consider making model configurable
                 thinkingPrompt,
                 thinkingContext,
-                true,
+                true, // Streaming
                 streamController,
                 'reasoning'
             );
-            // No state change needed, just pass through after streaming reasoning
-            return {}; 
+
+            // Update accumulated tokens if usage info is available
+            if (generationResult.usage) {
+                const accumulatedTokens = updateAccumulatedTokens(
+                    state.accumulatedTokens,
+                    this.getName(),
+                    generationResult.usage
+                );
+                updatedState = { accumulatedTokens };
+            }
+
         } catch (error) {
             console.error("Error in planning node:", error);
             streamController.writeSystemMessage("Failed to generate planning steps\n");
-            // Allow workflow to continue, but log error.
-            // We might add an error field to the state later if needed.
-            return {}; 
+            // Don't update tokens on error
         }
+        // Return the updated token state (or empty object if error/no usage)
+        return updatedState; 
     }
 
     getName(): string {

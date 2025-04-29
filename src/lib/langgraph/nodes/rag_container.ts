@@ -53,7 +53,6 @@ export class RAGContainer implements IGraphNode {
             // const queryEmbedding = await this.modelRouter.embed(query);
             
             // Placeholder for actual Pinecone query logic
-            streamController.writeSystemMessage("Searching knowledge base...");
             console.log(`Querying Pinecone with: "${query}"`); 
             // const results = await this.pinecone.index("your-index-name").query({ vector: queryEmbedding, topK: 5 });
             // Mock result:

@@ -2,6 +2,7 @@ import { ModelRouter } from "../models";
 import { generalQueryPrompt } from "../prompts";
 import { TAgentState } from "../schema";
 import { IGraphNode } from "./base";
+import { updateAccumulatedTokens } from "./token_usage_updater"; // Import helper
 
 export class GeneralContainer implements IGraphNode {
     private modelRouter: ModelRouter;
@@ -18,7 +19,7 @@ export class GeneralContainer implements IGraphNode {
 
         try {
             const finalPrompt = generalQueryPrompt(state);
-            await this.modelRouter.generate(
+            const generationResult = await this.modelRouter.generate(
                 state.model, // Use model specified in state
                 finalPrompt,
                 state.query,
@@ -26,13 +27,27 @@ export class GeneralContainer implements IGraphNode {
                 streamController,
                 'partialResult'
             );
-            resultState = { draft: "" }; // Clear draft after general query
+            
+            // Start with draft clearing
+            resultState = { draft: "" }; 
+
+            // Update accumulated tokens if usage info is available
+            if (generationResult.usage) {
+                const accumulatedTokens = updateAccumulatedTokens(
+                    state.accumulatedTokens,
+                    this.getName(),
+                    generationResult.usage
+                );
+                 // Merge token updates into resultState
+                resultState = { ...resultState, accumulatedTokens };
+            }
+
         } catch (error) {
             console.error("Error in general query node:", error);
             streamController.writeSystemMessage("Failed to answer query\n");
             resultState = { draft: "Error: Failed to answer query" };
+             // Don't update tokens on error
         } finally {
-            // Ensure stream is closed after execution finishes or errors
             console.log(`Closing stream in ${this.getName()}.`);
             streamController.close();
         }

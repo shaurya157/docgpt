@@ -1,6 +1,7 @@
-import { ModelRouter } from "../models"; // Assuming models.ts is in the parent directory
+import { LLMGenerationResult, ModelRouter } from "../models"; // Assuming models.ts is in the parent directory
 import { TAgentState } from "../schema";
 import { IGraphNode } from "./base";
+import { updateAccumulatedTokens } from "./token_usage_updater"; // Import the helper
 
 export class SanitizeInputContainer implements IGraphNode {
     private modelRouter: ModelRouter;
@@ -10,11 +11,13 @@ export class SanitizeInputContainer implements IGraphNode {
         this.modelRouter = modelRouter;
     }
 
-    private async classifyIntentNode(state: TAgentState): Promise<Partial<TAgentState>> {
+    // Modified to return usage info along with intent
+    private async classifyIntentNode(state: TAgentState): Promise<{ synthesizedIntent: 'create' | 'edit' | 'general', usage: LLMGenerationResult['usage'] }> {
         console.log("Classifying intent...");
         const { chatHistory, customContexts, query, streamController } = state;
+        let intentResult: 'create' | 'edit' | 'general' = 'general'; // Default
+        let usage: LLMGenerationResult['usage'] = null;
 
-        // Use the last message from chat history if available, otherwise use the original query
         const lastUserMessage = chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
         const queryToAnalyze = lastUserMessage ? lastUserMessage.content : query;
         const uploadedFiles = lastUserMessage?.fileNames ?? [];
@@ -46,28 +49,29 @@ export class SanitizeInputContainer implements IGraphNode {
         `;
 
         try {
-            const classification = await this.modelRouter.generate(
-                "Open AI 4o", // Consider making model configurable
+            const generationResult = await this.modelRouter.generate(
+                "Open AI 4o", // Consider making model configurable or using state.model
                 classificationPrompt,
                 "Classify user intent internally",
                 false // Non-streaming
             );
-
-            const cleanClassification = classification.trim().toLowerCase();
+            usage = generationResult.usage; // Capture usage
+            const cleanClassification = generationResult.output.trim().toLowerCase();
             console.log("Internal classification:", cleanClassification);
 
             if (['create', 'edit', 'general'].includes(cleanClassification)) {
-                return { synthesizedIntent: cleanClassification as 'create' | 'edit' | 'general' };
+                intentResult = cleanClassification as 'create' | 'edit' | 'general';
             } else {
-                console.warn(`Unexpected classification result: '${classification}'. Defaulting to 'general'.`);
+                console.warn(`Unexpected classification result: '${generationResult.output}'. Defaulting to 'general'.`);
                 streamController.writeSystemMessage("Warning: Could not reliably determine intent, proceeding with general query.");
-                return { synthesizedIntent: 'general' };
+                // Keep intentResult as 'general'
             }
         } catch (error) {
             console.error("Error in classify intent node:", error);
             streamController.writeSystemMessage("Error: Failed to classify user intent. Proceeding with general query.");
-            return { synthesizedIntent: 'general' };
+            // Keep intentResult as 'general' and usage as null
         }
+        return { synthesizedIntent: intentResult, usage };
     }
 
     private async sanitizeQueryNode(state: Pick<TAgentState, 'query'>): Promise<Partial<TAgentState>> {
@@ -86,9 +90,10 @@ export class SanitizeInputContainer implements IGraphNode {
         }
 
         const queryPart = query.slice(lastIndex).trim();
+
         return {
             activeDocument: result["Document"],
-            query: queryPart ? queryPart : undefined, // Keep original if no query part extracted? Or set to empty? Let's set to undefined for now to signal removal.
+            query: queryPart ? queryPart : undefined,
         };
     }
 
@@ -96,18 +101,30 @@ export class SanitizeInputContainer implements IGraphNode {
 
     async execute(state: TAgentState): Promise<Partial<TAgentState>> {
         console.log(`--- Executing ${this.getName()} ---`);
-        // Run sanitize and classify in parallel
+        let accumulatedTokens = state.accumulatedTokens;
+        let classifyUsageResultState: Partial<TAgentState> = {};
+
+        // Run sanitize (no LLM call) and classify (LLM call) in parallel
         const [sanitizeResult, classifyResult] = await Promise.all([
-            this.sanitizeQueryNode(state),
-            // Pass the initial state to classify, it will use the original query before sanitization
-            this.classifyIntentNode(state) 
+            this.sanitizeQueryNode(state), // No LLM call here
+            this.classifyIntentNode(state) // Makes LLM call
         ]);
 
-        // Merge results - prioritize classifyResult's synthesizedIntent
-        // and sanitizeResult's query/activeDocument changes
+        // If classifyIntentNode returned usage, update accumulatedTokens
+        if (classifyResult.usage) {
+            accumulatedTokens = updateAccumulatedTokens(
+                accumulatedTokens,
+                "classifyIntent", // Use specific node name here
+                classifyResult.usage
+            );
+            classifyUsageResultState = { accumulatedTokens };
+        }
+
+        // Merge results
         return {
             ...sanitizeResult,
             synthesizedIntent: classifyResult.synthesizedIntent,
+            ...classifyUsageResultState, // Include updated tokens
         };
     }
 

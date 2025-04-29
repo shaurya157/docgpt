@@ -422,7 +422,7 @@ const ChatContent = ({
 
       {/* Conditionally render the Chat Header only if not mobile */}
       {!isMobile && (
-        <div className="w-full py-2 px-3 flex justify-between items-center border-b border-gray-200 bg-gray-50">
+        <div className="w-full py-2 px-3 flex justify-between items-center border-b border-gray-200 bg-gray-50 mt-9">
           <h2 className="font-medium text-sm">Chat</h2>
           <button className="text-gray-500 hover:bg-gray-200 rounded w-6 h-6 flex items-center justify-center">
             —

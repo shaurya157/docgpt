@@ -2,6 +2,7 @@ import { END, START, StateGraph } from "@langchain/langgraph";
 import { Pinecone } from "@pinecone-database/pinecone";
 
 import { ModelRouter } from "./models";
+import { CommitUsageNode } from "./nodes/commit_usage_node";
 import { DocumentSpecificContainer } from "./nodes/document_specific_container";
 import { GeneralContainer } from "./nodes/general_container";
 import { PlanningContainer } from "./nodes/planning_container";
@@ -11,9 +12,10 @@ import { SanitizeInputContainer } from "./nodes/sanitize_input_container";
 import { TAgentState } from "./schema";
 
 export class DocumentWorkflow {
+  private commitUsageNode = new CommitUsageNode();
   private modelRouter = new ModelRouter();
-  private documentSpecificContainer = new DocumentSpecificContainer(this.modelRouter);
 
+  private documentSpecificContainer = new DocumentSpecificContainer(this.modelRouter);
   private generalContainer = new GeneralContainer(this.modelRouter);
   private pinecone = new Pinecone();
   private planningContainer = new PlanningContainer(this.modelRouter);
@@ -40,16 +42,16 @@ export class DocumentWorkflow {
   async buildGraph() {
     const graph = new StateGraph<TAgentState>({
       channels: {
-        // State definition remains the same
-        activeDocument: { default: () => "", value: (x, y) => y ?? x }, // Use nullish coalescing for potential undefined from sanitize
+        accumulatedTokens: { default: () => [], value: (x, y) => y || x }, 
+        activeDocument: { default: () => "", value: (x, y) => y ?? x },
         chatHistory: { default: () => [], value: (x, y) => y || x },
         chatId: { value: (x) => x },
-        context: { default: () => [], value: (x, y) => y || x }, // Pinecone results merged in RAG
+        context: { default: () => [], value: (x, y) => y || x },
         customContexts: { default: () => [], value: (x, y) => y || x },
         draft: { default: () => "", value: (x, y) => y || x },
         feedback: { default: () => [], value: (x, y) => [...(x || []), ...(y || [])] },
         model: { value: (x) => x },
-        query: { value: (x, y) => y ?? x }, // Use nullish coalescing for potential undefined from sanitize
+        query: { value: (x, y) => y ?? x },
         slackMessages: { default: () => [], value: (x, y) => y ?? x },
         streamController: { value: (x) => x },
         synthesizedIntent: { default: () => undefined, value: (x, y) => y || x },
@@ -63,6 +65,7 @@ export class DocumentWorkflow {
     graph.addNode(this.generalContainer.getName(), this.generalContainer.execute.bind(this.generalContainer));
     graph.addNode(this.planningContainer.getName(), this.planningContainer.execute.bind(this.planningContainer));
     graph.addNode(this.documentSpecificContainer.getName(), this.documentSpecificContainer.execute.bind(this.documentSpecificContainer));
+    graph.addNode(this.commitUsageNode.getName(), this.commitUsageNode.execute.bind(this.commitUsageNode));
 
     // Define the workflow edges connecting the containers
     graph.addEdge(START, this.sanitizeInputContainer.getName() as any);
@@ -81,12 +84,14 @@ export class DocumentWorkflow {
     // After Planning, go to Document Specific actions
     graph.addEdge(this.planningContainer.getName() as any, this.documentSpecificContainer.getName() as any);
 
-    // General Query goes directly to END
-    graph.addEdge(this.generalContainer.getName() as any, END);
+    // General Query goes directly to Commit Usage
+    graph.addEdge(this.generalContainer.getName() as any, this.commitUsageNode.getName() as any);
     
-    // Document Specific Actions container goes to END 
-    // (since finalization is now internal to it)
-    graph.addEdge(this.documentSpecificContainer.getName() as any, END);
+    // Document Specific Actions container goes to Commit Usage
+    graph.addEdge(this.documentSpecificContainer.getName() as any, this.commitUsageNode.getName() as any);
+
+    // Commit Usage goes to END
+    graph.addEdge(this.commitUsageNode.getName() as any, END);
 
     return graph.compile();
   }

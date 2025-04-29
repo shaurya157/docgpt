@@ -3,6 +3,16 @@ import OpenAI from "openai";
 
 import { CustomStreamController } from "@/utils/custom-stream";
 
+// Export the interface
+export interface LLMGenerationResult {
+  output: string;
+  usage: {
+    inputTokens: number;
+    modelName: string; // The specific model used for this call
+    outputTokens: number;
+  } | null;
+}
+
 type StreamTarget = 'partialResult' | 'reasoning'; // Define the type for clarity
 
 export class ModelRouter {
@@ -212,11 +222,14 @@ export class ModelRouter {
     stream: boolean = false,
     streamController?: CustomStreamController,
     streamTarget?: StreamTarget // Added streamTarget
-  ): Promise<string> {
+  ): Promise<LLMGenerationResult> {
     const { model, provider } = this.getProviderAndModel(selectedModel);
 
     // Determine the effective stream target based on the stream flag
     const effectiveStreamTarget = stream ? streamTarget : undefined;
+
+    let outputText = "";
+    let usageInfo: LLMGenerationResult['usage'] = null;
 
     try {
       let result: string;
@@ -240,7 +253,13 @@ export class ModelRouter {
         streamController.writePartialResult("\n\n");
       }
 
-      return result;
+      outputText = result;
+      usageInfo = {
+        inputTokens: systemPrompt.length * 2, // Replace with actual token count
+        modelName: model, // Use actual model if dynamically chosen
+        outputTokens: outputText.length // Replace with actual token count
+      };
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error(`Error generating content with ${provider} (${model}):`, error); // Log detailed error
@@ -251,5 +270,11 @@ export class ModelRouter {
       // Re-throw the original error to be handled by the workflow node
       throw error;
     }
+
+    // Return the structured result
+    return {
+      output: outputText,
+      usage: usageInfo,
+    };
   }
 }

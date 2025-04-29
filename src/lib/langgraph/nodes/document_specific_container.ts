@@ -1,4 +1,4 @@
-import { ModelRouter } from "../models";
+import { LLMGenerationResult, ModelRouter } from "../models";
 import { 
     createDocumentPrompt, 
     editDocumentPrompt, 
@@ -7,6 +7,7 @@ import {
 } from "../prompts";
 import { TAgentState } from "../schema";
 import { IGraphNode } from "./base";
+import { updateAccumulatedTokens } from "./token_usage_updater"; // Import helper
 
 export class DocumentSpecificContainer implements IGraphNode {
     private modelRouter: ModelRouter;
@@ -16,15 +17,19 @@ export class DocumentSpecificContainer implements IGraphNode {
         this.modelRouter = modelRouter;
     }
 
-    private async createDocumentNode(state: TAgentState): Promise<Partial<TAgentState>> {
+    // --- Node Logic --- 
+    // Modified to return draft and usage
+    private async createDocumentNode(state: TAgentState): Promise<{ draft: string, usage: LLMGenerationResult['usage'] }> {
         console.log("Creating document...");
         const { streamController } = state;
+        let draft = "";
+        let usage: LLMGenerationResult['usage'] = null;
         try {
             const summaryMessage = `Okay, based on the plan, I'll now generate the document content you requested.`;
             streamController.writePartialResult(summaryMessage);
 
             const finalPrompt = createDocumentPrompt(state);
-            const output = await this.modelRouter.generate(
+            const generationResult = await this.modelRouter.generate(
                 state.model, // Use model from state
                 finalPrompt,
                 state.query,
@@ -32,24 +37,29 @@ export class DocumentSpecificContainer implements IGraphNode {
                 streamController,
                 'partialResult'
             );
-            return { draft: output };
+            draft = generationResult.output;
+            usage = generationResult.usage;
         } catch (error) {
             console.error("Error in create document node:", error);
             streamController.writeSystemMessage("Failed to generate document\n");
-            return { draft: "Error: Failed to generate document" };
+            draft = "Error: Failed to generate document";
         }
+        return { draft, usage };
     }
 
-    private async editDocumentNode(state: TAgentState): Promise<Partial<TAgentState>> {
+    // Modified to return draft and usage
+    private async editDocumentNode(state: TAgentState): Promise<{ draft: string, usage: LLMGenerationResult['usage'] }> {
         console.log("Editing document...");
         const { streamController } = state;
+        let draft = "";
+        let usage: LLMGenerationResult['usage'] = null;
         try {
             const editFocus = state.customContexts.some(c => c.type === 'Selection') ? "the selection" : "the document";
             const summaryMessage = `Understood. I'll now apply the edits to ${editFocus} based on the plan.`;
             streamController.writePartialResult(summaryMessage);
 
             const finalPrompt = editDocumentPrompt(state);
-            const output = await this.modelRouter.generate(
+            const generationResult = await this.modelRouter.generate(
                 state.model, // Use model from state
                 finalPrompt,
                 state.query,
@@ -57,18 +67,19 @@ export class DocumentSpecificContainer implements IGraphNode {
                 streamController,
                 'partialResult'
             );
-            return { draft: output };
+            draft = generationResult.output;
+            usage = generationResult.usage;
         } catch (error) {
             console.error("Error in edit document node:", error);
             streamController.writeSystemMessage("Failed to edit document\n");
-            return { draft: "Error: Failed to edit document" };
+            draft = "Error: Failed to edit document";
         }
+        return { draft, usage };
     }
 
-    // --- Node Logic (moved from DocumentWorkflow) ---
-
-    private async finalizeActionNode(state: TAgentState): Promise<Partial<TAgentState>> {
-        const { draft, query, streamController, synthesizedIntent } = state;
+    // Modified to return only usage (or null)
+    private async finalizeActionNode(state: TAgentState): Promise<LLMGenerationResult['usage']> {
+        const { draft, streamController, synthesizedIntent } = state;
         console.log(`FinalizeAction: Checking conditions. Intent: ${synthesizedIntent}, Draft starts with Error: ${draft?.startsWith("Error:")}`);
         
         const documentRegex = /<Document>[\s\S]*?<\/Document>/;
@@ -77,7 +88,7 @@ export class DocumentSpecificContainer implements IGraphNode {
 
         if (!canSummarizeCreate && !canSummarizeEdit) {
             console.log("FinalizeAction: Conditions not met for summary.");
-            return {}; 
+            return null; 
         }
 
         let summaryPrompt: string | null = null;
@@ -91,10 +102,12 @@ export class DocumentSpecificContainer implements IGraphNode {
             summaryLog = "Generating edit summary";
         }
 
+        let usage: LLMGenerationResult['usage'] = null;
+
         if (summaryPrompt) {
             try {
                 console.log(`FinalizeAction: ${summaryLog}. Prompt length: ${summaryPrompt.length}`);
-                await this.modelRouter.generate(
+                const generationResult = await this.modelRouter.generate(
                     state.model, // Use model from state
                     summaryPrompt,
                     summaryLog, // Context for generation
@@ -102,6 +115,7 @@ export class DocumentSpecificContainer implements IGraphNode {
                     streamController,
                     'partialResult' // Stream as part of the main result
                 );
+                usage = generationResult.usage;
                 console.log("FinalizeAction: Summary generation call completed.");
             } catch (error) {
                 console.error(`Error during ${summaryLog}:`, error);
@@ -112,48 +126,83 @@ export class DocumentSpecificContainer implements IGraphNode {
             console.warn("FinalizeAction: Conditions met but no summary prompt generated.")
         }
         
-        return {}; // Finalize doesn't modify state, just streams the summary.
+        return usage; // Return usage or null
     }
 
     async execute(state: TAgentState): Promise<Partial<TAgentState>> {
         console.log(`--- Executing ${this.getName()} ---`);
         const { streamController } = state;
-        let actionResult: Partial<TAgentState> = {};
-        let finalizeResult: Partial<TAgentState> = {};
+        let accumulatedTokens = state.accumulatedTokens; // Start with current tokens
+        let actionResultState: Partial<TAgentState> = {}; // Holds draft + tokens from action
+        let finalizeResultState: Partial<TAgentState> = {}; // Holds tokens from finalize
+        let nodeNameForAction = ""; // Variable to hold the specific action node name
         
         try {
             const intent = state.synthesizedIntent;
+            let actionUsage: LLMGenerationResult['usage'] = null;
+
             // --- 1. Perform Create or Edit Action --- 
             if (intent === "create") {
-                actionResult = await this.createDocumentNode(state);
+                nodeNameForAction = "createDocument"; // Set specific name
+                const { draft, usage } = await this.createDocumentNode(state);
+                actionResultState = { draft };
+                actionUsage = usage;
             } else if (intent === "edit") {
-                actionResult = await this.editDocumentNode(state);
+                nodeNameForAction = "editDocument"; // Set specific name
+                const { draft, usage } = await this.editDocumentNode(state);
+                actionResultState = { draft };
+                actionUsage = usage;
             } else {
                 console.warn(`DocumentSpecificContainer executed with unexpected intent: ${intent}`);
                 streamController.writeSystemMessage("Error: Unexpected state for document action.");
-                actionResult = { draft: "Error: Unexpected state" }; // Set error state
+                actionResultState = { draft: "Error: Unexpected state" }; 
+            }
+
+            // Accumulate tokens from the main create/edit action using the specific name
+            if (actionUsage && nodeNameForAction) { 
+                accumulatedTokens = updateAccumulatedTokens(
+                    accumulatedTokens,
+                    nodeNameForAction, // Use specific node name
+                    actionUsage
+                );
+                actionResultState.accumulatedTokens = accumulatedTokens; // Update state immediately
             }
 
             // --- 2. Finalize Action (Summarize) if successful --- 
-            // Only proceed if the action didn't result in an error draft
-            if (!actionResult.draft?.startsWith("Error:")) {
-                const stateAfterAction = { ...state, ...actionResult }; 
-                finalizeResult = await this.finalizeActionNode(stateAfterAction);
+            if (!actionResultState.draft?.startsWith("Error:")) {
+                // Pass the state *including* the draft and updated tokens from the action
+                const stateForFinalize = { ...state, ...actionResultState }; 
+                const finalizeUsage = await this.finalizeActionNode(stateForFinalize);
+                
+                // Accumulate tokens from the finalization step under its own name
+                if (finalizeUsage) {
+                    accumulatedTokens = updateAccumulatedTokens(
+                        accumulatedTokens,
+                        "finalizeAction", // Use specific name for finalize step
+                        finalizeUsage
+                    );
+                    finalizeResultState = { accumulatedTokens };
+                }
             }
         } catch (error) {
              console.error(`Error during ${this.getName()} execution:`, error);
              streamController.writeSystemMessage("An internal error occurred during document processing.\n");
-             actionResult = { ...actionResult, draft: actionResult.draft + "\nError during final processing." };
+             // Ensure draft reflects error, keep accumulated tokens as they are
+             actionResultState = { 
+                 ...actionResultState, 
+                 accumulatedTokens: accumulatedTokens, // Carry over tokens accumulated so far
+                 draft: (actionResultState.draft || "") + "\nError during final processing."
+             };
+             finalizeResultState = {}; // Don't add finalize tokens if error occurred
         } finally {
-            // Ensure stream is closed after execution finishes or errors
             console.log(`Closing stream in ${this.getName()}.`);
             streamController.close();
         }
 
-        // Merge results from action and finalization
+        // Merge results: Draft from action, tokens from finalize (which includes action tokens)
         return {
-            ...actionResult,
-            ...finalizeResult, 
+            ...actionResultState,
+            ...finalizeResultState, // This will overwrite accumulatedTokens with the final version
         };
     }
 

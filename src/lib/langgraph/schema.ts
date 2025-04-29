@@ -2,7 +2,23 @@ import { z } from "zod";
 
 import { CustomStreamController } from "@/utils/custom-stream";
 
+// Define the structure for accumulated token usage within the state
+const AccumulatedTokenModelUsage = z.object({
+  inputTokens: z.number(),
+  model: z.string(),
+  outputTokens: z.number()
+});
+
+const AccumulatedTokenNodeUsage = z.object({
+  models: z.array(AccumulatedTokenModelUsage),
+  node: z.string()
+});
+
+export type TAccumulatedTokenNodeUsage = z.infer<typeof AccumulatedTokenNodeUsage>;
+
 export const AgentState = z.object({
+  // Add the field to accumulate token usage during the run
+  accumulatedTokens: z.array(AccumulatedTokenNodeUsage).default([]),
   activeDocument: z.string().default(""),
   chatHistory: z.array(z.object({
     content: z.string(),
