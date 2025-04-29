@@ -2,7 +2,7 @@ import { END, START, StateGraph } from "@langchain/langgraph";
 import { Pinecone } from "@pinecone-database/pinecone";
 
 import { getChatHistory } from "./firebase-admin";
-import { ModelRouter } from "./models";
+import { ModelRouter } from "./langgraph/models";
 import { 
   createDocumentPrompt, 
   createThinkingPrompt, 
@@ -10,8 +10,8 @@ import {
   generalQueryPrompt, 
   summarizeCreationPrompt,
   summarizeEditPrompt
-} from "./prompts";
-import { TAgentState } from "./schema";
+} from "./langgraph/prompts";
+import { TAgentState } from "./langgraph/schema";
 import { getValidSlackToken } from "./slack-auth-helper";
 
 // Define expected message structure from Slack conversations.history

@@ -24,7 +24,6 @@ const eslintConfig = [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
-      'autoFixOnSave': true,
       'import/no-anonymous-default-export': 'off',
       'no-case-declarations': 'off',
       'no-duplicate-imports': 'off',

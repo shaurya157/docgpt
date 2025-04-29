@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-import { DocumentWorkflow } from "@/lib/workflow";
+import { DocumentWorkflow } from "@/lib/langgraph/workflow";
 import { CustomStreamController } from "@/utils/custom-stream";
 
 export async function POST(req: NextRequest) {
