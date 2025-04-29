@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 import { CustomStreamController } from "@/utils/custom-stream";
 
@@ -8,6 +9,7 @@ export class ModelRouter {
     baseURL: "https://api.deepseek.com",
   })
   private openai = new OpenAI();
+  private google = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
   private async generateDeepSeek(
     system: string,
@@ -89,8 +91,48 @@ export class ModelRouter {
     }
   }
 
-  private getProviderAndModel(selectedModel: string): { model: string; provider: "deepseek" | "openai", } {
-    if (selectedModel.toLowerCase().includes("open ai")) {
+  private async generateGoogle(
+    system: string,
+    input: string,
+    model: string,
+    streamController?: CustomStreamController
+  ) {
+    const genAI = this.google.getGenerativeModel({
+      model: model,
+      systemInstruction: system,
+      safetySettings: [ // Add appropriate safety settings
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      ],
+    });
+
+    if (streamController) {
+      const result = await genAI.generateContentStream(input);
+      let accumulatedContent = '';
+      for await (const chunk of result.stream) {
+        const content = chunk.text();
+        if (content) {
+          accumulatedContent += content;
+          streamController.writePartialResult(content);
+        }
+      }
+       // Google's API doesn't provide reasoning content in the same way DeepSeek does.
+      // If needed, you might need a separate mechanism or prompt engineering to extract reasoning.
+      return accumulatedContent;
+
+    } else {
+      const result = await genAI.generateContent(input);
+      const response = result.response;
+      return response.text();
+    }
+  }
+
+  private getProviderAndModel(selectedModel: string): { model: string; provider: "deepseek" | "openai" | "google", } {
+    const lowerCaseModel = selectedModel.toLowerCase();
+
+    if (lowerCaseModel.includes("open ai")) {
       // Map OpenAI models
       const modelMap = {
         "Open AI 4o": "gpt-4o",
@@ -99,6 +141,18 @@ export class ModelRouter {
       return {
         model: modelMap[selectedModel] || "gpt-4o", // default to gpt-4o if not found
         provider: "openai"
+      };
+    } else if (lowerCaseModel.includes("google") || lowerCaseModel.includes("gemini")) {
+       // Map Google models
+       // Add other Gemini models as needed
+      const modelMap = {
+        "Google Gemini-2.5-pro-exp-03-25": "gemini-2.5-pro-exp-03-25", // Example mapping
+        "Google Gemini 1.5 Pro": "gemini-1.5-pro-latest",
+        "Google Gemini 1.5 Flash": "gemini-1.5-flash-latest"
+      };
+      return {
+        model: modelMap[selectedModel] || "gemini-1.5-pro-latest", // default to 1.5 pro if not found
+        provider: "google"
       };
     } else {
       // For DeepSeek models
@@ -123,11 +177,23 @@ export class ModelRouter {
     const { model, provider } = this.getProviderAndModel(selectedModel);
     
     try {
-      const result = await (provider === "deepseek" 
-        ? this.generateDeepSeek(systemPrompt, userInput, stream ? streamController : undefined)
-        : this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined));
+      let result: string;
+      switch (provider) {
+        case "deepseek":
+          result = await this.generateDeepSeek(systemPrompt, userInput, stream ? streamController : undefined);
+          break;
+        case "openai":
+          result = await this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined);
+          break;
+        case "google":
+           result = await this.generateGoogle(systemPrompt, userInput, model, stream ? streamController : undefined);
+           break;
+        default:
+          // Should not happen with the current logic, but good practice
+           throw new Error(`Unsupported provider: ${provider}`);
+      }
       
-        // splitting stream output
+      // splitting stream output
       if (streamController) {
         streamController.writePartialResult("\n\n");
       }
