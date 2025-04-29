@@ -17,8 +17,8 @@ import UberLogo from '@/assets/images/Uber_Logo_Black_RGB.svg';
 import HeroGif from '@/assets/images/xx1.gif';
 import HeroImage from '@/assets/images/z1.gif';
 import { SignIn } from '@/components/landing/auth';
-import PreLoginHeader from '@/components/landing/pre-login-header';
 import PreLoginFooter from '@/components/landing/pre-login-footer';
+import PreLoginHeader from '@/components/landing/pre-login-header';
 
 export default function Landing() {
   const { data: session } = useSession();

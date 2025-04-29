@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { TextApi, TRange, TText } from '@udecode/plate';
 import { MarkdownPlugin } from '@udecode/plate-markdown';
+import { BaseSuggestionPlugin } from '@udecode/plate-suggestion';
 import { useEditorRef, usePlateState } from '@udecode/plate/react';
+import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 
 import { storeMessage } from '@/firebase/firestore-dao';
@@ -10,17 +13,7 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message, StreamingState } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
 import { parseAssistantResponse } from '@/utils/document-parser';
-import { nanoid } from 'nanoid';
-import { BaseSuggestionPlugin } from '@udecode/plate-suggestion';
-import { TRange, TText, TextApi } from '@udecode/plate';
 import { EditBlock, parseEdits } from '@/utils/edit-parser';
-
-interface UseChatMessagingProps {
-  chatId: string;
-  model: string;
-  userId: string;
-  initialMessages?: Message[];
-}
 
 export interface SuggestionEdit {
   id: string;
@@ -28,6 +21,13 @@ export interface SuggestionEdit {
 }
 
 type MessageWithSuggestions = Message & { suggestions?: SuggestionEdit[] };
+
+interface UseChatMessagingProps {
+  chatId: string;
+  model: string;
+  userId: string;
+  initialMessages?: Message[];
+}
 
 export const useChatMessaging = ({ chatId, initialMessages, model, userId }: UseChatMessagingProps) => {
   const { setUserChats } = useUserDataContext();
@@ -126,8 +126,8 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             path = nodePath;
             startOffset = index;
             foundRange = {
-              anchor: { path: nodePath, offset: index },
-              focus: { path: nodePath, offset: index + edit.original.length },
+              anchor: { offset: index, path: nodePath },
+              focus: { offset: index + edit.original.length, path: nodePath },
             };
             break;
           }
@@ -138,28 +138,28 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             editorRef.tf.select(foundRange);
             editorRef.tf.setNodes<TText>(
               {
-                suggestion: true,
                 [`suggestion_${id}`]: {
                   id: id,
                   createdAt: Date.now(),
                   type: 'remove',
                   userId: currentUserId,
                 },
+                suggestion: true,
               },
-              { match: (n): n is TText => TextApi.isText(n), split: true, at: foundRange }
+              { at: foundRange, split: true, match: (n): n is TText => TextApi.isText(n) }
             );
 
             editorRef.tf.collapse({ edge: 'focus' });
             editorRef.tf.insertNodes<TText>(
               {
-                text: edit.newText,
-                suggestion: true,
-                 [`suggestion_${id}`]: {
+                [`suggestion_${id}`]: {
                   id: id,
                   createdAt: Date.now(),
                   type: 'insert',
                   userId: currentUserId,
                 },
+                suggestion: true,
+                 text: edit.newText,
               },
               { select: false }
             );

@@ -1,9 +1,10 @@
-import { AgentState, TAgentState } from "./schema";
 import { z } from "zod";
 
+import { AgentState, TAgentState } from "./schema";
+
+type CustomContext = z.infer<typeof AgentState.shape.customContexts>[number];
 // Infer types from AgentState schema parts
 type Message = z.infer<typeof AgentState.shape.chatHistory>[number];
-type CustomContext = z.infer<typeof AgentState.shape.customContexts>[number];
 type SlackChannelMessages = z.infer<typeof AgentState.shape.slackMessages>[number];
 
 const role = (position: string) => {
@@ -292,11 +293,10 @@ export const createThinkingPrompt = (state: TAgentState): string => {
     ${state.query}
 
     Instructions:
-    1.  **Analyze:** Briefly summarize the core request based on the User Query and User Intent and Next Steps.
-    2.  **Context Review:** Note the key pieces of context available (Active Document, History, Pinecone, Custom Context, Slack) and how they will be used.
-    3.  **Strategy/Structure:** Outline the approach or structure you will use for the response (e.g., for a PRD: sections to include; for an edit: how to locate and modify text; for a query: sources to consult).
-    4.  **Detailed Plan:** List the specific steps you will take during generation.
-    5.  **Formatting:** Use Markdown for clarity (headers, lists).
+    1. Briefly summarize the core request based on the User Query and User Intent and Next Steps.
+    2. Note the key pieces of context available (Active Document, History, Pinecone, Custom Context, Slack) and how they will be used.
+    3. Outline the approach or structure you will use for the response (e.g., for a PRD: sections to include; for an edit: how to locate and modify text; for a query: sources to consult).
+    4. List the specific steps you will take during generation.
 
     ${formattingInstructions([])}
     
