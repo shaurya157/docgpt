@@ -8,13 +8,14 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  onSnapshot,
   query,
   setDoc,
   where,
 } from 'firebase/firestore';
 
 import firebase_app from '@/firebase/config';
-import { SlackIntegration, UserIntegrations } from '@/types';
+import { SlackIntegration, TokenNodeUsage, UserIntegrations } from '@/types';
 
 const db = getFirestore(firebase_app);
 
@@ -368,4 +369,39 @@ export async function getUserIntegrations(userId: string): Promise<{ integration
     console.error('Error fetching user integrations:', error);
     return { error, integrations: null };
   }
+}
+
+// New function for real-time token usage updates
+export function subscribeToChatTokenUsage(
+  chatId: string,
+  callback: (tokensUsed: TokenNodeUsage[] | undefined) => void
+): () => void { // Returns an unsubscribe function
+  if (!chatId) {
+    console.error("subscribeToChatTokenUsage requires a chatId.");
+    return () => {}; // Return a no-op unsubscribe function
+  }
+
+  const chatDocRef = doc(db, 'chats', chatId);
+
+  const unsubscribe = onSnapshot(
+    chatDocRef,
+    (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Pass the tokensUsed array (or undefined if not present) to the callback
+        callback(data?.tokensUsed as TokenNodeUsage[] | undefined);
+      } else {
+        console.warn(`Chat document ${chatId} not found for token subscription.`);
+        callback(undefined); // Indicate data is not available
+      }
+    },
+    (error) => {
+      console.error(`Error listening to chat ${chatId} for token usage:`, error);
+      // Optionally call callback with an error state or specific value
+      callback(undefined);
+    }
+  );
+
+  // Return the unsubscribe function provided by onSnapshot
+  return unsubscribe;
 }

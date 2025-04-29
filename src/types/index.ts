@@ -5,6 +5,7 @@ export interface Chat {
   files: File[];
   messages: Message[];
   userId: string;
+  tokensUsed?: TokenNodeUsage[];
 }
 
 export interface Document {
@@ -75,6 +76,18 @@ export interface Template {
   template: any[];
   templateName: string;
   templateOwnerId: string;
+}
+
+// Add this type based on the Firestore structure for tokensUsed
+export interface TokenModelUsage {
+  inputTokens: number;
+  model: string;
+  outputTokens: number;
+}
+
+export interface TokenNodeUsage {
+  models: TokenModelUsage[];
+  node: string;
 }
 
 // Represents the map of all possible integrations for a user

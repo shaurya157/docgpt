@@ -23,7 +23,6 @@ export class PlanningContainer implements IGraphNode {
 
         try {
             const thinkingPrompt = createThinkingPrompt(state);
-            streamController.writeSystemMessage("Generating detailed plan...");
             
             const generationResult = await this.modelRouter.generate(
                 "Open AI 4o", // Consider making model configurable

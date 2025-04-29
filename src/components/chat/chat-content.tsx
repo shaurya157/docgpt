@@ -3,7 +3,7 @@ import { Dispatch, DragEvent, SetStateAction, useEffect, useRef, useState } from
 import { getEditorPrompt } from '@udecode/plate-ai/react';
 import { PlateEditor } from '@udecode/plate/react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { Info, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 import { ChatMessageList } from '@/components/chat/chat-messaging-list';
@@ -18,7 +18,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/plate-ui/dropdown-menu';
-import { appendChatSpecificFileIds } from '@/firebase/firestore-dao';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/plate-ui/tooltip';
+import { appendChatSpecificFileIds, subscribeToChatTokenUsage } from '@/firebase/firestore-dao';
 import { useChatMessaging } from '@/hooks/use-chat-messaging';
 import { useDocumentIntegration } from '@/hooks/use-document-integration';
 import { useFileAttachments } from '@/hooks/use-file-attachments';
@@ -40,6 +46,14 @@ interface ContentProps {
   changeEditorContent: (content: any) => void;
   onToggleChat: () => void;
 }
+
+// Type for calculated totals
+type TokenTotalsByModel = {
+  [modelName: string]: {
+    input: number;
+    output: number;
+  };
+};
 
 const ChatContent = ({
   activeChatMessages,
@@ -72,6 +86,8 @@ const ChatContent = ({
   const documentEditorRef = useRef<HTMLElement | null>(null);
   const [isMobile, setIsMobile] = useState(false); // State for mobile view
   const [isSlackModalOpen, setIsSlackModalOpen] = useState(false); // State for Slack modal
+  const [totalTokensByModel, setTotalTokensByModel] = useState<TokenTotalsByModel>({}); // State for token totals
+  const { chatId } = activeUserDocument || {}; // Get chatId safely
 
   const { attachments, removeAttachment, updateAttachments, uploadFiles, uploadInProgress } = 
     useFileAttachments(session?.user?.email || '');
@@ -366,6 +382,41 @@ const ChatContent = ({
     updateAttachments(e.target.files);
   };
 
+  // --- Real-time Token Usage Subscription ---
+  useEffect(() => {
+    if (!chatId || process.env.NODE_ENV === 'production') {
+        setTotalTokensByModel({}); // Clear totals if no chatId or in production
+        return; // Don't subscribe if no chatId or in production
+    }
+
+    console.log(`Subscribing to token usage for chat: ${chatId}`);
+
+    const unsubscribe = subscribeToChatTokenUsage(chatId, (tokensUsed) => {
+      if (tokensUsed) {
+        const totals: TokenTotalsByModel = {};
+        tokensUsed.forEach(nodeEntry => {
+          nodeEntry.models.forEach(modelEntry => {
+            if (!totals[modelEntry.model]) {
+              totals[modelEntry.model] = { input: 0, output: 0 };
+            }
+            totals[modelEntry.model].input += modelEntry.inputTokens || 0;
+            totals[modelEntry.model].output += modelEntry.outputTokens || 0;
+          });
+        });
+        setTotalTokensByModel(totals);
+        // console.log("Updated Token Totals:", totals); // Optional: for debugging
+      } else {
+        setTotalTokensByModel({}); // Clear totals if data becomes unavailable
+      }
+    });
+
+    // Cleanup function to unsubscribe when component unmounts or chatId changes
+    return () => {
+      console.log(`Unsubscribing from token usage for chat: ${chatId}`);
+      unsubscribe();
+    };
+  }, [chatId]); // Re-run effect if chatId changes
+
   return (
     <motion.div
       ref={chatContainerRef}
@@ -424,9 +475,44 @@ const ChatContent = ({
       {!isMobile && (
         <div className="w-full py-2 px-3 flex justify-between items-center border-b border-gray-200 bg-gray-50 mt-9">
           <h2 className="font-medium text-sm">Chat</h2>
-          <button className="text-gray-500 hover:bg-gray-200 rounded w-6 h-6 flex items-center justify-center">
-            —
-          </button>
+          {/* --- Token Usage Info (Development Only) --- */}
+          {process.env.NODE_ENV === 'development' && Object.keys(totalTokensByModel).length > 0 && (
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="p-2 rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-600">
+                    <Info size={16} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  align="start"
+                  // Apply gradient background, white text, padding, rounded corners, shadow, and z-index
+                  className="text-xs bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3 rounded-md shadow-lg z-[51]"
+                >
+                  <div className="font-semibold mb-2">Token Usage (Total):</div>
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-blue-400 border-opacity-50">
+                        <th className="pb-1 pr-4 font-medium">Model</th>
+                        <th className="pb-1 pr-4 font-medium text-right">Input</th>
+                        <th className="pb-1 font-medium text-right">Output</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(totalTokensByModel).map(([model, totals]) => (
+                        <tr key={model}>
+                          <td className="pt-1 pr-4">{model}</td>
+                          <td className="pt-1 pr-4 text-right">{totals.input.toLocaleString()}</td>
+                          <td className="pt-1 text-right">{totals.output.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       )}
 
@@ -481,8 +567,11 @@ const ChatContent = ({
               multiple
             />
           </div>
-          <div className="flex items-center justify-between">
-            <ChatSettings />
+          <div className="flex items-center justify-between mt-1"> 
+            <div className="flex items-center gap-1"> {/* Container for settings + token info */}
+              <ChatSettings />
+            </div>
+
             <div className="flex items-center gap-2">
               <button
                 className="cursor-pointer rounded-lg p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
