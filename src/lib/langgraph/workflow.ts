@@ -2,13 +2,13 @@ import { END, START, StateGraph } from "@langchain/langgraph";
 import { Pinecone } from "@pinecone-database/pinecone";
 
 import { ModelRouter } from "./models";
-import { CommitUsageNode } from "./nodes/commit_usage_node";
-import { DocumentSpecificContainer } from "./nodes/document_specific_container";
-import { GeneralContainer } from "./nodes/general_container";
-import { PlanningContainer } from "./nodes/planning_container";
-import { RAGContainer } from "./nodes/rag_container";
+import { CommitUsageNode } from "./node-containers/commit-usage";
+import { DocumentSpecificContainer } from "./node-containers/document-modifications";
+import { GeneralContainer } from "./node-containers/general";
+import { PlanningContainer } from "./node-containers/planning";
+import { RAGContainer } from "./node-containers/rag";
 // Import the new containers
-import { SanitizeInputContainer } from "./nodes/sanitize_input_container";
+import { SanitizeInputContainer } from "./node-containers/sanitize-input";
 import { TAgentState } from "./schema";
 
 export class DocumentWorkflow {

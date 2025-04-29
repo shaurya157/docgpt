@@ -1,7 +1,7 @@
 import { LLMGenerationResult, ModelRouter } from "../models"; // Assuming models.ts is in the parent directory
 import { TAgentState } from "../schema";
+import { updateAccumulatedTokens } from "../token-usage-updater"; // Import the helper
 import { IGraphNode } from "./base";
-import { updateAccumulatedTokens } from "./token_usage_updater"; // Import the helper
 
 export class SanitizeInputContainer implements IGraphNode {
     private modelRouter: ModelRouter;

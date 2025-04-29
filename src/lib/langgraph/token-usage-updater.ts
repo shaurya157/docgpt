@@ -1,4 +1,4 @@
-import { TAccumulatedTokenNodeUsage } from "../schema";
+import { TAccumulatedTokenNodeUsage } from "./schema";
 
 interface LLMUsageInfo {
     inputTokens: number;

@@ -1,8 +1,8 @@
 import { ModelRouter } from "../models";
 import { generalQueryPrompt } from "../prompts";
 import { TAgentState } from "../schema";
+import { updateAccumulatedTokens } from "../token-usage-updater"; // Import helper
 import { IGraphNode } from "./base";
-import { updateAccumulatedTokens } from "./token_usage_updater"; // Import helper
 
 export class GeneralContainer implements IGraphNode {
     private modelRouter: ModelRouter;

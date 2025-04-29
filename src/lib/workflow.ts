@@ -4,14 +4,14 @@ import { Pinecone } from "@pinecone-database/pinecone";
 // Remove unused imports
 // import { getChatHistory } from "./firebase-admin"; 
 import { ModelRouter } from "./langgraph/models";
-import { CommitUsageNode } from "./langgraph/nodes/commit_usage_node";
+import { CommitUsageNode } from "./langgraph/node-containers/commit-usage";
 // import { getValidSlackToken } from "./slack-auth-helper";
-import { DocumentSpecificContainer } from "./langgraph/nodes/document_specific_container";
-import { GeneralContainer } from "./langgraph/nodes/general_container";
-import { PlanningContainer } from "./langgraph/nodes/planning_container";
-import { RAGContainer } from "./langgraph/nodes/rag_container";
+import { DocumentSpecificContainer } from "./langgraph/node-containers/document-modifications";
+import { GeneralContainer } from "./langgraph/node-containers/general";
+import { PlanningContainer } from "./langgraph/node-containers/planning";
+import { RAGContainer } from "./langgraph/node-containers/rag";
 // Import the containers and the commit node from the correct relative path
-import { SanitizeInputContainer } from "./langgraph/nodes/sanitize_input_container";
+import { SanitizeInputContainer } from "./langgraph/node-containers/sanitize-input";
 // import { 
 //   createDocumentPrompt, 
 //   createThinkingPrompt, 
