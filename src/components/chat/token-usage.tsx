@@ -21,6 +21,8 @@ const MODEL_PRICING = {
   'gemini-1.5-pro-latest': { input: 1.25, output: 5.00 }, // <=128k context
   // OpenAI
   'gpt-4o': { input: 5.00, output: 15.00 },
+  'gpt-4o-mini': { input: 0.15, output: 0.60 },
+  'o1': { input: 15.00, output: 60.00 },
   // Add other models as needed...
 };
 

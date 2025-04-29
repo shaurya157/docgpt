@@ -50,7 +50,7 @@ export class SanitizeInputContainer implements IGraphNode {
 
         try {
             const generationResult = await this.modelRouter.generate(
-                "Open AI 4o", // Consider making model configurable or using state.model
+                "Open AI 4o-mini", // Consider making model configurable or using state.model
                 classificationPrompt,
                 "Classify user intent internally",
                 false // Non-streaming

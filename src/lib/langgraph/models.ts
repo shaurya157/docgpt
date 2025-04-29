@@ -184,6 +184,7 @@ export class ModelRouter {
       // Map OpenAI models
       const modelMap = {
         "Open AI 4o": "gpt-4o",
+        "Open AI 4o-mini": "gpt-4o-mini",
         "Open AI O1": "o1"
       };
       return {

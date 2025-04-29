@@ -108,7 +108,7 @@ export class DocumentSpecificContainer implements IGraphNode {
             try {
                 console.log(`FinalizeAction: ${summaryLog}. Prompt length: ${summaryPrompt.length}`);
                 const generationResult = await this.modelRouter.generate(
-                    state.model, // Use model from state
+                    "Open AI 4o-mini", // Use model from state
                     summaryPrompt,
                     summaryLog, // Context for generation
                     true,
