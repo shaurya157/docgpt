@@ -18,6 +18,7 @@
     "@auth/unstorage-adapter": "^2.7.4",
     "@emoji-mart/data": "1.2.1",
     "@faker-js/faker": "^9.4.0",
+    "@google/generative-ai": "^0.24.0",
     "@langchain/core": "^0.3.42",
     "@langchain/langgraph": "^0.2.55",
     "@next/third-parties": "^15.2.0",

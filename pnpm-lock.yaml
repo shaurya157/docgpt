@@ -23,6 +23,9 @@ importers:
       '@faker-js/faker':
         specifier: ^9.4.0
         version: 9.5.0
+      '@google/generative-ai':
+        specifier: ^0.24.0
+        version: 0.24.0
       '@langchain/core':
         specifier: ^0.3.42
         version: 0.3.42(openai@4.85.1(encoding@0.1.13)(zod@3.24.2))
@@ -1015,6 +1018,10 @@ packages:
   '@google-cloud/storage@7.15.2':
     resolution: {integrity: sha512-+2k+mcQBb9zkaXMllf2wwR/rI07guAx+eZLWsGTDihW2lJRGfiqB7xu1r7/s4uvSP/T+nAumvzT5TTscwHKJ9A==}
     engines: {node: '>=14'}
+
+  '@google/generative-ai@0.24.0':
+    resolution: {integrity: sha512-fnEITCGEB7NdX0BhoYZ/cq/7WPZ1QS5IzJJfC3Tg/OwkvBetMiVJciyaan297OvE4B9Jg1xvo0zIazX/9sGu1Q==}
+    engines: {node: '>=18.0.0'}
 
   '@grpc/grpc-js@1.13.0':
     resolution: {integrity: sha512-pMuxInZjUnUkgMT2QLZclRqwk2ykJbIU05aZgPgJYXEpN9+2I7z7aNwcjWZSycRPl232FfhPszyBFJyOxTHNog==}
@@ -6169,6 +6176,8 @@ snapshots:
       - encoding
       - supports-color
     optional: true
+
+  '@google/generative-ai@0.24.0': {}
 
   '@grpc/grpc-js@1.13.0':
     dependencies:
