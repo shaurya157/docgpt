@@ -10,6 +10,10 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message, StreamingState } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
 import { parseAssistantResponse } from '@/utils/document-parser';
+import { nanoid } from 'nanoid';
+import { BaseSuggestionPlugin } from '@udecode/plate-suggestion';
+import { TRange, TText, TextApi } from '@udecode/plate';
+import { EditBlock, parseEdits } from '@/utils/edit-parser';
 
 interface UseChatMessagingProps {
   chatId: string;
@@ -18,10 +22,17 @@ interface UseChatMessagingProps {
   initialMessages?: Message[];
 }
 
+export interface SuggestionEdit {
+  id: string;
+  edit: EditBlock;
+}
+
+type MessageWithSuggestions = Message & { suggestions?: SuggestionEdit[] };
+
 export const useChatMessaging = ({ chatId, initialMessages, model, userId }: UseChatMessagingProps) => {
   const { setUserChats } = useUserDataContext();
   const { clearCustomContexts, customContexts } = useCustomContext();
-  const [messages, setMessages] = useState<Message[]>(initialMessages || []);
+  const [messages, setMessages] = useState<MessageWithSuggestions[]>(initialMessages || []);
   const [status, setStatus] = useState<'awaiting_message' | 'in_progress'>('awaiting_message');
   const [readOnly, setReadOnly] = usePlateState('readOnly');
   const editorRef = useEditorRef();
@@ -31,7 +42,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       isStreaming: false
     },
     isProcessingDocument: false,
-    isProcessingEdit: false, // Initialize edit processing state
+    isProcessingEdit: false,
     message: {
       id: 'streaming',
       content: '',
@@ -45,7 +56,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
   const lastUpdateTimeRef = useRef<number>(0);
   const pendingDocUpdateRef = useRef<string | null>(null);
 
-  // Throttle function for editor updates
   const throttleEditorUpdate = useCallback(() => {
     if (!pendingDocUpdateRef.current) return;
     
@@ -65,7 +75,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
     }
   }, [editorRef]);
 
-  // Set up interval for throttled updates
   useEffect(() => {
     const intervalId = setInterval(throttleEditorUpdate, 1200);
     return () => clearInterval(intervalId);
@@ -90,7 +99,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       role: 'user'
     };
 
-    // Store the message in Firestore
     await storeMessage(chatId, {
       id: timestamp,
       content: content.trim(),
@@ -101,6 +109,74 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
     setMessages((prev) => [...prev, newMessage]);
     return newMessage;
   };
+
+  const applyEditsAsSuggestions = useCallback(async (suggestions: SuggestionEdit[]) => {
+    const suggestionOptions = editorRef.getOptions(BaseSuggestionPlugin);
+    const currentUserId = suggestionOptions?.currentUserId || 'placeholder-user';
+    editorRef.tf.withoutNormalizing(() => {
+      suggestions.forEach(({ id, edit }) => {
+        const textNodes = Array.from(editorRef.api.nodes<TText>({ at: [], match: (n): n is TText => TextApi.isText(n) }));
+        let foundRange: TRange | null = null;
+        let path: number[] | null = null;
+        let startOffset = -1;
+
+        for (const [node, nodePath] of textNodes) {
+          const index = node.text.indexOf(edit.original);
+          if (index !== -1) {
+            path = nodePath;
+            startOffset = index;
+            foundRange = {
+              anchor: { path: nodePath, offset: index },
+              focus: { path: nodePath, offset: index + edit.original.length },
+            };
+            break;
+          }
+        }
+
+        if (foundRange && path !== null && startOffset !== -1) {
+          try {
+            editorRef.tf.select(foundRange);
+            editorRef.tf.setNodes<TText>(
+              {
+                suggestion: true,
+                [`suggestion_${id}`]: {
+                  id: id,
+                  createdAt: Date.now(),
+                  type: 'remove',
+                  userId: currentUserId,
+                },
+              },
+              { match: (n): n is TText => TextApi.isText(n), split: true, at: foundRange }
+            );
+
+            editorRef.tf.collapse({ edge: 'focus' });
+            editorRef.tf.insertNodes<TText>(
+              {
+                text: edit.newText,
+                suggestion: true,
+                 [`suggestion_${id}`]: {
+                  id: id,
+                  createdAt: Date.now(),
+                  type: 'insert',
+                  userId: currentUserId,
+                },
+              },
+              { select: false }
+            );
+
+            editorRef.tf.deselect();
+
+          } catch (error) {
+             console.error(`Error applying suggestion ${id} for edit:`, edit, error);
+             toast.error(`Failed to apply suggestion for: "${edit.original}"`);
+          }
+        } else {
+           console.warn(`Could not find text to apply suggestion for: "${edit.original}"`);
+           toast.warning(`Could not apply suggestion for: "${edit.original}". Original text may have changed.`);
+        }
+      });
+    });
+  }, [editorRef]);
 
   const sendMessage = useCallback(async (serializedContent: string) => {
     setStatus('in_progress');
@@ -123,55 +199,47 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
           onError: (error: Error) => {
             toast.error(error.message);
             setStatus('awaiting_message');
-            // Remove the streaming message on error
             setMessages(prev => prev.filter(m => m.id !== 'streaming'));
             setStreamingState({
-              document: { content: '', isStreaming: false }, // Stream ends
+              document: { content: '', isStreaming: false },
               isProcessingDocument: false,
-              isProcessingEdit: false, // Reset edit state on error
+              isProcessingEdit: false,
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
               reasoning: ''
             });
           },
-          // Update the state update type to include isProcessingEdit
           onStateUpdate: (newStateUpdate: Pick<StreamingState, 'isProcessingDocument' | 'isProcessingEdit' | 'message' | 'reasoning'>) => {
             setStreamingState(prevState => {
               const nextState: StreamingState = {
-                // Update all parts based on the incoming update
-                document: prevState.document, // Keep document content until end
+                document: prevState.document,
                 isProcessingDocument: newStateUpdate.isProcessingDocument,
-                isProcessingEdit: newStateUpdate.isProcessingEdit, // Update edit state
+                isProcessingEdit: newStateUpdate.isProcessingEdit,
                 message: newStateUpdate.message,
                 reasoning: newStateUpdate.reasoning,
               };
 
-              // --- Live Editor Update Logic --- 
               if (nextState.isProcessingDocument) {
-                // Attempt to parse partial document content
                 const docRegex = /<Document>([\s\S]*)/;
                 const match = nextState.message.content.match(docRegex);
                 if (match && match[1]) {
                   let partialDocContent = match[1];
-                  // Remove closing tag if present for cleaner parsing
                   partialDocContent = partialDocContent.replace(/<\/Document>[\s\S]*$/, '');
                   
-                  // Instead of updating immediately, store for throttled update
                   pendingDocUpdateRef.current = partialDocContent;
                 }
               }
-              // --- End Live Editor Update Logic ---
 
               return nextState;
             });
           },
           onStreamEnd: async (finalContent: string) => {
             clearCustomContexts();
-            const currentState = streamingStateRef.current; // Use ref for final reasoning
+            const currentState = streamingStateRef.current;
             const timestamp = Date.now();
             let finalDocumentContent = '';
             let isDocumentPresent = false;
+            let generatedSuggestions: SuggestionEdit[] = [];
 
-            // Parse the *final* content here
             if (finalContent.includes('<Document>')) {
               isDocumentPresent = true;
               const { document } = parseAssistantResponse({ 
@@ -181,57 +249,72 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                 role: 'assistant'
               });
               finalDocumentContent = document;
-              // Update the editor with the final document content
               const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(document);
               editorRef.tf.setValue(deserializedNodes);
             }
 
-            const finalMessage: Message = {
+            if (finalContent.includes('<Edit>')) {
+              try {
+                  const parsedEditBlocks = parseEdits(finalContent);
+                  generatedSuggestions = parsedEditBlocks.map(edit => ({
+                      id: nanoid(),
+                      edit: edit,
+                  }));
+                  console.log("Generated suggestions:", generatedSuggestions);
+              } catch (error) {
+                  console.error("Error parsing edits:", error);
+                  toast.error("Failed to parse edits from the response.");
+              }
+            }
+
+            const finalMessage: MessageWithSuggestions = {
               id: timestamp.toString(),
-              content: finalContent, // Store the raw final content
+              content: finalContent,
               fileNames: [],
-              reasoning: currentState.reasoning, // Use reasoning from ref
-              role: "assistant"
+              reasoning: currentState.reasoning,
+              role: "assistant",
+              suggestions: generatedSuggestions,
             };
-        
+
             setStatus('awaiting_message');
 
-            // Store the assistant's message in Firestore
             await storeMessage(chatId, {
               id: timestamp,
               content: finalMessage.content,
               fileNames: [],
               reasoning: currentState.reasoning,
-              role: "assistant"
+              role: "assistant",
             });
 
-            // Replace the streaming message with the final message
-            setMessages(prev => prev.map(m => 
+            setMessages(prev => prev.map(m =>
               m.id === 'streaming' ? finalMessage : m
             ));
 
-            // Update userChats with the new message
             setUserChats(prevChats => {
               if (!prevChats) return prevChats;
               return prevChats.map(chat => {
                 if (chat.id === chatId) {
+                  const messagesWithoutStreaming = chat.messages?.filter(m => m.id !== 'streaming') || [];
                   return {
                     ...chat,
-                    messages: [...(chat.messages || []), finalMessage]
+                    messages: [...messagesWithoutStreaming, finalMessage]
                   };
                 }
                 return chat;
               });
             });
 
-            // Final state reset
+            if (generatedSuggestions.length > 0) {
+               await applyEditsAsSuggestions(generatedSuggestions);
+            }
+
             setStreamingState({
               document: {
                 content: finalDocumentContent,
-                isStreaming: false // Stream ended
+                isStreaming: false
               },
               isProcessingDocument: false,
-              isProcessingEdit: false, // Reset edit state on end
+              isProcessingEdit: false,
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
               reasoning: ''
             });
@@ -242,9 +325,9 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
             lastUpdateTimeRef.current = 0;
             pendingDocUpdateRef.current = null;
             setStreamingState({
-              document: { content: '', isStreaming: true }, // Stream starts
+              document: { content: '', isStreaming: true },
               isProcessingDocument: false,
-              isProcessingEdit: false, // Reset edit state on start
+              isProcessingEdit: false,
               message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
               reasoning: ''
             });
@@ -255,18 +338,16 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
       console.error('Error in sendMessage:', error);
       toast.error('Failed to send message');
       setStatus('awaiting_message');
-      // Remove the streaming message on error
       setMessages(prev => prev.filter(m => m.id !== 'streaming'));
-      // Reset state on catch
       setStreamingState({
-        document: { content: '', isStreaming: false }, // Stream ends
+        document: { content: '', isStreaming: false },
         isProcessingDocument: false,
-        isProcessingEdit: false, // Reset edit state on catch
+        isProcessingEdit: false,
         message: { id: 'streaming', content: '', fileNames: [], role: 'assistant' },
         reasoning: ''
       });
     }
-  }, [chatId, userId, model, setUserChats, editorRef, customContexts, clearCustomContexts]);
+  }, [chatId, userId, model, setUserChats, editorRef, customContexts, clearCustomContexts, applyEditsAsSuggestions]);
 
   return {
     addMessage,

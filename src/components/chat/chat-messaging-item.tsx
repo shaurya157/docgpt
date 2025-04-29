@@ -274,10 +274,6 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
                         <span className="font-medium text-sm">Generating edits...</span>
                         {/* No buttons while processing */}
                     </div>
-                    <div className="flex items-center text-xs text-gray-500 pt-2">
-                        <Icons.spinner className="size-3 animate-spin mr-1" />
-                        <span>Parsing edits...</span>
-                    </div>
                 </div>
                 {/* Avoid rendering content after the edit tag while processing */}
             </div>

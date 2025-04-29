@@ -263,6 +263,9 @@ importers:
       lucide-react:
         specifier: 0.474.0
         version: 0.474.0(react@19.0.0)
+      nanoid:
+        specifier: ^5.1.5
+        version: 5.1.5
       next:
         specifier: ^15.1.6
         version: 15.1.6(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -4253,8 +4256,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.1.0:
-    resolution: {integrity: sha512-zDAl/llz8Ue/EblwSYwdxGBYfj46IM1dhjVi8dyp9LQffoIGxJEAHj2oeZ4uNcgycSRcQ83CnfcZqEJzVDLcDw==}
+  nanoid@5.1.5:
+    resolution: {integrity: sha512-Ir/+ZpE9fDsNH0hQ3C68uyThDXzYcim2EqcZ8zn8Chtt1iylPT9xXJB0kPCnqzgcEGikO9RxSrh63MsmVCU7Fw==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -7302,7 +7305,7 @@ snapshots:
       jotai-optics: 0.4.0(jotai@2.8.4(@types/react@19.0.9)(react@19.0.0))(optics-ts@2.4.1)
       jotai-x: 2.3.2(@types/react@19.0.9)(jotai@2.8.4(@types/react@19.0.9)(react@19.0.0))(react@19.0.0)
       lodash: 4.17.21
-      nanoid: 5.1.0
+      nanoid: 5.1.5
       optics-ts: 2.4.1
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
@@ -9940,7 +9943,7 @@ snapshots:
 
   nanoid@3.3.8: {}
 
-  nanoid@5.1.0: {}
+  nanoid@5.1.5: {}
 
   natural-compare@1.4.0: {}
 
