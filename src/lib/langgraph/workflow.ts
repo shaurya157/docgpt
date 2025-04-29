@@ -54,7 +54,6 @@ export class DocumentWorkflow {
         streamController: { value: (x) => x },
         synthesizedIntent: { default: () => undefined, value: (x, y) => y || x },
         userId: { value: (x) => x },
-        userIntent: { default: () => "", value: (x, y) => y || x } // Likely redundant now with synthesizedIntent
       }
     });
 

@@ -27,8 +27,6 @@ export class DocumentWorkflow {
   private model = new ModelRouter();
   private pinecone = new Pinecone();
 
-  
-  // Renamed and modified from userIntentClassificationNode
   private async classifyIntentNode(state: TAgentState): Promise<Partial<TAgentState>> {
     const { chatHistory, customContexts, query, streamController } = state; // Keep streamController for potential error messages
 
@@ -511,7 +509,6 @@ export class DocumentWorkflow {
         streamController: { value: (x) => x },
         synthesizedIntent: { default: () => undefined, value: (x, y) => y || x },
         userId: { value: (x) => x },
-        userIntent: { default: () => "", value: (x, y) => y || x }
       }
     });
 

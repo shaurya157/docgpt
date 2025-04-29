@@ -25,7 +25,6 @@ export async function POST(req: NextRequest) {
       query: message,
       streamController,
       userId,
-      userIntent: "",
     }).catch(error => {
       console.error('Workflow error:', error);
       streamController.writeSystemMessage(`Error: ${error.message}`);
