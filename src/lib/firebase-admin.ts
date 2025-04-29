@@ -107,7 +107,6 @@ export async function updateTokenUsage(chatId: string, nodeName: string, usage: 
 
             // Update the document with the modified tokensUsed array
             transaction.update(chatRef, { tokensUsed: tokensUsedArray });
-            console.log(`Updated token usage for chat ${chatId}, node ${nodeName}, model ${usage.modelName}`);
         });
     } catch (error) {
         console.error(`Error updating token usage for chat ${chatId}, node ${nodeName}:`, error);
@@ -128,7 +127,6 @@ export async function commitTokenUsage(chatId: string, accumulatedTokens: TAccum
     }
 
     const chatRef = adminDb.collection('chats').doc(chatId);
-    console.log(`Attempting to commit token usage for chat: ${chatId}`);
 
     try {
         await adminDb.runTransaction(async (transaction: Transaction) => {

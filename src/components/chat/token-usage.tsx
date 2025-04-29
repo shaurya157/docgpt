@@ -50,8 +50,6 @@ export const TokenUsage = ({ chatId }: TokenUsageProps) => {
       return;
     }
 
-    console.log(`Subscribing to token usage for chat: ${chatId}`);
-
     const unsubscribe = subscribeToChatTokenUsage(chatId, (tokensUsed) => {
       if (tokensUsed) {
         const totals: TokenTotalsByModelAndCost = {};
@@ -84,7 +82,6 @@ export const TokenUsage = ({ chatId }: TokenUsageProps) => {
     });
 
     return () => {
-      console.log(`Unsubscribing from token usage for chat: ${chatId}`);
       unsubscribe();
     };
   }, [chatId]);
