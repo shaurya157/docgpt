@@ -3,6 +3,7 @@ import { ModelType, useChatSettings } from '@/providers/chat-settings-provider';
 export const ChatSettings = () => {
   const { selectedModel, setSelectedModel } = useChatSettings();
   const models: ModelType[] = [
+    'Open AI 4o-mini',
     'Open AI 4o', 
     'Open AI O1', 
     'DeepSeek R1', 

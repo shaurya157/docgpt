@@ -7,6 +7,7 @@ export type ModelType =
   | 'Google Gemini 1.5 Pro'
   | 'Google Gemini-2.5-pro-exp-03-25'
   | 'Open AI 4o'
+  | 'Open AI 4o-mini'
   | 'Open AI O1';
 
 interface ChatSettingsContextType {
