@@ -339,7 +339,7 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
         {/* Render raw content only if it doesn't contain incomplete/unhandled tags */}
         {/* A simple check, might need refinement depending on edge cases */}
         {!content.includes('<Document>') && !content.includes('<Edit>') &&
-           <Markdown className="react-markdown text-sm">{content}</Markdown>
+           <Markdown className="react-markdown text-sm whitespace-normal">{content}</Markdown>
         }
         {message.fileNames && message.fileNames.map((fileName) => (
           <div key={fileName} className="flex items-center gap-2">
@@ -364,7 +364,7 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
       </Button>
       {isReasoningExpanded && (
         <div className="space-y-2 rounded-md bg-gray-50 p-2 text-sm text-gray-500 leading-tight">
-          <ReactMarkdown>{reasoning}</ReactMarkdown>
+          <Markdown className="react-markdown text-sm whitespace-normal">{reasoning}</Markdown>
         </div>
       )}
     </div>

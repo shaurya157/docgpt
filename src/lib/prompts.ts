@@ -19,6 +19,13 @@ const baseFormattingInstructions = `
         - Never add triple backticks to the beginning or end of your response unless the user asks for code.
 `
 
+const formattingInstructions = (additionalInstructions: string[]) => {
+    return `
+    ${baseFormattingInstructions}
+    ${additionalInstructions.map(i => `- ${i}`).join("\n")}
+    `
+}
+
 const rules = (additionalRules: string[]) => {
     return `
     Rules:
@@ -123,7 +130,7 @@ export const editDocumentPrompt = (state: TAgentState) => {
             `NEVER add any prepending text before <Edit> or after </Edit>`,
         ])}
             
-        ${baseFormattingInstructions}
+        ${formattingInstructions([])}
     `;
 }
 
@@ -148,7 +155,7 @@ export const createDocumentPrompt = (state: TAgentState) => {
             `NEVER add any prepending text before <Document> or after </Document>`,
         ])}
             
-        ${baseFormattingInstructions}
+        ${formattingInstructions([])}
     `;
 }
 
@@ -169,7 +176,7 @@ export const generalQueryPrompt = (state: TAgentState) => {
 
         ${criticalRules([])}
             
-        ${baseFormattingInstructions}
+        ${formattingInstructions([])}
     `;
 }
 
@@ -229,16 +236,14 @@ export function createPlanPrompt(
   const prompt = `
     Role:
       - You are a helpful assistant. Your task is to explain to the user what you understand they want to do, what context you are using, and what your next step will be, before actually performing the action.
-      
-    Formatting Instructions:
-      - Respond in a clear, concise, and friendly tone.
-      - Use Markdown for formatting (e.g., bolding, lists if necessary).
-      - Start by confirming the user's goal.
-      - Clearly state the context you will use (history, active document, selections, custom context, retrieved documents, Slack messages).
-      - Outline the immediate next action you will take.
-      - NEVER add triple backticks to the beginning or end of your response.
-      - Ensure the output flows naturally as a single message.
-      - Always add a new line at the end of your response.
+    
+      ${formattingInstructions([
+        `- Respond in a clear, concise, and friendly tone.`,
+        `- Start by confirming the user's goal.`,
+        `- Clearly state the context you will use (history, active document, selections, custom context, retrieved documents, Slack messages if any).`,
+        `- Outline the immediate next action you will take.`,
+        `- Ensure the output flows naturally as a single message.`,
+      ])}
 
     User Query:
     ---
@@ -293,11 +298,14 @@ export const createThinkingPrompt = (state: TAgentState): string => {
     4.  **Detailed Plan:** List the specific steps you will take during generation.
     5.  **Formatting:** Use Markdown for clarity (headers, lists).
 
+    ${formattingInstructions([])}
+    
     Output Rules:
     - **CRITICAL:** Output *only* your thinking process and detailed plan. 
     - **DO NOT** generate the final response (document, edit, or answer) in this step.
     - Start your response with "Okay, here's my plan:"
     - Ensure the output is detailed enough to understand the generation process.
+
   `;
 }
 
@@ -312,14 +320,15 @@ export const summarizeCreationPrompt = (state: TAgentState): string => {
       - User's Request (Query): "${querySummary}"
       - You previously generated a detailed plan (reasoning).
       - The full document content was just streamed.
+
+    ${formattingInstructions([])}
     Instructions:
     - Adopt a helpful, slightly informal but respectful, and confirming tone (like an employee proactively reporting task completion and readiness for review).
     - Briefly confirm completion, connecting the generated document back to the user's original request.
     - **Crucially: End by proactively asking for feedback or offering to make changes.**
     - Avoid technical jargon.
     - Keep the confirmation concise (2-3 sentences).
-    - Respond in markdown format.
-    - NEVER use triple backticks.
+
     Example Tones/Phrases:
       - "OK, I've finished drafting the [Document Type/Topic] you asked for. Let me know what you think or if you'd like any adjustments!"
       - "Done. I've generated the document based on your request about [Topic]. How does it look? I'm ready for any revisions."
@@ -355,5 +364,7 @@ export const summarizeEditPrompt = (state: TAgentState): string => {
       - "I've completed the revisions you asked for regarding [Topic/Selection]. Feel free to review them and tell me if more changes are needed."
       - "Done. The requested modifications have been made. What do you think?"
     Generate the confirmation message now, based on the user's request: "${state.query}"
+
+    ${formattingInstructions([])}
   `;
 }

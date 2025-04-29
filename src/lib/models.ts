@@ -3,6 +3,8 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/ge
 
 import { CustomStreamController } from "@/utils/custom-stream";
 
+type StreamTarget = 'reasoning' | 'partialResult'; // Define the type for clarity
+
 export class ModelRouter {
   private deepseek = new OpenAI({
     apiKey: process.env.DEEPSEEK_API_KEY,
@@ -14,9 +16,10 @@ export class ModelRouter {
   private async generateDeepSeek(
     system: string,
     input: string,
-    streamController?: CustomStreamController
+    streamController?: CustomStreamController,
+    streamTarget?: StreamTarget // Added streamTarget
   ) {
-    if (streamController) {
+    if (streamController && streamTarget) { // Check for streamController AND streamTarget
       const response = await this.deepseek.chat.completions.create({
         messages: [
           { content: system, role: "system" },
@@ -28,19 +31,26 @@ export class ModelRouter {
 
       let accumulatedContent = '';
       for await (const chunk of response) {
-        const reasoning = chunk.choices[0]?.delta?.["reasoning_content"] || '';
+        // DeepSeek has a specific reasoning field, but let's standardize:
+        // Stream the main content to the specified target.
         const content = chunk.choices[0]?.delta?.content || '';
-        
-        if (reasoning) {
-          streamController.writeReasoning(reasoning, "deepseek");
-        }
+        // const reasoning = chunk.choices[0]?.delta?.["reasoning_content"] || ''; // We might ignore this specific field now
+
         if (content) {
           accumulatedContent += content;
-          streamController.writePartialResult(content);
+          if (streamTarget === 'reasoning') {
+            streamController.writeReasoning(content, "deepseek");
+          } else { // 'partialResult'
+            streamController.writePartialResult(content);
+          }
         }
+        // Optionally handle the 'reasoning_content' if needed specifically for DeepSeek in reasoning mode
+        // if (streamTarget === 'reasoning' && reasoning) {
+        //   streamController.writeReasoning(reasoning, "deepseek-reasoning-field");
+        // }
       }
       return accumulatedContent;
-    } else {
+    } else { // Handle non-streaming case or when streamTarget is not provided
       const response = await this.deepseek.chat.completions.create({
         messages: [
           { content: system, role: "system" },
@@ -57,9 +67,10 @@ export class ModelRouter {
     system: string,
     input: string,
     model: string,
-    streamController?: CustomStreamController
+    streamController?: CustomStreamController,
+    streamTarget?: StreamTarget // Added streamTarget
   ) {
-    if (streamController) {
+    if (streamController && streamTarget) { // Check for streamController AND streamTarget
       const response = await this.openai.chat.completions.create({
         messages: [
           { content: system, role: "system" },
@@ -74,11 +85,15 @@ export class ModelRouter {
         const content = chunk.choices[0]?.delta?.content || '';
         if (content) {
           accumulatedContent += content;
-          streamController.writePartialResult(content);
+           if (streamTarget === 'reasoning') {
+             streamController.writeReasoning(content, "openai");
+           } else { // 'partialResult'
+             streamController.writePartialResult(content);
+           }
         }
       }
       return accumulatedContent;
-    } else {
+    } else { // Handle non-streaming case or when streamTarget is not provided
       const response = await this.openai.chat.completions.create({
         messages: [
           { content: system, role: "system" },
@@ -95,12 +110,13 @@ export class ModelRouter {
     system: string,
     input: string,
     model: string,
-    streamController?: CustomStreamController
+    streamController?: CustomStreamController,
+    streamTarget?: StreamTarget // Added streamTarget
   ) {
     const genAI = this.google.getGenerativeModel({
       model: model,
       systemInstruction: system,
-      safetySettings: [ // Add appropriate safety settings
+      safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
         { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -108,24 +124,46 @@ export class ModelRouter {
       ],
     });
 
-    if (streamController) {
+    if (streamController && streamTarget) { // Check for streamController AND streamTarget
       const result = await genAI.generateContentStream(input);
       let accumulatedContent = '';
       for await (const chunk of result.stream) {
-        const content = chunk.text();
-        if (content) {
-          accumulatedContent += content;
-          streamController.writePartialResult(content);
+        // Ensure errors are handled or reported if needed from chunk.error
+        try {
+            const content = chunk.text();
+            if (content) {
+              accumulatedContent += content;
+              if (streamTarget === 'reasoning') {
+                streamController.writeReasoning(content, "google");
+              } else { // 'partialResult'
+                streamController.writePartialResult(content);
+              }
+            }
+        } catch (e) {
+             console.error("Error processing Google stream chunk:", e);
+             streamController.writeSystemMessage("Error processing part of the response.");
         }
       }
-       // Google's API doesn't provide reasoning content in the same way DeepSeek does.
-      // If needed, you might need a separate mechanism or prompt engineering to extract reasoning.
       return accumulatedContent;
 
-    } else {
+    } else { // Handle non-streaming case or when streamTarget is not provided
       const result = await genAI.generateContent(input);
       const response = result.response;
-      return response.text();
+       try {
+           return response.text();
+       } catch (e) {
+           console.error("Error extracting text from Google non-streaming response:", e);
+           // Attempt to provide more info if available
+           const candidate = response.candidates?.[0];
+           const finishReason = candidate?.finishReason;
+           const safetyRatings = candidate?.safetyRatings;
+           console.error("Finish Reason:", finishReason);
+           console.error("Safety Ratings:", safetyRatings);
+            if (streamController) { // Also notify user if possible
+                 streamController.writeSystemMessage(`Error: Could not generate response. Finish Reason: ${finishReason}`);
+            }
+           throw new Error(`Failed to get text from Google response. Finish Reason: ${finishReason}`);
+       }
     }
   }
 
@@ -172,38 +210,45 @@ export class ModelRouter {
     systemPrompt: string,
     userInput: string,
     stream: boolean = false,
-    streamController?: CustomStreamController
+    streamController?: CustomStreamController,
+    streamTarget?: StreamTarget // Added streamTarget
   ): Promise<string> {
     const { model, provider } = this.getProviderAndModel(selectedModel);
-    
+
+    // Determine the effective stream target based on the stream flag
+    const effectiveStreamTarget = stream ? streamTarget : undefined;
+
     try {
       let result: string;
       switch (provider) {
         case "deepseek":
-          result = await this.generateDeepSeek(systemPrompt, userInput, stream ? streamController : undefined);
+          result = await this.generateDeepSeek(systemPrompt, userInput, streamController, effectiveStreamTarget);
           break;
         case "openai":
-          result = await this.generateOpenAI(systemPrompt, userInput, model, stream ? streamController : undefined);
+          result = await this.generateOpenAI(systemPrompt, userInput, model, streamController, effectiveStreamTarget);
           break;
         case "google":
-           result = await this.generateGoogle(systemPrompt, userInput, model, stream ? streamController : undefined);
+           result = await this.generateGoogle(systemPrompt, userInput, model, streamController, effectiveStreamTarget);
            break;
         default:
-          // Should not happen with the current logic, but good practice
            throw new Error(`Unsupported provider: ${provider}`);
       }
-      
-      // splitting stream output
-      if (streamController) {
+
+      // Add a newline only if streaming to partialResult, not reasoning.
+      // Reasoning stream might be followed immediately by partialResult stream.
+      if (streamController && effectiveStreamTarget === 'partialResult') {
         streamController.writePartialResult("\n\n");
       }
-      
+
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error(`Error generating content with ${provider} (${model}):`, error); // Log detailed error
       if (streamController) {
-        streamController.writeSystemMessage(`Error during generation: ${errorMessage}`);
+        // Provide a more user-friendly error message
+        streamController.writeSystemMessage(`Error during generation with ${selectedModel}. Please check logs or try again.`);
       }
+      // Re-throw the original error to be handled by the workflow node
       throw error;
     }
   }

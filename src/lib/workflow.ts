@@ -27,23 +27,43 @@ export class DocumentWorkflow {
   private model = new ModelRouter();
   private pinecone = new Pinecone();
 
+  // New node for generating thinking steps for create/edit
+  private async thinkingNode(state: TAgentState) {
+    const { streamController, synthesizedIntent } = state;
+
+    // Determine context for the thinking prompt
+    const thinkingContext = synthesizedIntent === 'create'
+      ? "Generate detailed thinking for document creation"
+      : "Generate detailed thinking for document edits";
+
+    try {
+        const thinkingPrompt = createThinkingPrompt(state);
+        streamController.writeSystemMessage("Generating detailed plan..."); // Optional feedback
+        await this.model.generate(
+            "Open AI 4o", 
+            thinkingPrompt,
+            thinkingContext,
+            true,
+            streamController,
+            'reasoning'
+        );
+
+        return state; // No state modification needed, just pass through
+    } catch (error) {
+        console.error("Error in thinking node:", error);
+        streamController.writeSystemMessage("Failed to generate thinking plan\n");
+        // Let the workflow continue, but log the error.
+        // Depending on desired behavior, we could add error handling or stop the flow.
+        return state;
+    }
+  }
+
   private async createDocumentNode(state: TAgentState) {
     console.log("Creating document");
     const { streamController } = state;
 
     try {
-      // === Generate and Send Thinking Step ===
-      const thinkingPrompt = createThinkingPrompt(state);
-      // streamController.writeSystemMessage("Generating detailed plan..."); // Removing optional system messages for cleaner flow
-      const thinkingText = await this.model.generate(
-        state.model, // Use the designated model 
-        thinkingPrompt,
-        "Generate detailed thinking for document creation",
-        false, // Non-streaming
-        // No stream controller needed here
-      );
-      streamController.writeReasoning(thinkingText, 'DocumentWriter');
-      // === End Thinking Step ===
+      // Thinking step moved to thinkingNode
 
       // === Send Intermediate Summary ===
       const summaryMessage = `Okay, based on the plan, I'll now generate the document content you requested.`;
@@ -58,11 +78,12 @@ export class DocumentWorkflow {
         finalPrompt,
         state.query, // Keep original query context if needed by model
         true, // Streaming
-        streamController
+        streamController,
+        'partialResult'
       );
       // === End Final Document Generation ===
       
-      // Don't close stream here; summarizeChanges might need it.
+      // Don't close stream here; finalizeActionNode might need it.
       
       return { ...state, draft: output }; // Store potentially incomplete streamed output in draft
 
@@ -79,17 +100,7 @@ export class DocumentWorkflow {
     const { streamController } = state;
     
     try {
-      // === Generate and Send Thinking Step ===
-      const thinkingPrompt = createThinkingPrompt(state);
-      streamController.writeSystemMessage("Generating detailed plan for edits..."); // Optional feedback
-      const thinkingText = await this.model.generate(
-        state.model,
-        thinkingPrompt,
-        "Generate detailed thinking for document edits",
-        false, // Non-streaming
-      );
-      streamController.writeReasoning(thinkingText, 'DocumentEditor'); // Send thinking
-      // === End Thinking Step ===
+      // Thinking step moved to thinkingNode
 
       // === Send Intermediate Summary ===
       let editFocus = state.customContexts.some(c => c.type === 'Selection') ? "the selection" : "the document";
@@ -99,17 +110,18 @@ export class DocumentWorkflow {
 
       // === Generate and Stream Final Edits ===
       const finalPrompt = editDocumentPrompt(state);
-      streamController.writeSystemMessage("Generating edits..."); // Optional feedback
+      // streamController.writeSystemMessage("Generating edits..."); // Optional feedback
       const output = await this.model.generate(
         state.model,
         finalPrompt,
         state.query,
         true, // Streaming
-        streamController
+        streamController,
+        'partialResult'
       );
       // === End Final Edit Generation ===
       
-      // Don't close stream here; summarizeChanges might need it.
+      // Don't close stream here; finalizeActionNode might need it.
 
       return { ...state, draft: output };
 
@@ -126,21 +138,11 @@ export class DocumentWorkflow {
     const { streamController } = state;
 
     try {
-      // === Generate and Send Thinking Step ===
-      const thinkingPrompt = createThinkingPrompt(state);
-      streamController.writeSystemMessage("Generating plan for query..."); // Optional feedback
-      const thinkingText = await this.model.generate(
-        state.model,
-        thinkingPrompt,
-        "Generate detailed thinking for general query",
-        false, // Non-streaming
-      );
-      streamController.writeReasoning(thinkingText, 'QueryHandler'); // Send thinking
-      // === End Thinking Step ===
+      // No separate thinking step needed for general query as per requirement
 
       // === Send Intermediate Summary ===
-      const summaryMessage = `Right, proceeding to answer your query based on the plan.`;
-      streamController.writePartialResult(summaryMessage);
+      // const summaryMessage = `Right, proceeding to answer your query based on the plan.`; // Can remove if thinking isn't done here
+      // streamController.writePartialResult(summaryMessage);
       // === End Intermediate Summary ===
       
       // === Generate and Stream Final Answer ===
@@ -151,12 +153,13 @@ export class DocumentWorkflow {
         finalPrompt,
         state.query,
         true, // Streaming
-        streamController
+        streamController,
+        'partialResult'
       );
       // === End Final Answer Generation ===
 
       streamController.close();
-      return { ...state, draft: "" }; 
+      return { ...state, draft: "" };
 
     } catch (error) {
       console.error("Error in general query node:", error);
@@ -324,18 +327,28 @@ export class DocumentWorkflow {
       return { ...state, slackMessages: allFetchedMessages };
   }
 
-  // Function to decide the next step based on synthesized intent
-  private routeIntent(state: TAgentState): "createDocument" | "editDocument" | "generalQuery" {
+  // Function to decide the next step AFTER the thinking node (if applicable)
+  private routeIntentToAction(state: TAgentState): "createDocument" | "editDocument" {
+    // This router is only hit after the thinkingNode, so intent must be create or edit
     const intent = state.synthesizedIntent;
     if (intent === "create") {
       return "createDocument";
-    } else if (intent === "edit") {
+    } else { // Must be "edit" if we got here via routeToThinkingOrAction
       return "editDocument";
-    } else {
-      // Default to generalQuery if intent is missing or 'general'
-      console.log("Routing to general query node. Intent:", intent);
-      return "generalQuery";
     }
+    // No need for 'generalQuery' here as it bypasses the thinkingNode
+  }
+
+  // New function to decide whether to go to thinking or directly to action
+  private routeToThinkingOrAction(state: TAgentState): "thinkingNode" | "generalQuery" {
+      const intent = state.synthesizedIntent;
+      if (intent === "create" || intent === "edit") {
+          return "thinkingNode";
+      } else {
+          // Default to generalQuery if intent is missing or 'general'
+          console.log("Routing directly to general query node. Intent:", intent);
+          return "generalQuery";
+      }
   }
 
   private async sanitizeQueryNode(state: TAgentState) {
@@ -402,7 +415,8 @@ export class DocumentWorkflow {
                 summaryPrompt,
                 summaryLog,
                 true, 
-                streamController
+                streamController,
+                'partialResult'
             );
         } catch (error) {
              console.error(`Error in finalizeActionNode (${summaryLog}):`, error);
@@ -506,6 +520,7 @@ export class DocumentWorkflow {
     graph.addNode("retrieveChatHistory", this.retrieveChatHistoryNode.bind(this));
     graph.addNode("retrieveSlackMessages", this.retrieveSlackMessagesNode.bind(this));
     graph.addNode("classifyIntent", this.classifyIntentNode.bind(this));
+    graph.addNode("thinkingNode", this.thinkingNode.bind(this)); // Add the new node
     graph.addNode("createDocument", this.createDocumentNode.bind(this));
     graph.addNode("editDocument", this.editDocumentNode.bind(this));
     graph.addNode("finalizeAction", this.finalizeActionNode.bind(this));
@@ -518,22 +533,32 @@ export class DocumentWorkflow {
     graph.addEdge("retrieveSlackMessages" as any, "classifyIntent" as any);
     graph.addEdge("classifyIntent" as any, "retrievePineconeContext" as any);
 
-    // Conditional routing starts AFTER retrievePineconeContext now
+    // Conditional routing: After Pinecone, decide if thinking is needed or go straight to general query
     graph.addConditionalEdges(
       "retrievePineconeContext" as any,
-      this.routeIntent.bind(this),
+      this.routeToThinkingOrAction.bind(this), // Use the new router
       {
-        "createDocument": "createDocument" as any,
-        "editDocument": "editDocument" as any,
-        "generalQuery": "generalQuery" as any
+        "thinkingNode": "thinkingNode" as any,     // If create/edit, go to thinking
+        "generalQuery": "generalQuery" as any      // If general, go to general query
       }
     );
 
-    // Edges from conditional branches
+    // After thinkingNode, route to the specific action (create or edit)
+    graph.addConditionalEdges(
+        "thinkingNode" as any,
+        this.routeIntentToAction.bind(this), // Use the action router
+        {
+            "createDocument": "createDocument" as any,
+            "editDocument": "editDocument" as any
+            // No generalQuery branch here
+        }
+    );
+
+    // Edges from action nodes to finalization/end
     graph.addEdge("createDocument" as any, "finalizeAction" as any);
     graph.addEdge("editDocument" as any, "finalizeAction" as any);
-    graph.addEdge("generalQuery" as any, END);
-    graph.addEdge("finalizeAction" as any, END);
+    graph.addEdge("generalQuery" as any, END);             // General query goes directly to END
+    graph.addEdge("finalizeAction" as any, END);         // Finalize action goes to END
 
     return graph.compile();
   }
