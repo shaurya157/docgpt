@@ -3,12 +3,11 @@ import Markdown from 'react-markdown';
 
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { useEditorRef } from '@udecode/plate/react';
-import { ArrowRight, Check, ChevronDown, ChevronRight, FileText, LocateFixed, X } from 'lucide-react'; // Import Check and X icons
+import { ArrowRight, FileText, LocateFixed } from 'lucide-react'; // Import Check and X icons
 import { toast } from 'sonner'; // Import toast
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
-import { cn } from '@/lib/utils'; // Import cn for conditional classes
 import { Message, StreamingState } from '@/types';
 import { parseAssistantResponse } from '@/utils/document-parser';
 import { EditBlock, parseEdits } from '@/utils/edit-parser'; // Import edit parser
@@ -270,7 +269,7 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
 
                 {/* Show the "Generating Edits" indicator box */}
                 <div className="rounded-md border border-gray-200 bg-gray-50 p-3 mt-2">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex justify-between items-center">
                         <span className="font-medium text-sm">Generating edits...</span>
                         {/* No buttons while processing */}
                     </div>
@@ -292,7 +291,7 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
 
           {/* Render the final Edits Section box */}
           <div className="rounded-md border border-gray-200 bg-gray-50 p-3 mt-2">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center">
               <span className="font-medium text-sm">
                 {`${edits.length} edit${edits.length > 1 ? 's' : ''} suggested`}
               </span>
@@ -303,89 +302,6 @@ export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocu
                   <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleRejectAll}>Reject All</Button>
                 </div>
               )}
-            </div>
-
-            {/* Render individual edits */}
-            <div className="space-y-2 pt-2">
-              {edits.map((edit, index) => {
-                const status = editStatuses[index] || 'pending';
-                const isPending = status === 'pending';
-                const isAccepted = status === 'accepted';
-                const isRejected = status === 'rejected';
-                const expanded = !!isEditExpanded[index]; // Check if this edit is expanded
-
-                // Function to toggle expansion state for this edit
-                const toggleExpand = () => {
-                    setIsEditExpanded(prev => ({ ...prev, [index]: !expanded }));
-                };
-
-                return (
-                  <div
-                    key={index}
-                    className={cn(
-                      "border-t border-gray-200 pt-2 pb-1 px-2 rounded", // Removed transition-colors
-                      isAccepted && "bg-green-100",
-                      isRejected && "bg-red-100"
-                    )}
-                  >
-                    <div className="flex justify-between items-center text-xs mb-1">
-                      {/* Edit Title and Toggle Button */}
-                      <div className="flex items-center gap-1">
-                        <Button
-                            size="xs"
-                            variant="ghost"
-                            className="p-0 h-4 w-4 text-gray-500 hover:bg-gray-200"
-                            onClick={toggleExpand}
-                            aria-label={expanded ? `Collapse edit ${index + 1}` : `Expand edit ${index + 1}`}
-                        >
-                            {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-                        </Button>
-                        <span className="font-semibold cursor-pointer" onClick={toggleExpand}>Edit {index + 1}</span>
-                      </div>
-                      {/* Individual Accept/Reject Buttons - Only show if pending */}
-                      {isPending && (
-                        <div className="flex gap-1">
-                          <Button
-                            size="xs"
-                            variant="ghost"
-                            className={cn(
-                              "p-0 h-5 w-5 text-gray-400 hover:bg-green-200 hover:text-green-700",
-                              !isLastMessage && "cursor-not-allowed opacity-50"
-                              // Removed accepted/rejected specific styles as they are no longer needed when hidden
-                            )}
-                            disabled={!isLastMessage} // Disable only based on isLastMessage now
-                            onClick={() => handleAcceptChange(index)}
-                            aria-label={`Accept edit ${index + 1}`}
-                          >
-                            <Check className="size-3" />
-                          </Button>
-                          <Button
-                            size="xs"
-                            variant="ghost"
-                            className={cn(
-                              "p-0 h-5 w-5 text-gray-400 hover:bg-red-200 hover:text-red-700",
-                              !isLastMessage && "cursor-not-allowed opacity-50"
-                              // Removed accepted/rejected specific styles
-                            )}
-                            disabled={!isLastMessage} // Disable only based on isLastMessage now
-                            onClick={() => handleRejectChange(index)}
-                            aria-label={`Reject edit ${index + 1}`}
-                          >
-                            <X className="size-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    {/* Collapsible Edit Content */}
-                    {expanded && (
-                      <div className="text-xs space-y-1 pl-5 pt-1"> {/* Indent content slightly */}
-                        <p className={cn("text-red-600 line-through", isAccepted && "opacity-50")}>{edit.original}</p>
-                        <p className={cn("text-green-600", isRejected && "opacity-50")}>{edit.newText}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
             </div>
           </div>
         </div>
