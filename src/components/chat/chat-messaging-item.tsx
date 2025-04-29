@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react'; // Import useEffect, useMemo, and useRef
 import Markdown from 'react-markdown'; // Keep original import if used elsewhere
-import ReactMarkdown from 'react-markdown'; // Add import for reasoning section
 
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { useEditorRef } from '@udecode/plate/react';
