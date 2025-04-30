@@ -73,7 +73,7 @@ export default function PreLoginFooter() {
                 <span className="text-sm text-gray-600 cursor-pointer" onClick={() => router.push('/contact')}>Contact</span>
               </li>
               <li>
-                <a className="text-sm text-gray-600 cursor-pointer hover:text-gray-900" href="/privacy.html">Privacy Policy</a>
+                <a className="text-sm text-gray-600 cursor-pointer hover:text-gray-900" onClick={() => router.push('/privacy')}>Privacy Policy</a>
               </li>
               <li>
                 <span className="text-sm text-gray-600 cursor-pointer" onClick={() => router.push('/terms')}>Terms of Service</span>

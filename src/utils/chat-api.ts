@@ -22,13 +22,6 @@ export const sendChatMessage = async (
   callbacks: StreamCallbacks
 ) => {
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
-  console.log("string", JSON.stringify({
-    chatId,
-    customContexts,
-    messages,
-    model,
-    userId
-  }))
   try {
     const result = await fetch('/api/ai/chat/agents', {
       body: JSON.stringify({
