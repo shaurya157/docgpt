@@ -133,6 +133,12 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
           }
         }
 
+        console.log("Found range:", foundRange);
+        console.log("Path:", path);
+        console.log("Start offset:", startOffset);
+        console.log("Text nodes:", JSON.stringify(textNodes));
+        console.log("Edit:", JSON.stringify(edit));
+        
         if (foundRange && path !== null && startOffset !== -1) {
           try {
             editorRef.tf.select(foundRange);
@@ -260,7 +266,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                       id: nanoid(),
                       edit: edit,
                   }));
-                  console.log("Generated suggestions:", generatedSuggestions);
+                  console.log("Generated suggestions:", JSON.stringify(generatedSuggestions));
               } catch (error) {
                   console.error("Error parsing edits:", error);
                   toast.error("Failed to parse edits from the response.");
