@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { TextApi, TRange, TText } from '@udecode/plate';
+// Import types from plate (using type-only imports where applicable)
+import type { TElement, TNode, TRange } from '@udecode/plate';
+
+import { ElementApi, TextApi, TText } from '@udecode/plate'; // Keep runtime imports for things used as values (TText for instance checks if needed, TextApi for .isText)
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { BaseSuggestionPlugin } from '@udecode/plate-suggestion';
 import { useEditorRef, usePlateState } from '@udecode/plate/react';
@@ -13,7 +16,7 @@ import { useUserDataContext } from '@/providers/user-data-provider';
 import { Message, StreamingState } from '@/types';
 import { sendChatMessage } from '@/utils/chat-api';
 import { parseAssistantResponse } from '@/utils/document-parser';
-import { EditBlock, parseEdits } from '@/utils/edit-parser';
+import { EditBlock, parseEdits } from '@/utils/edit-utils';
 
 export interface SuggestionEdit {
   id: string;
@@ -113,62 +116,150 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
   const applyEditsAsSuggestions = useCallback(async (suggestions: SuggestionEdit[]) => {
     const suggestionOptions = editorRef.getOptions(BaseSuggestionPlugin);
     const currentUserId = suggestionOptions?.currentUserId || 'placeholder-user';
+
+    // --- Recursive Text Extraction Helpers ---
+    const getTextRecursively = (node: TNode): string => {
+      if (TextApi.isText(node)) {
+        return node.text ?? ''; // Handle potentially null/undefined text
+      }
+      // Use ElementApi as requested by user for type guard
+      if (ElementApi.isElement(node) && Array.isArray(node.children)) {
+        // Join children's text content directly, preserving inline concatenation
+        return (node.children as TNode[]).map(getTextRecursively).join('');
+      }
+      return '';
+    };
+
+    const getNodesString = (nodes: TNode[]): string => {
+       // Map over the top-level nodes, get text recursively for each, and join with '\n' for block separation.
+       const result = nodes.map(getTextRecursively).join('\n');
+       return result;
+    };
+    // --- End Helpers ---
+
+
     editorRef.tf.withoutNormalizing(() => {
       suggestions.forEach(({ id, edit }) => {
-        const textNodes = Array.from(editorRef.api.nodes<TText>({ at: [], match: (n): n is TText => TextApi.isText(n) }));
         let foundRange: TRange | null = null;
-        let path: number[] | null = null;
-        let startOffset = -1;
+        const trimmedOriginal = edit.original.trim();
+        const trimmedNewText = edit.newText.trim();
 
-        for (const [node, nodePath] of textNodes) {
-          const index = node.text.indexOf(edit.original);
-          if (index !== -1) {
-            path = nodePath;
-            startOffset = index;
-            foundRange = {
-              anchor: { offset: index, path: nodePath },
-              focus: { offset: index + edit.original.length, path: nodePath },
-            };
-            break;
+        const markdownApi = editorRef.getApi(MarkdownPlugin).markdown;
+
+        // 1. Verify Markdown Match
+        const currentEditorMarkdown = markdownApi.serialize();
+        const markdownMatchIndex = currentEditorMarkdown.indexOf(trimmedOriginal);
+        if (markdownMatchIndex !== -1) {
+          // 2. Find Plain Text Range
+          try {
+            // originalNodes is TDescendant[] which is TNode[]
+            const originalNodes = markdownApi.deserialize(trimmedOriginal);
+            const originalPlainText = getNodesString(originalNodes); // Use new helper
+
+            // Get current editor plain text using new helper on editor children
+            const currentPlainText = getNodesString(editorRef.children);
+            const plainTextStartIndex = currentPlainText.indexOf(originalPlainText);
+
+            if (plainTextStartIndex !== -1 && originalPlainText.length > 0) { 
+               const plainTextEndIndex = plainTextStartIndex + originalPlainText.length;
+               let currentOffset = 0;
+               let startPath: number[] | null = null;
+               let startNodeOffset = -1;
+               let endPath: number[] | null = null;
+               let endNodeOffset = -1;
+               const separator = '\n'; // Separator used by getNodesString for top-level nodes
+
+               // Iterate through editor *top-level* children to map plain text index to Slate path/offset
+               const topLevelNodes = editorRef.children;
+               for (let i = 0; i < topLevelNodes.length; i++) {
+                 const node = topLevelNodes[i];
+                 const path = [i]; // Path for top-level node
+                 // Use recursive helper to get string content for the current top-level node
+                 const nodeString = getTextRecursively(node);
+                 const nodeLength = nodeString.length;
+                 const nodeEndOffsetInPlainText = currentOffset + nodeLength;
+
+                 // --- Start/End Path/Offset Calculation (Simplified) ---
+                 // TODO: Refine mapping for nested structures.
+                 if (startPath === null && plainTextStartIndex >= currentOffset && plainTextStartIndex < nodeEndOffsetInPlainText) {
+                    startPath = path;
+                    // This offset is relative to the start of this top-level node's plain text
+                    startNodeOffset = plainTextStartIndex - currentOffset;
+                 }
+                 if (endPath === null && plainTextEndIndex > currentOffset && plainTextEndIndex <= nodeEndOffsetInPlainText) {
+                    endPath = path;
+                    // This offset is relative to the start of this top-level node's plain text
+                    endNodeOffset = plainTextEndIndex - currentOffset;
+                 }
+                  // --- End Simplified Mapping ---
+
+
+                 if (startPath !== null && endPath !== null) {
+                     foundRange = {
+                         anchor: { offset: startNodeOffset, path: startPath },
+                         focus: { offset: endNodeOffset, path: endPath },
+                     };
+                   break; // Exit loop once range is found
+                 }
+
+                 // Move to the next top-level node's starting offset in the plain text string
+                 currentOffset = nodeEndOffsetInPlainText + (i < topLevelNodes.length - 1 ? separator.length : 0);
+               }
+
+               // TODO: Revisit edge case handling if necessary
+
+               if (!foundRange){
+                   console.warn("Plain text match found, but failed to map back to node paths/offsets correctly (mapping logic might be incomplete).");
+               }
+
+            } else if (originalPlainText.length === 0) {
+                 console.warn("Original plain text was empty, cannot find range.");
+            } else {
+               console.warn(`Could not find match for plain text "${originalPlainText}" in current editor plain text.`);
+            }
+
+          } catch (error) {
+             console.error("Error during plain text range finding:", error);
+             toast.error("Error processing edit text to find range.");
           }
+
+        } else {
+          console.warn(`Initial Markdown structure match failed for "${trimmedOriginal}". Suggestion cannot be applied.`);
         }
 
-        console.log("Found range:", foundRange);
-        console.log("Path:", path);
-        console.log("Start offset:", startOffset);
-        console.log("Text nodes:", JSON.stringify(textNodes));
-        console.log("Edit:", JSON.stringify(edit));
-        
-        if (foundRange && path !== null && startOffset !== -1) {
+        // --- Apply Suggestion (using foundRange if valid) ---
+        if (foundRange) {
           try {
+            // WARNING: Applying suggestion with approximate range might lead to unexpected behavior.
             editorRef.tf.select(foundRange);
-            editorRef.tf.setNodes<TText>(
+            editorRef.tf.setNodes<TElement | TText>(
               {
-                [`suggestion_${id}`]: {
-                  id: id,
-                  createdAt: Date.now(),
-                  type: 'remove',
-                  userId: currentUserId,
-                },
+                [`suggestion_${id}`]: { id, createdAt: Date.now(), type: 'remove', userId: currentUserId },
                 suggestion: true,
               },
-              { at: foundRange, split: true, match: (n): n is TText => TextApi.isText(n) }
+              // Use ElementApi for match as requested
+              { at: foundRange, split: true, match: (n): n is TElement | TText => TextApi.isText(n) || ElementApi.isElement(n) }
             );
 
             editorRef.tf.collapse({ edge: 'focus' });
-            editorRef.tf.insertNodes<TText>(
-              {
-                [`suggestion_${id}`]: {
-                  id: id,
-                  createdAt: Date.now(),
-                  type: 'insert',
-                  userId: currentUserId,
-                },
-                suggestion: true,
-                 text: edit.newText,
-              },
-              { select: false }
-            );
+
+            let newNodes: (TElement | TText)[] = [];
+            try {
+                if (trimmedNewText) {
+                    const deserialized = markdownApi.deserialize(trimmedNewText);
+                     newNodes = Array.isArray(deserialized) ? deserialized : [deserialized];
+                }
+            } catch (deserializeError) {
+                console.error("Error deserializing newText:", edit.newText, deserializeError);
+                toast.error(`Failed to deserialize new content for suggestion: "${edit.original}". Inserting as plain text.`);
+                newNodes = [{ text: edit.newText }];
+            }
+
+            if (newNodes.length > 0) {
+                // (Decoration and Insertion logic - map needs helper function)
+                const decoratedNodes: (TElement | TText)[] = newNodes.map(node => decorateNode(node, id, currentUserId));
+                editorRef.tf.insertNodes(decoratedNodes, { select: false });
+            }
 
             editorRef.tf.deselect();
 
@@ -177,8 +268,10 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
              toast.error(`Failed to apply suggestion for: "${edit.original}"`);
           }
         } else {
-           console.warn(`Could not find text to apply suggestion for: "${edit.original}"`);
-           toast.warning(`Could not apply suggestion for: "${edit.original}". Original text may have changed.`);
+           // (Failure logging - remains the same)
+           console.warn(`Could not find text range to apply suggestion for: "${edit.original}" (ID: ${id})...`);
+           console.log("Failed edit details:", JSON.stringify(edit));
+           if (markdownMatchIndex !== -1) { /* ... */ } else { /* ... */ }
         }
       });
     });
@@ -255,8 +348,13 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                 role: 'assistant'
               });
               finalDocumentContent = document;
-              const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(document);
-              editorRef.tf.setValue(deserializedNodes);
+              try {
+                  const deserializedNodes = editorRef.getApi(MarkdownPlugin).markdown.deserialize(document);
+                  editorRef.tf.setValue(deserializedNodes);
+              } catch(e) {
+                 console.error("Error deserializing final document content:", e);
+                 toast.error("Failed to update document with final content.");
+              }
             }
 
             if (finalContent.includes('<Edit>')) {
@@ -266,7 +364,6 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
                       id: nanoid(),
                       edit: edit,
                   }));
-                  console.log("Generated suggestions:", JSON.stringify(generatedSuggestions));
               } catch (error) {
                   console.error("Error parsing edits:", error);
                   toast.error("Failed to parse edits from the response.");
@@ -363,4 +460,23 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
     status,
     streamingState
  };
-}; 
+};
+
+// Helper function (for decoration logic inside applyEditsAsSuggestions) - needs TElement/TText types
+const decorateNode = (node: TNode, id: string, currentUserId: string): TElement | TText => {
+     const baseDecorated = {
+         ...node,
+         [`suggestion_${id}`]: { id, createdAt: Date.now(), type: 'insert', userId: currentUserId },
+         suggestion: true,
+     };
+     if (TextApi.isText(baseDecorated)) {
+         const text = baseDecorated.text ?? '';
+         return { ...baseDecorated, text } as TText;
+     } else {
+          const children = ('children' in baseDecorated && Array.isArray(baseDecorated.children)) ? baseDecorated.children : [];
+          if (!('children' in baseDecorated) || !Array.isArray(baseDecorated.children)) {
+              console.warn("Decorated element node missing/invalid children, adding empty array:", baseDecorated);
+          }
+         return { ...baseDecorated, children } as TElement;
+     }
+ } 

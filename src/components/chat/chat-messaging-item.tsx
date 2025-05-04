@@ -8,7 +8,7 @@ import { Icons } from '@/components/icons';
 import { Button } from '@/components/plate-ui/button';
 import { Message, StreamingState } from '@/types';
 import { parseAssistantResponse } from '@/utils/document-parser';
-import { parseEdits } from '@/utils/edit-parser'; // Import edit parser
+import { parseEdits } from '@/utils/edit-utils'; // Import edit parser
 
 import { EditContainer } from './edit-container'; // Import the new EditContainer component
  
@@ -20,7 +20,7 @@ interface ChatMessageItemProps {
 }
 
 export const ChatMessageItem = ({ isLastMessage, message, streamingState, onDocumentUpdate }: ChatMessageItemProps) => {
-  const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
+  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
   const hasAutoCollapsedReasoning = useRef(false); // Ref to track auto-collapse
   const editor = useEditorRef();
   

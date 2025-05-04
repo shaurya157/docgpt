@@ -6,7 +6,7 @@ import { PlateEditor } from '@udecode/plate/react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
-import { EditBlock } from '@/utils/edit-parser';
+import { EditBlock } from '@/utils/edit-utils';
 
 interface EditContainerProps {
   editor: PlateEditor;
