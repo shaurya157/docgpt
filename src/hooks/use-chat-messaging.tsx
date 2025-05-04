@@ -7,6 +7,7 @@ import { ElementApi, TextApi, TText } from '@udecode/plate'; // Keep runtime imp
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { BaseSuggestionPlugin } from '@udecode/plate-suggestion';
 import { useEditorRef, usePlateState } from '@udecode/plate/react';
+import { SuggestionPlugin } from '@udecode/plate-suggestion/react';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 
@@ -114,6 +115,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
   };
 
   const applyEditsAsSuggestions = useCallback(async (suggestions: SuggestionEdit[]) => {
+    editorRef.setOption(SuggestionPlugin, 'isSuggesting', true);
     const suggestionOptions = editorRef.getOptions(BaseSuggestionPlugin);
     const currentUserId = suggestionOptions?.currentUserId || 'placeholder-user';
 
@@ -275,6 +277,7 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
         }
       });
     });
+    editorRef.setOption(SuggestionPlugin, 'isSuggesting', false);
   }, [editorRef]);
 
   const sendMessage = useCallback(async (serializedContent: string) => {
@@ -464,19 +467,22 @@ export const useChatMessaging = ({ chatId, initialMessages, model, userId }: Use
 
 // Helper function (for decoration logic inside applyEditsAsSuggestions) - needs TElement/TText types
 const decorateNode = (node: TNode, id: string, currentUserId: string): TElement | TText => {
-     const baseDecorated = {
-         ...node,
-         [`suggestion_${id}`]: { id, createdAt: Date.now(), type: 'insert', userId: currentUserId },
-         suggestion: true,
-     };
-     if (TextApi.isText(baseDecorated)) {
-         const text = baseDecorated.text ?? '';
-         return { ...baseDecorated, text } as TText;
-     } else {
-          const children = ('children' in baseDecorated && Array.isArray(baseDecorated.children)) ? baseDecorated.children : [];
-          if (!('children' in baseDecorated) || !Array.isArray(baseDecorated.children)) {
-              console.warn("Decorated element node missing/invalid children, adding empty array:", baseDecorated);
-          }
-         return { ...baseDecorated, children } as TElement;
-     }
- } 
+  const suggestionProps = {
+      [`suggestion_${id}`]: { id, createdAt: Date.now(), type: 'insert', userId: currentUserId },
+      suggestion: true,
+  };
+
+  if (TextApi.isText(node)) {
+      return { ...node, ...suggestionProps, text: node.text ?? '' } as TText;
+  } else if (ElementApi.isElement(node)) {
+      // Ensure children array exists, even if empty, before mapping
+      const children = (node.children && Array.isArray(node.children))
+          ? node.children.map(child => decorateNode(child, id, currentUserId)) // Recursively decorate children
+          : [];
+      return { ...node, ...suggestionProps, children } as TElement;
+  }
+  // Should ideally not happen with valid TNode, but good practice
+  console.warn("Decorating unexpected node type:", node);
+  // Return a text node representation as a fallback if needed
+  return { text: '[Unexpected Node]', ...suggestionProps } as TText;
+}

@@ -159,7 +159,7 @@ export const BlockSuggestionCard = ({
           </div>
         </div>
 
-        <div className="relative mt-1 mb-4 pl-[32px]">
+        <div className="relative mt-1 mb-4">
           <div className="flex flex-col gap-2">
             {suggestion.type === 'remove' && (
               <React.Fragment>
@@ -204,7 +204,7 @@ export const BlockSuggestionCard = ({
                         key={index}
                         className="flex items-start gap-2 text-brand/80"
                       >
-                        <span className="text-sm">with:</span>
+                        <span className="text-sm min-w-fit">with:</span>
                         <span className="text-sm">{text || 'line breaks'}</span>
                       </div>
                     </React.Fragment>
@@ -214,7 +214,7 @@ export const BlockSuggestionCard = ({
                 {suggestionText2Array(suggestion.text!).map((text, index) => (
                   <React.Fragment key={index}>
                     <div key={index} className="flex items-start gap-2">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground min-w-fit">
                         {index === 0 ? 'Replace:' : 'Delete:'}
                       </span>
                       <span className="text-sm">{text || 'line breaks'}</span>
