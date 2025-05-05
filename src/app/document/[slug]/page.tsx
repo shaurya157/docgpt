@@ -246,7 +246,6 @@ export default function DocumentPage() {
     const localStorageKey = `docgpt-save-${activeUserDocument.id}`;
     const storedContentString = localStorage.getItem(localStorageKey);
 
-    console.log("Current content:", currentContentString);
     // If content matches localStorage, ensure status is Saved and clear any pending save.
     if (currentContentString === storedContentString) {
         if (saveStatus !== 'Saved') {

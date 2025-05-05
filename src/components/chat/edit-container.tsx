@@ -1,12 +1,30 @@
-import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 
-import { MarkdownPlugin } from '@udecode/plate-markdown';
-import { PlateEditor } from '@udecode/plate/react';
+import { ElementApi, TextApi } from '@udecode/plate';
+import {
+  type TResolvedSuggestion,
+  type TSuggestionElement,
+  acceptSuggestion,
+  keyId2SuggestionId,
+  rejectSuggestion,
+} from '@udecode/plate-suggestion';
+import { SuggestionPlugin } from '@udecode/plate-suggestion/react';
+import { PlateEditor, useEditorPlugin } from '@udecode/plate/react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/plate-ui/button';
 import { EditBlock } from '@/utils/edit-utils';
+
+// Define constants locally to avoid circular dependency
+const BLOCK_SUGGESTION = '__block__';
+// Simplified TYPE_TEXT_MAP - just include what we need or use a fallback approach
+const TYPE_TEXT_MAP: Record<string, (node?: any) => string> = {
+  default: () => 'Block',
+  h1: () => 'Heading 1',
+  h2: () => 'Heading 2',
+  h3: () => 'Heading 3',
+  p: () => 'Paragraph',
+};
 
 interface EditContainerProps {
   editor: PlateEditor;
@@ -16,7 +34,9 @@ interface EditContainerProps {
   nonEditContent?: string;
 }
 
-type EditStatus = 'accepted' | 'pending' | 'rejected';
+interface MinimalResolvedSuggestion extends TResolvedSuggestion {
+  keyId: string;
+}
 
 export const EditContainer = ({ 
   editor, 
@@ -25,144 +45,165 @@ export const EditContainer = ({
   isProcessingEdit,
   nonEditContent = ''
 }: EditContainerProps) => {
-  const [editStatuses, setEditStatuses] = useState<{ [key: number]: EditStatus }>({});
-  const [isEditExpanded, setIsEditExpanded] = useState<{ [key: number]: boolean }>({});
-  
+  const { api } = useEditorPlugin(SuggestionPlugin)
   const hasEdits = edits.length > 0;
 
-  // Initialize/clear statuses based on edits
-  useEffect(() => {
-    if (hasEdits) {
-      const newStatuses: { [key: number]: EditStatus } = {};
-      let changed = false;
-
-      // Initialize statuses for current edits
-      edits.forEach((_, index) => {
-        const currentStatus = editStatuses[index];
-        if (currentStatus) {
-          newStatuses[index] = currentStatus;
-        } else {
-          newStatuses[index] = 'pending';
-          changed = true;
+  const getAllResolvedSuggestions = (): MinimalResolvedSuggestion[] => {
+    const suggestionNodes = api.suggestion.nodes({ at: [] });
+  
+    if (suggestionNodes.length === 0) return [];
+  
+    const suggestionIds = new Set<string>(
+      suggestionNodes
+        .map(([node]) => api.suggestion.nodeId(node))
+        .filter((id): id is string => !!id)
+    );
+  
+    const resolved: MinimalResolvedSuggestion[] = [];
+  
+    suggestionIds.forEach((keyId) => {
+      const suggestionId = keyId2SuggestionId(keyId);
+  
+      const entries = suggestionNodes.filter(
+        ([node]) => api.suggestion.nodeId(node) === keyId
+      );
+  
+      if (entries.length === 0) return;
+  
+      let newText = '';
+      let text = '';
+      let properties: Record<string, any> = {};
+      let newProperties: Record<string, any> = {};
+  
+      entries.forEach(([node]) => {
+        if (TextApi.isText(node)) {
+          const dataList = api.suggestion.dataList(node);
+          dataList.forEach((data) => {
+            if (data.id !== suggestionId) return;
+  
+            switch (data.type) {
+              case 'insert':
+                newText += node.text;
+                break;
+              case 'remove':
+                text += node.text;
+                break;
+              case 'update':
+                properties = { ...properties, ...data.properties };
+                newProperties = { ...newProperties, ...data.newProperties };
+                newText += node.text;
+                break;
+            }
+          });
+        } else if (ElementApi.isElement(node)) {
+          const lineBreakData = api.suggestion.isBlockSuggestion(node as TSuggestionElement)
+            ? (node as TSuggestionElement).suggestion
+            : undefined;
+  
+          if (lineBreakData?.id !== suggestionId) return;
+  
+          const typeText = TYPE_TEXT_MAP[node.type]
+            ? TYPE_TEXT_MAP[node.type](node)
+            : TYPE_TEXT_MAP.default ? TYPE_TEXT_MAP.default(node) : 'Block';
+          const suggestionMarker = lineBreakData.isLineBreak
+            ? BLOCK_SUGGESTION
+            : BLOCK_SUGGESTION + typeText;
+  
+          if (lineBreakData.type === 'insert') {
+            newText += suggestionMarker;
+          } else if (lineBreakData.type === 'remove') {
+            text += suggestionMarker;
+          }
         }
       });
-
-      // Clean up statuses for removed edits
-      const currentKeysLength = Object.keys(editStatuses).length;
-      Object.keys(newStatuses).forEach(keyStr => {
-        const keyIndex = parseInt(keyStr, 10);
-        if (keyIndex >= edits.length) {
-          delete newStatuses[keyIndex];
-          changed = true;
-        }
-      });
-      const finalKeysLength = Object.keys(newStatuses).length;
-
-      if (changed || currentKeysLength !== finalKeysLength) {
-        setEditStatuses(newStatuses);
+  
+      const nodeData = api.suggestion.suggestionData(entries[0][0]);
+      if (!nodeData) return;
+  
+      const suggestionBase = {
+        createdAt: new Date(nodeData.createdAt),
+        keyId,
+        suggestionId: suggestionId,
+        userId: nodeData.userId,
+      };
+  
+      if (nodeData.type === 'update') {
+         resolved.push({
+          ...suggestionBase,
+          newProperties,
+          newText,
+          properties,
+          type: 'update',
+        });
+      } else if (newText.length > 0 && text.length > 0) {
+        resolved.push({
+          ...suggestionBase,
+          newText,
+          text,
+          type: 'replace',
+        });
+      } else if (newText.length > 0) {
+        resolved.push({
+          ...suggestionBase,
+          newText,
+          text: '',
+          type: 'insert',
+        });
+      } else if (text.length > 0) {
+         resolved.push({
+          ...suggestionBase,
+          newText: '',
+          text,
+          type: 'remove',
+        });
       }
-    } else if (Object.keys(editStatuses).length > 0) {
-      setEditStatuses({});
-    }
-  }, [edits, hasEdits, editStatuses]);
-
-  // Initialize/reset edit expansion state
-  useEffect(() => {
-    if (hasEdits) {
-      const newExpansionStates: { [key: number]: boolean } = {};
-      let changed = false;
-
-      // Initialize expansion states for current edits
-      edits.forEach((_, index) => {
-        const currentExpansion = isEditExpanded[index];
-        if (currentExpansion !== undefined) {
-          newExpansionStates[index] = currentExpansion;
-        } else {
-          newExpansionStates[index] = false;
-          changed = true;
-        }
-      });
-
-      // Clean up expansion states for removed edits
-      const currentKeysLength = Object.keys(isEditExpanded).length;
-      Object.keys(newExpansionStates).forEach(keyStr => {
-        const keyIndex = parseInt(keyStr, 10);
-        if (keyIndex >= edits.length) {
-          delete newExpansionStates[keyIndex];
-          changed = true;
-        }
-      });
-      const finalKeysLength = Object.keys(newExpansionStates).length;
-
-      if (changed || currentKeysLength !== finalKeysLength) {
-        setIsEditExpanded(newExpansionStates);
-      }
-    } else if (Object.keys(isEditExpanded).length > 0) {
-      setIsEditExpanded({});
-    }
-  }, [edits, hasEdits, isEditExpanded]);
-
-  // Attempts to apply a single edit block to the editor's current content
-  const applySingleEdit = (edit: EditBlock): boolean => {
-    let editorMarkdown = editor.getApi(MarkdownPlugin).markdown.serialize();
-
-    if (editorMarkdown.includes(edit.original)) {
-      editorMarkdown = editorMarkdown.replace(edit.original, edit.newText);
-      const deserializedNodes = editor.getApi(MarkdownPlugin).markdown.deserialize(editorMarkdown);
-      editor.tf.setValue(deserializedNodes);
-      return true;
-    } else {
-      console.warn("Edit could not be applied: Original content not found.", edit);
-      return false;
-    }
+    });
+  
+    return resolved;
   };
 
   const handleAcceptAll = () => {
-    if (!isLastMessage) return;
+    if (!isLastMessage || !editor) return;
 
-    let currentEditorMarkdown = editor.getApi(MarkdownPlugin).markdown.serialize();
-    const updatedStatuses = { ...editStatuses };
-    const successfullyAppliedIndices: number[] = [];
-    const failedEditIndices: number[] = [];
-    let markdownChanged = false;
-
-    edits.forEach((edit, index) => {
-      if (updatedStatuses[index] === 'pending') {
-        if (currentEditorMarkdown.includes(edit.original)) {
-          currentEditorMarkdown = currentEditorMarkdown.replace(edit.original, edit.newText);
-          updatedStatuses[index] = 'accepted';
-          successfullyAppliedIndices.push(index + 1);
-          markdownChanged = true;
-        } else {
-          failedEditIndices.push(index + 1);
-          console.warn(`Accept All: Edit ${index + 1} original content not found.`);
-        }
-      }
-    });
-
-    if (markdownChanged) {
-      const deserializedNodes = editor.getApi(MarkdownPlugin).markdown.deserialize(currentEditorMarkdown);
-      editor.tf.setValue(deserializedNodes);
+    const suggestions = getAllResolvedSuggestions();
+    if (suggestions.length === 0) {
+      toast.info("No active suggestions found in the editor to accept.");
+      return;
     }
 
-    setEditStatuses(updatedStatuses);
-
-    if (failedEditIndices.length > 0) {
-      toast.error(`Edits ${failedEditIndices.join(', ')} could not be applied: Original content has changed.`);
-    } else if (successfullyAppliedIndices.length > 0) {
-      toast.success("Selected edits applied successfully.");
-    } else {
-      toast.info("No pending edits were applicable.");
+    try {
+      api.suggestion.withoutSuggestions(() => {
+        suggestions.forEach((suggestion) => {
+          acceptSuggestion(editor, suggestion as TResolvedSuggestion);
+        });
+      });
+      toast.success("All suggestions accepted.");
+    } catch (error) {
+      console.error("Error accepting all suggestions:", error);
+      toast.error("An error occurred while accepting suggestions.");
     }
   };
 
   const handleRejectAll = () => {
-    if (!isLastMessage) return;
-    const newStatuses: { [key: number]: EditStatus } = {};
-    edits.forEach((_, index) => {
-      newStatuses[index] = 'rejected';
-    });
-    setEditStatuses(newStatuses);
+    if (!isLastMessage || !editor) return;
+
+    const suggestions = getAllResolvedSuggestions();
+    if (suggestions.length === 0) {
+      toast.info("No active suggestions found in the editor to reject.");
+      return;
+    }
+
+    try {
+      api.suggestion.withoutSuggestions(() => {
+        suggestions.forEach((suggestion) => {
+          rejectSuggestion(editor, suggestion as TResolvedSuggestion);
+        });
+      });
+      toast.success("All suggestions rejected.");
+    } catch (error) {
+      console.error("Error rejecting all suggestions:", error);
+      toast.error("An error occurred while rejecting suggestions.");
+    }
   };
 
   // Processing edits
@@ -181,6 +222,8 @@ export const EditContainer = ({
 
   // Finished processing, has edits
   if (hasEdits) {
+    const hasActiveSuggestions = editor ? getAllResolvedSuggestions().length > 0 : false;
+
     return (
       <div className="space-y-2">
         {nonEditContent && <Markdown className="react-markdown text-sm whitespace-normal">{nonEditContent}</Markdown>}
@@ -189,7 +232,7 @@ export const EditContainer = ({
             <span className="font-medium text-sm">
               {`${edits.length} edit${edits.length > 1 ? 's' : ''} suggested`}
             </span>
-            {Object.values(editStatuses).some(status => status === 'pending') && (
+            {hasActiveSuggestions && (
               <div className="flex gap-1">
                 <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleAcceptAll}>Accept All</Button>
                 <Button size="xs" variant="outline" className="text-xs h-6 px-2" disabled={!isLastMessage} onClick={handleRejectAll}>Reject All</Button>

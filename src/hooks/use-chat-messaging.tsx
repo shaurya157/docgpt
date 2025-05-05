@@ -6,8 +6,8 @@ import type { TElement, TNode, TRange } from '@udecode/plate';
 import { ElementApi, TextApi, TText } from '@udecode/plate'; // Keep runtime imports for things used as values (TText for instance checks if needed, TextApi for .isText)
 import { MarkdownPlugin } from '@udecode/plate-markdown';
 import { BaseSuggestionPlugin } from '@udecode/plate-suggestion';
-import { useEditorRef, usePlateState } from '@udecode/plate/react';
 import { SuggestionPlugin } from '@udecode/plate-suggestion/react';
+import { useEditorRef, usePlateState } from '@udecode/plate/react';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 
