@@ -12,7 +12,7 @@ import GDriveLogo from '@/assets/images/GDrive logo.png';
 import GoogleLogo from '@/assets/images/Google_Logo_0.svg';
 import MetaLogo from '@/assets/images/Meta_lockup_positive primary_RGB.svg';
 import SlackLogo from '@/assets/images/Slack.png';
-import TemplatesImage from '@/assets/images/templates.png';
+import TemplatesImage from '@/assets/images/NewPRDdemo.png';
 import UberLogo from '@/assets/images/Uber_Logo_Black_RGB.svg';
 import HeroGif from '@/assets/images/xx1.gif';
 import HeroImage from '@/assets/images/z1.gif';

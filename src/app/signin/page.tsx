@@ -22,9 +22,6 @@ export default function SignInPage() {
       
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
         <h1 className="text-4xl font-bold text-center text-gray-900 mb-6">Sign in options</h1>
-        <p className="text-lg text-center text-gray-600 mb-8">
-          We're working on a no-sign in demo, sign in with Google in the interim
-        </p>
         <button 
           className="flex items-center justify-center gap-3 w-full py-6 text-lg border-2 rounded-lg border-gray-200 bg-white hover:bg-gray-50 active:bg-gray-100 active:scale-[0.99] transition-all duration-150 cursor-pointer shadow-sm hover:shadow active:shadow-inner"
           onClick={handleGoogleSignIn}
