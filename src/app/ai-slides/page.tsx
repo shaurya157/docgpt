@@ -1,99 +1,95 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
 import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  AlignLeft, 
   AlignCenter, 
-  AlignRight,
-  Type,
-  Image,
-  BarChart,
-  Square,
-  Play,
-  Save,
-  Download,
-  Plus,
-  Trash2,
+  AlignLeft, 
+  AlignRight, 
+  BarChart, 
+  Bold, 
+  Check,
   ChevronLeft,
   ChevronRight,
-  Palette,
-  Layout,
-  Sparkles,
-  Send,
+  Download,
+  Image,
+  Italic,
   Loader2,
   MessageSquare,
-  X,
-  Check
+  Plus,
+  Save,
+  Send,
+  Square,
+  Type,
+  Underline,
+  X
 } from 'lucide-react';
 
-interface Slide {
-  id: string;
-  content: SlideContent;
-  layout: 'title' | 'content' | 'twoColumn' | 'image' | 'chart';
-  background: string;
-  animations: Animation[];
-}
-
-interface SlideContent {
-  title?: string;
-  subtitle?: string;
-  body?: string;
-  elements: SlideElement[];
-}
-
-interface SlideElement {
-  id: string;
-  type: 'text' | 'image' | 'shape' | 'chart';
-  content: any;
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  style: Record<string, any>;
-}
-
 interface Animation {
-  elementId: string;
-  type: 'entrance' | 'emphasis' | 'exit';
-  effect: string;
   duration: number;
-}
-
-interface ToolbarAction {
-  category: string;
-  action: string;
-  value?: any;
-  target?: string;
+  effect: string;
+  elementId: string;
+  type: 'emphasis' | 'entrance' | 'exit';
 }
 
 interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system';
   content: string;
+  role: 'assistant' | 'system' | 'user';
   timestamp: number;
   actions?: ToolbarAction[];
 }
 
 interface ChatSuggestion {
   id: string;
-  title: string;
   description: string;
   edits: number;
+  title: string;
+}
+
+interface Slide {
+  id: string;
+  animations: Animation[];
+  background: string;
+  content: SlideContent;
+  layout: 'chart' | 'content' | 'image' | 'title' | 'twoColumn';
+}
+
+interface SlideContent {
+  elements: SlideElement[];
+  body?: string;
+  subtitle?: string;
+  title?: string;
+}
+
+interface SlideElement {
+  id: string;
+  content: any;
+  position: { x: number; y: number };
+  size: { height: number; width: number; };
+  style: Record<string, any>;
+  type: 'chart' | 'image' | 'shape' | 'text';
+}
+
+interface ToolbarAction {
+  action: string;
+  category: string;
+  target?: string;
+  value?: any;
 }
 
 export default function AISlidesPage() {
   const [slides, setSlides] = useState<Slide[]>([
     {
       id: '1',
-      content: {
-        title: 'Welcome to AI Slides',
-        subtitle: 'Create presentations with natural language',
-        elements: []
-      },
-      layout: 'title',
+      animations: [],
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      animations: []
+      content: {
+        elements: [],
+        subtitle: 'Create presentations with natural language',
+        title: 'Welcome to AI Slides'
+      },
+      layout: 'title'
     }
   ]);
   
@@ -107,9 +103,9 @@ export default function AISlidesPage() {
   const [chatSuggestions, setChatSuggestions] = useState<ChatSuggestion[]>([
     {
       id: '1',
-      title: 'Create a pitch deck for a peer to peer car sales platform',
       description: 'I\'ve taken an initial stab\n1. Created a basic outline for presentations\n2. Filled in some headers\n\nWhat do you think?',
-      edits: 2
+      edits: 2,
+      title: 'Create a pitch deck for a peer to peer car sales platform'
     }
   ]);
   
@@ -146,6 +142,12 @@ export default function AISlidesPage() {
     if (!slide || !slide.content) return;
     
     switch (action.category) {
+      case 'design':
+        if (action.action === 'background' && action.value) {
+          slide.background = action.value;
+        }
+        break;
+        
       case 'formatting':
         if (action.action === 'bold') {
           // Apply bold to selected text
@@ -175,42 +177,36 @@ export default function AISlidesPage() {
         if (action.action === 'textBox') {
           const newElement: SlideElement = {
             id: `element-${Date.now()}`,
-            type: 'text',
             content: 'New Text',
             position: { x: 100, y: 100 },
-            size: { width: 200, height: 50 },
-            style: { fontSize: '16px', color: '#000000' }
+            size: { height: 50, width: 200 },
+            style: { color: '#000000', fontSize: '16px' },
+            type: 'text'
           };
           if (!slide.content.elements) slide.content.elements = [];
           slide.content.elements.push(newElement);
         } else if (action.action === 'shape' && action.value) {
           const newElement: SlideElement = {
             id: `element-${Date.now()}`,
-            type: 'shape',
             content: action.value,
             position: { x: 150, y: 150 },
-            size: { width: 100, height: 100 },
-            style: { backgroundColor: '#3b82f6' }
+            size: { height: 100, width: 100 },
+            style: { backgroundColor: '#3b82f6' },
+            type: 'shape'
           };
           if (!slide.content.elements) slide.content.elements = [];
           slide.content.elements.push(newElement);
         } else if (action.action === 'chart') {
           const newElement: SlideElement = {
             id: `element-${Date.now()}`,
-            type: 'chart',
             content: 'Sample Chart',
             position: { x: 200, y: 150 },
-            size: { width: 300, height: 200 },
-            style: { backgroundColor: '#f3f4f6', border: '2px solid #d1d5db' }
+            size: { height: 200, width: 300 },
+            style: { backgroundColor: '#f3f4f6', border: '2px solid #d1d5db' },
+            type: 'chart'
           };
           if (!slide.content.elements) slide.content.elements = [];
           slide.content.elements.push(newElement);
-        }
-        break;
-        
-      case 'design':
-        if (action.action === 'background' && action.value) {
-          slide.background = action.value;
         }
         break;
         
@@ -218,13 +214,13 @@ export default function AISlidesPage() {
         if (action.action === 'newSlide') {
           const newSlide: Slide = {
             id: Date.now().toString(),
-            content: {
-              title: 'New Slide',
-              elements: []
-            },
-            layout: 'content',
+            animations: [],
             background: '#ffffff',
-            animations: []
+            content: {
+              elements: [],
+              title: 'New Slide'
+            },
+            layout: 'content'
           };
           setSlides(prev => [...prev, newSlide]);
           setCurrentSlideIndex(slides.length);
@@ -258,8 +254,8 @@ export default function AISlidesPage() {
     // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      role: 'user',
       content: command,
+      role: 'user',
       timestamp: Date.now()
     };
     setChatMessages(prev => [...prev, userMessage]);
@@ -267,16 +263,16 @@ export default function AISlidesPage() {
     try {
       // Call the AI API
       const response = await fetch('/api/ai/slides', {
-        method: 'POST',
+        body: JSON.stringify({
+          allSlides: slides,
+          command,
+          currentSlide,
+          selectedElement
+        }),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          command,
-          currentSlide,
-          allSlides: slides,
-          selectedElement
-        })
+        method: 'POST'
       });
 
       if (!response.ok) {
@@ -301,10 +297,10 @@ export default function AISlidesPage() {
       // Add assistant response
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        role: 'assistant',
+        actions,
         content: `✅ ${summary}`,
-        timestamp: Date.now(),
-        actions
+        role: 'assistant',
+        timestamp: Date.now()
       };
       setChatMessages(prev => [...prev, assistantMessage]);
       
@@ -312,8 +308,8 @@ export default function AISlidesPage() {
       console.error('AI command error:', error);
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        role: 'assistant',
         content: '❌ Sorry, I couldn\'t process that command. Please try being more specific.',
+        role: 'assistant',
         timestamp: Date.now()
       };
       setChatMessages(prev => [...prev, errorMessage]);
@@ -345,24 +341,24 @@ export default function AISlidesPage() {
 
   const ToolbarButton = ({ 
     icon: Icon, 
-    onClick, 
     toolId, 
-    tooltip 
+    tooltip, 
+    onClick 
   }: { 
     icon: any; 
-    onClick: () => void; 
     toolId: string; 
-    tooltip: string;
+    tooltip: string; 
+    onClick: () => void;
   }) => {
     const isHighlighted = highlightedTools.includes(toolId);
     
     return (
       <button
-        onClick={onClick}
         className={`
           relative p-2 rounded hover:bg-gray-100 transition-all duration-200
           ${isHighlighted ? 'bg-yellow-100 ring-2 ring-yellow-400' : ''}
         `}
+        onClick={onClick}
         title={tooltip}
       >
         <Icon className="w-4 h-4" />
@@ -380,63 +376,63 @@ export default function AISlidesPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1">
             {/* File operations */}
-            <ToolbarButton icon={Save} onClick={() => {}} toolId="file.save" tooltip="Save" />
-            <ToolbarButton icon={Download} onClick={() => {}} toolId="file.export" tooltip="Export" />
+            <ToolbarButton onClick={() => {}} icon={Save} toolId="file.save" tooltip="Save" />
+            <ToolbarButton onClick={() => {}} icon={Download} toolId="file.export" tooltip="Export" />
             <div className="w-px h-4 bg-gray-300 mx-2" />
             
             {/* Text formatting */}
             <ToolbarButton 
+              onClick={() => executeToolbarAction({ action: 'bold', category: 'formatting' })} 
               icon={Bold} 
-              onClick={() => executeToolbarAction({ category: 'formatting', action: 'bold' })} 
               toolId="formatting.bold" 
               tooltip="Bold"
             />
             <ToolbarButton 
+              onClick={() => executeToolbarAction({ action: 'italic', category: 'formatting' })} 
               icon={Italic} 
-              onClick={() => executeToolbarAction({ category: 'formatting', action: 'italic' })} 
               toolId="formatting.italic" 
               tooltip="Italic" 
             />
-            <ToolbarButton icon={Underline} onClick={() => {}} toolId="formatting.underline" tooltip="Underline" />
+            <ToolbarButton onClick={() => {}} icon={Underline} toolId="formatting.underline" tooltip="Underline" />
             
             <div className="w-px h-4 bg-gray-300 mx-2" />
             
             {/* Alignment */}
-            <ToolbarButton icon={AlignLeft} onClick={() => {}} toolId="formatting.alignLeft" tooltip="Align Left" />
+            <ToolbarButton onClick={() => {}} icon={AlignLeft} toolId="formatting.alignLeft" tooltip="Align Left" />
             <ToolbarButton 
+              onClick={() => executeToolbarAction({ action: 'alignment', category: 'formatting', value: 'center' })} 
               icon={AlignCenter} 
-              onClick={() => executeToolbarAction({ category: 'formatting', action: 'alignment', value: 'center' })} 
               toolId="formatting.alignment" 
               tooltip="Align Center"
             />
-            <ToolbarButton icon={AlignRight} onClick={() => {}} toolId="formatting.alignRight" tooltip="Align Right" />
+            <ToolbarButton onClick={() => {}} icon={AlignRight} toolId="formatting.alignRight" tooltip="Align Right" />
             
             <div className="w-px h-4 bg-gray-300 mx-2" />
             
             {/* Insert elements */}
             <ToolbarButton 
+              onClick={() => executeToolbarAction({ action: 'textBox', category: 'insert' })} 
               icon={Type} 
-              onClick={() => executeToolbarAction({ category: 'insert', action: 'textBox' })} 
               toolId="insert.textBox" 
               tooltip="Insert Text"
             />
-            <ToolbarButton icon={Image} onClick={() => {}} toolId="insert.image" tooltip="Insert Image" />
+            <ToolbarButton onClick={() => {}} icon={Image} toolId="insert.image" tooltip="Insert Image" />
             <ToolbarButton 
+              onClick={() => executeToolbarAction({ action: 'shape', category: 'insert', value: 'rectangle' })} 
               icon={Square} 
-              onClick={() => executeToolbarAction({ category: 'insert', action: 'shape', value: 'rectangle' })} 
               toolId="insert.shape" 
               tooltip="Insert Shape"
             />
-            <ToolbarButton icon={BarChart} onClick={() => {}} toolId="insert.chart" tooltip="Insert Chart" />
+            <ToolbarButton onClick={() => {}} icon={BarChart} toolId="insert.chart" tooltip="Insert Chart" />
           </div>
 
           {/* Chat toggle */}
           <button
-            onClick={() => setIsChatOpen(!isChatOpen)}
             className={`
               flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
               ${isChatOpen ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
             `}
+            onClick={() => setIsChatOpen(!isChatOpen)}
           >
             <MessageSquare className="w-4 h-4" />
             Chat
@@ -452,11 +448,11 @@ export default function AISlidesPage() {
             {slides.map((slide, index) => (
               <div
                 key={slide.id}
-                onClick={() => setCurrentSlideIndex(index)}
                 className={`
                   relative cursor-pointer rounded-lg overflow-hidden border transition-all
                   ${index === currentSlideIndex ? 'border-blue-500 shadow-md' : 'border-gray-200 hover:border-gray-300'}
                 `}
+                onClick={() => setCurrentSlideIndex(index)}
               >
                 <div className="aspect-[16/9] bg-white p-2 text-xs">
                   <div 
@@ -472,17 +468,17 @@ export default function AISlidesPage() {
               </div>
             ))}
             <button
+              className="w-full aspect-[16/9] border border-dashed border-gray-300 rounded-lg hover:border-gray-400 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
               onClick={() => {
                 const newSlide: Slide = {
                   id: Date.now().toString(),
-                  content: { title: 'New Slide', elements: [] },
-                  layout: 'content',
+                  animations: [],
                   background: '#ffffff',
-                  animations: []
+                  content: { elements: [], title: 'New Slide' },
+                  layout: 'content'
                 };
                 setSlides([...slides, newSlide]);
               }}
-              className="w-full aspect-[16/9] border border-dashed border-gray-300 rounded-lg hover:border-gray-400 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
             >
               <Plus className="w-6 h-6" />
             </button>
@@ -496,9 +492,9 @@ export default function AISlidesPage() {
               ref={canvasRef}
               className="relative bg-white rounded-lg shadow-lg overflow-hidden"
               style={{ 
-                width: '960px', 
+                background: currentSlide?.background || '#ffffff', 
                 height: '540px',
-                background: currentSlide?.background || '#ffffff'
+                width: '960px'
               }}
             >
               {/* Slide content */}
@@ -522,10 +518,10 @@ export default function AISlidesPage() {
                     key={element.id}
                     className={`absolute border-2 ${selectedElement === element.id ? 'border-blue-500' : 'border-transparent'} hover:border-gray-300 cursor-move`}
                     style={{
+                      height: element.size.height,
                       left: element.position.x,
                       top: element.position.y,
                       width: element.size.width,
-                      height: element.size.height,
                       ...element.style
                     }}
                     onClick={() => setSelectedElement(element.id)}
@@ -551,9 +547,9 @@ export default function AISlidesPage() {
               {/* Slide navigation */}
               <div className="absolute bottom-4 right-4 flex items-center space-x-2">
                 <button
-                  onClick={() => setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1))}
-                  disabled={currentSlideIndex === 0}
                   className="p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 disabled:opacity-30 transition-opacity"
+                  disabled={currentSlideIndex === 0}
+                  onClick={() => setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1))}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -561,9 +557,9 @@ export default function AISlidesPage() {
                   {currentSlideIndex + 1} / {slides.length}
                 </span>
                 <button
-                  onClick={() => setCurrentSlideIndex(Math.min(slides.length - 1, currentSlideIndex + 1))}
-                  disabled={currentSlideIndex === slides.length - 1}
                   className="p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 disabled:opacity-30 transition-opacity"
+                  disabled={currentSlideIndex === slides.length - 1}
+                  onClick={() => setCurrentSlideIndex(Math.min(slides.length - 1, currentSlideIndex + 1))}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -579,8 +575,8 @@ export default function AISlidesPage() {
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-gray-900">Chat</h3>
                 <button
-                  onClick={() => setIsChatOpen(false)}
                   className="p-1 hover:bg-gray-100 rounded"
+                  onClick={() => setIsChatOpen(false)}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -598,15 +594,15 @@ export default function AISlidesPage() {
                         <h5 className="font-medium text-sm">{suggestion.title}</h5>
                         <div className="flex items-center gap-1 ml-2">
                           <button
-                            onClick={() => handleSuggestionAccept(suggestion.id)}
                             className="p-1 hover:bg-green-100 rounded text-green-600"
+                            onClick={() => handleSuggestionAccept(suggestion.id)}
                             title="Accept"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleSuggestionReject(suggestion.id)}
                             className="p-1 hover:bg-red-100 rounded text-red-600"
+                            onClick={() => handleSuggestionReject(suggestion.id)}
                             title="Reject"
                           >
                             <X className="w-4 h-4" />
@@ -676,19 +672,19 @@ export default function AISlidesPage() {
 
             {/* Chat input */}
             <div className="p-4 border-t border-gray-200">
-              <form onSubmit={handleSendMessage} className="flex space-x-2">
+              <form className="flex space-x-2" onSubmit={handleSendMessage}>
                 <input
-                  type="text"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  disabled={isProcessing}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   placeholder="Message SlidesGPT"
-                  disabled={isProcessing}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  type="text"
                 />
                 <button
-                  type="submit"
-                  disabled={!inputMessage.trim() || isProcessing}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  disabled={!inputMessage.trim() || isProcessing}
+                  type="submit"
                 >
                   <Send className="w-4 h-4" />
                 </button>

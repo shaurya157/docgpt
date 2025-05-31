@@ -4,23 +4,23 @@ import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 
 interface FileMetadata {
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  userId: string;
-  uploadedAt: string;
   contentType: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  uploadedAt: string;
+  userId: string;
   chatId?: string;
 }
 
 interface ProcessResult {
   fileName: string;
-  status: 'success' | 'error';
-  contentType?: string;
+  status: 'error' | 'success';
   chunksCreated?: number;
+  contentType?: string;
+  error?: string;
   fileIds?: string[];
   preview?: string;
-  error?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -46,13 +46,13 @@ export async function POST(req: NextRequest) {
   for (const file of files) {
     try {
       let textContent = '';
-      let metadata: FileMetadata = {
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        userId: userId?.toString() || '',
-        uploadedAt: new Date().toISOString(),
+      const metadata: FileMetadata = {
         contentType: '',
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        uploadedAt: new Date().toISOString(),
+        userId: userId?.toString() || '',
         ...(chatId && { chatId })
       };
 
@@ -63,24 +63,24 @@ export async function POST(req: NextRequest) {
         // Use OpenAI Vision for image analysis
         const base64 = await fileToBase64(file);
         const response = await openai.chat.completions.create({
-          model: "gpt-4o",
+          max_tokens: 1000,
           messages: [{
-            role: "user",
             content: [
               { 
-                type: "text", 
-                text: "Analyze this image in detail. Describe what you see, including any text, objects, people, scenes, and context. If there are charts, graphs, or data visualizations, describe the data and insights. If there's text in the image, transcribe it accurately." 
+                text: "Analyze this image in detail. Describe what you see, including any text, objects, people, scenes, and context. If there are charts, graphs, or data visualizations, describe the data and insights. If there's text in the image, transcribe it accurately.", 
+                type: "text" 
               },
               { 
-                type: "image_url", 
                 image_url: { 
-                  url: `data:${file.type};base64,${base64}`,
-                  detail: "high"
-                } 
+                  detail: "high",
+                  url: `data:${file.type};base64,${base64}`
+                }, 
+                type: "image_url" 
               }
-            ]
+            ],
+            role: "user"
           }],
-          max_tokens: 1000
+          model: "gpt-4o"
         });
         textContent = response.choices[0].message.content || '';
         metadata.contentType = 'image_description';
@@ -140,8 +140,8 @@ export async function POST(req: NextRequest) {
           id: chunkId,
           metadata: { 
             ...metadata, 
-            text: chunk,
             chunkIndex: index,
+            text: chunk,
             totalChunks: chunks.length
           },
           values: values
@@ -151,20 +151,20 @@ export async function POST(req: NextRequest) {
       await index.upsert(vectors);
       
       results.push({
-        fileName: file.name,
-        status: 'success',
-        contentType: metadata.contentType,
         chunksCreated: chunks.length,
+        contentType: metadata.contentType,
         fileIds: chunkIds,
-        preview: textContent.substring(0, 200) + (textContent.length > 200 ? '...' : '')
+        fileName: file.name,
+        preview: textContent.substring(0, 200) + (textContent.length > 200 ? '...' : ''),
+        status: 'success'
       });
 
     } catch (error: any) {
       console.error(`Error processing file ${file.name}:`, error);
       results.push({
+        error: error.message || 'Unknown error occurred',
         fileName: file.name,
-        status: 'error',
-        error: error.message || 'Unknown error occurred'
+        status: 'error'
       });
     }
   }

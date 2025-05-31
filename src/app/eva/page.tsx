@@ -4,10 +4,10 @@ import React from 'react';
 
 // Placeholder for Icons
 const PlaceholderIcon = ({ className }: { className: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
 );
 // Simple Logo Placeholders
-const PlaceholderLogo = ({ name, className }: { name: string, className: string }) => (
+const PlaceholderLogo = ({ className, name }: { className: string; name: string, }) => (
   <div className={`flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded p-2 ${className}`}>
     <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">{name}</span>
   </div>
@@ -34,21 +34,21 @@ export default function EvaPage() {
               <div className="mt-10 max-w-xl mx-auto md:mx-0 flex flex-col sm:flex-row gap-4">
                 <form className="flex flex-col sm:flex-row flex-grow" onSubmit={(e) => e.preventDefault()}>
                   <input
-                    type="email"
-                    placeholder="Enter your email"
-                    required
                     className="flex-grow px-5 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    required
+                    placeholder="Enter your email"
+                    type="email"
                   />
                   <button
-                    type="submit"
                     className="mt-4 sm:mt-0 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300 ease-in-out shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap"
+                    type="submit"
                   >
                     Notify&nbsp;Me
                   </button>
                 </form>
                 <a
-                  href="/get-started"
                   className="mt-4 sm:mt-0 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300 ease-in-out shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap text-center"
+                  href="/get-started"
                 >
                   Get&nbsp;Started
                 </a>
@@ -58,9 +58,9 @@ export default function EvaPage() {
             {/* Image Content - Right Column */} 
             <div className="mt-10 md:mt-0">
                 <img 
-                    src="https://placehold.co/800x600/dbeafe/3b82f6?text=Hero+Image" 
+                    className="rounded-lg shadow-xl w-full h-auto object-cover aspect-[4/3]" 
                     alt="AI Assistant Visual"
-                    className="rounded-lg shadow-xl w-full h-auto object-cover aspect-[4/3]"
+                    src="https://placehold.co/800x600/dbeafe/3b82f6?text=Hero+Image"
                  />
             </div>
         </div>
@@ -92,7 +92,7 @@ export default function EvaPage() {
               <p className="text-gray-600 dark:text-gray-400 mb-4 grow">
                 Connect Slack, Gmail & Calendar. Our AI meticulously scans for action items, requests, and deadlines buried in threads and invites.
               </p>
-              <img src="https://placehold.co/600x400/e0f2fe/3b82f6?text=Task+Capture" alt="Connect Tools Feature Screenshot" className="rounded-md aspect-video object-cover mt-auto" />
+              <img className="rounded-md aspect-video object-cover mt-auto" alt="Connect Tools Feature Screenshot" src="https://placehold.co/600x400/e0f2fe/3b82f6?text=Task+Capture" />
             </div>
 
             {/* Feature 2: Intelligent Prioritization */}
@@ -106,7 +106,7 @@ export default function EvaPage() {
               <p className="text-gray-600 dark:text-gray-400 mb-4 grow">
                 Stop guessing. AI analyzes urgency, sender, keywords, and your schedule to rank tasks by true priority.
               </p>
-              <img src="https://placehold.co/600x400/dcfce7/16a34a?text=AI+Prioritization" alt="AI Prioritization Feature Screenshot" className="rounded-md aspect-video object-cover mt-auto" />
+              <img className="rounded-md aspect-video object-cover mt-auto" alt="AI Prioritization Feature Screenshot" src="https://placehold.co/600x400/dcfce7/16a34a?text=AI+Prioritization" />
             </div>
 
             {/* Feature 3: Daily Focused Plan */}
@@ -120,7 +120,7 @@ export default function EvaPage() {
               <p className="text-gray-600 dark:text-gray-400 mb-4 grow">
                 Start your day with a simple, actionable list. No more context switching – just focused execution, step-by-step.
               </p>
-              <img src="https://placehold.co/600x400/f3e8ff/7e22ce?text=Daily+Plan" alt="Daily Action Plan Feature Screenshot" className="rounded-md aspect-video object-cover mt-auto" />
+              <img className="rounded-md aspect-video object-cover mt-auto" alt="Daily Action Plan Feature Screenshot" src="https://placehold.co/600x400/f3e8ff/7e22ce?text=Daily+Plan" />
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function EvaPage() {
            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">
              Imagine this dashboard cutting through the noise, giving you back hours of your week.
            </p>
-           <img src="https://placehold.co/1200x675/e5e7eb/4b5563?text=Product+Dashboard+View" alt="Product Demo Screenshot" className="rounded-lg shadow-xl max-w-4xl mx-auto aspect-video object-cover" />
+           <img className="rounded-lg shadow-xl max-w-4xl mx-auto aspect-video object-cover" alt="Product Demo Screenshot" src="https://placehold.co/1200x675/e5e7eb/4b5563?text=Product+Dashboard+View" />
            {/* Quantifiable Benefit Placeholder */} 
            <p className="mt-8 text-lg font-medium text-gray-700 dark:text-gray-300">Early testers report saving <span className="font-bold text-blue-600 dark:text-blue-400">5+ hours</span> per week!</p>
         </div>
@@ -156,14 +156,14 @@ export default function EvaPage() {
            <form className="mt-10 max-w-xl mx-auto" onSubmit={(e) => e.preventDefault()}> 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <input 
-                  type="email" 
-                  placeholder="Enter your email again to confirm"
+                  className="flex-grow px-5 py-3 rounded-lg border border-blue-300 bg-white focus:outline-none focus:ring-2 focus:ring-white text-gray-900 placeholder-gray-500" 
                   required
-                  className="flex-grow px-5 py-3 rounded-lg border border-blue-300 bg-white focus:outline-none focus:ring-2 focus:ring-white text-gray-900 placeholder-gray-500"
+                  placeholder="Enter your email again to confirm"
+                  type="email"
                 />
                 <button 
-                  type="submit" 
-                  className="bg-white text-blue-700 hover:bg-blue-50 font-bold py-3 px-10 rounded-lg text-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-700 focus:ring-white whitespace-nowrap"
+                  className="bg-white text-blue-700 hover:bg-blue-50 font-bold py-3 px-10 rounded-lg text-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-700 focus:ring-white whitespace-nowrap" 
+                  type="submit"
                 >
                  Claim My Early Access Spot
                 </button>

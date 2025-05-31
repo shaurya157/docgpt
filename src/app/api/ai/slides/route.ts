@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-interface ToolbarAction {
-  category: string;
-  action: string;
-  value?: any;
-  target?: string;
-}
-
 interface SlideCommand {
+  allSlides: any[];
   command: string;
   currentSlide: any;
-  allSlides: any[];
   selectedElement?: string;
+}
+
+interface ToolbarAction {
+  action: string;
+  category: string;
+  target?: string;
+  value?: any;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { command, currentSlide, allSlides, selectedElement }: SlideCommand = await req.json();
+    const { allSlides, command, currentSlide, selectedElement }: SlideCommand = await req.json();
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({
@@ -58,13 +58,13 @@ Examples:
 Return only the JSON array, no other text.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      max_tokens: 500,
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: command }
+        { content: systemPrompt, role: "system" },
+        { content: command, role: "user" }
       ],
-      temperature: 0.3,
-      max_tokens: 500
+      model: "gpt-4o",
+      temperature: 0.3
     });
 
     const aiResponse = response.choices[0].message.content;
@@ -78,8 +78,8 @@ Return only the JSON array, no other text.`;
       
       return NextResponse.json({
         actions,
-        summary,
-        success: true
+        success: true,
+        summary
       });
       
     } catch (parseError) {
@@ -88,9 +88,9 @@ Return only the JSON array, no other text.`;
       
       return NextResponse.json({
         actions: fallbackActions,
-        summary: generateActionSummary(fallbackActions),
+        fallback: true,
         success: true,
-        fallback: true
+        summary: generateActionSummary(fallbackActions)
       });
     }
 
@@ -108,21 +108,21 @@ function generateActionSummary(actions: ToolbarAction[]): string {
   
   const summaries = actions.map(action => {
     switch (action.action) {
-      case 'bold': return 'Made text bold';
-      case 'italic': return 'Made text italic';
-      case 'fontSize': return `Changed font size to ${action.value}`;
       case 'alignment': return `Aligned text ${action.value}`;
-      case 'textBox': return 'Added text box';
-      case 'image': return 'Added image';
-      case 'shape': return 'Added shape';
-      case 'chart': return 'Added chart';
       case 'background': return 'Changed background';
-      case 'theme': return 'Applied theme';
-      case 'newSlide': return 'Created new slide';
+      case 'bold': return 'Made text bold';
+      case 'chart': return 'Added chart';
       case 'deleteSlide': return 'Deleted slide';
-      case 'entrance': return 'Added entrance animation';
       case 'emphasis': return 'Added emphasis animation';
+      case 'entrance': return 'Added entrance animation';
       case 'exit': return 'Added exit animation';
+      case 'fontSize': return `Changed font size to ${action.value}`;
+      case 'image': return 'Added image';
+      case 'italic': return 'Made text italic';
+      case 'newSlide': return 'Created new slide';
+      case 'shape': return 'Added shape';
+      case 'textBox': return 'Added text box';
+      case 'theme': return 'Applied theme';
       default: return `Performed ${action.action}`;
     }
   });
@@ -136,69 +136,69 @@ function extractActionsFromText(command: string): ToolbarAction[] {
   
   // Text formatting
   if (lowerCommand.includes('bold')) {
-    actions.push({ category: 'formatting', action: 'bold' });
+    actions.push({ action: 'bold', category: 'formatting' });
   }
   if (lowerCommand.includes('italic')) {
-    actions.push({ category: 'formatting', action: 'italic' });
+    actions.push({ action: 'italic', category: 'formatting' });
   }
   if (lowerCommand.includes('underline')) {
-    actions.push({ category: 'formatting', action: 'underline' });
+    actions.push({ action: 'underline', category: 'formatting' });
   }
   
   // Font size
   if (lowerCommand.includes('bigger') || lowerCommand.includes('larger')) {
-    actions.push({ category: 'formatting', action: 'fontSize', value: '32px' });
+    actions.push({ action: 'fontSize', category: 'formatting', value: '32px' });
   }
   if (lowerCommand.includes('smaller')) {
-    actions.push({ category: 'formatting', action: 'fontSize', value: '14px' });
+    actions.push({ action: 'fontSize', category: 'formatting', value: '14px' });
   }
   
   // Alignment
   if (lowerCommand.includes('center')) {
-    actions.push({ category: 'formatting', action: 'alignment', value: 'center' });
+    actions.push({ action: 'alignment', category: 'formatting', value: 'center' });
   }
   if (lowerCommand.includes('left align')) {
-    actions.push({ category: 'formatting', action: 'alignment', value: 'left' });
+    actions.push({ action: 'alignment', category: 'formatting', value: 'left' });
   }
   if (lowerCommand.includes('right align')) {
-    actions.push({ category: 'formatting', action: 'alignment', value: 'right' });
+    actions.push({ action: 'alignment', category: 'formatting', value: 'right' });
   }
   
   // Insert elements
   if (lowerCommand.includes('add') || lowerCommand.includes('insert')) {
     if (lowerCommand.includes('text')) {
-      actions.push({ category: 'insert', action: 'textBox' });
+      actions.push({ action: 'textBox', category: 'insert' });
     }
     if (lowerCommand.includes('image') || lowerCommand.includes('picture')) {
-      actions.push({ category: 'insert', action: 'image' });
+      actions.push({ action: 'image', category: 'insert' });
     }
     if (lowerCommand.includes('shape') || lowerCommand.includes('rectangle') || lowerCommand.includes('circle')) {
-      actions.push({ category: 'insert', action: 'shape', value: 'rectangle' });
+      actions.push({ action: 'shape', category: 'insert', value: 'rectangle' });
     }
     if (lowerCommand.includes('chart') || lowerCommand.includes('graph')) {
-      actions.push({ category: 'insert', action: 'chart' });
+      actions.push({ action: 'chart', category: 'insert' });
     }
   }
   
   // Background changes
   if (lowerCommand.includes('background')) {
     if (lowerCommand.includes('blue')) {
-      actions.push({ category: 'design', action: 'background', value: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' });
+      actions.push({ action: 'background', category: 'design', value: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' });
     } else if (lowerCommand.includes('red')) {
-      actions.push({ category: 'design', action: 'background', value: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' });
+      actions.push({ action: 'background', category: 'design', value: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' });
     } else if (lowerCommand.includes('green')) {
-      actions.push({ category: 'design', action: 'background', value: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' });
+      actions.push({ action: 'background', category: 'design', value: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' });
     } else if (lowerCommand.includes('white')) {
-      actions.push({ category: 'design', action: 'background', value: '#ffffff' });
+      actions.push({ action: 'background', category: 'design', value: '#ffffff' });
     }
   }
   
   // Slide operations
   if (lowerCommand.includes('new slide') || lowerCommand.includes('add slide')) {
-    actions.push({ category: 'slides', action: 'newSlide' });
+    actions.push({ action: 'newSlide', category: 'slides' });
   }
   if (lowerCommand.includes('delete slide') || lowerCommand.includes('remove slide')) {
-    actions.push({ category: 'slides', action: 'deleteSlide' });
+    actions.push({ action: 'deleteSlide', category: 'slides' });
   }
   
   return actions;

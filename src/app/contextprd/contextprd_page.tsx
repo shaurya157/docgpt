@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+
 import Link from 'next/link';
 
 export default function ContextPRDPage() {
@@ -19,20 +20,20 @@ export default function ContextPRDPage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center">
           <Link 
-            href="#contact" 
-            className="inline-block bg-[#0056ff] hover:bg-[#0045d4] text-white py-4 px-8 rounded-lg font-semibold transition-colors text-lg shadow-md"
+            className="inline-block bg-[#0056ff] hover:bg-[#0045d4] text-white py-4 px-8 rounded-lg font-semibold transition-colors text-lg shadow-md" 
+            href="#contact"
           >
             Start Free Pilot
           </Link>
           <Link
-            href="#pilot-details"
             className="text-[#0056ff] font-semibold hover:underline mt-2"
+            href="#pilot-details"
           >
             Pilot details
           </Link>
           <Link 
-            href="#how-it-works" 
-            className="text-[#0056ff] font-semibold hover:underline"
+            className="text-[#0056ff] font-semibold hover:underline" 
+            href="#how-it-works"
           >
             Learn how the pilot works
           </Link>
@@ -103,7 +104,7 @@ export default function ContextPRDPage() {
           <div>
             <div className="w-full aspect-[500/420] bg-white rounded-xl flex items-center justify-center text-[#0e1a46] font-bold p-8 shadow-lg border border-gray-200">
               {/* Replace with a more relevant image/diagram */}
-              <img src="https://placehold.co/400x320/e0e7ff/3730a3?text=Secure+RAG+Process" alt="Secure RAG Process Diagram" className="rounded-md" />
+              <img className="rounded-md" alt="Secure RAG Process Diagram" src="https://placehold.co/400x320/e0e7ff/3730a3?text=Secure+RAG+Process" />
             </div>
           </div>
         </div>
@@ -114,7 +115,7 @@ export default function ContextPRDPage() {
         <h2 className="text-3xl font-bold mb-8 text-center">Don't Just Take Our Word For It</h2>
         
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <img src="https://dummyimage.com/56x56/e5e7eb/4b5563.png&text=SL" alt="Sara L avatar" className="w-14 h-14 rounded-full flex-shrink-0" />
+          <img className="w-14 h-14 rounded-full flex-shrink-0" alt="Sara L avatar" src="https://dummyimage.com/56x56/e5e7eb/4b5563.png&text=SL" />
           <div className="flex-grow">
             <p className="text-lg mb-2 italic text-gray-800">
               "ContextPRD sliced PRD drafting time from 3 hours to 20 minutes for complex features. The AI surfaced a critical dependency we'd missed twice, saving us a potential re-platform later. This isn't just faster, it's smarter."
@@ -126,7 +127,7 @@ export default function ContextPRDPage() {
         </div>
         
         <div className="flex flex-col md:flex-row gap-6 items-start bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <img src="https://dummyimage.com/56x56/e5e7eb/4b5563.png&text=TD" alt="Tom D avatar" className="w-14 h-14 rounded-full flex-shrink-0" />
+          <img className="w-14 h-14 rounded-full flex-shrink-0" alt="Tom D avatar" src="https://dummyimage.com/56x56/e5e7eb/4b5563.png&text=TD" />
           <div className="flex-grow">
             <p className="text-lg mb-2 italic text-gray-800">
               "The no‑risk pilot was exactly that—zero effort for my team, instant value. We saw a PRD for a new initiative drafted with nuance that usually takes weeks to build. We signed the PO the next week. It's a CPO's dream for scaling quality."
@@ -145,8 +146,8 @@ export default function ContextPRDPage() {
           Schedule your complimentary 1-week pilot. We'll handle the setup. You see the impact. No strings attached.
         </p>
         <a 
-          href="mailto:founder@contextprd.com?subject=ContextPRD%20Zero-Risk%20Pilot%20Request" 
-          className="inline-block bg-[#ff7043] hover:bg-[#e06038] text-white py-4 px-10 rounded-lg font-semibold transition-colors text-lg shadow-md"
+          className="inline-block bg-[#ff7043] hover:bg-[#e06038] text-white py-4 px-10 rounded-lg font-semibold transition-colors text-lg shadow-md" 
+          href="mailto:founder@contextprd.com?subject=ContextPRD%20Zero-Risk%20Pilot%20Request"
         >
           Request Your Free Pilot
         </a>
@@ -192,9 +193,9 @@ export default function ContextPRDPage() {
       {/* Footer */}
       <footer className="bg-[#f1f3f9] py-8 px-6 text-sm text-center">
         © 2025 ContextPRD Inc. •&nbsp;
-        <Link href="/privacy" className="text-[#0056ff] hover:underline">Privacy Policy</Link> •&nbsp;
-        <Link href="/terms" className="text-[#0056ff] hover:underline">Terms of Service</Link> •&nbsp;
-        <Link href="/security" className="text-[#0056ff] hover:underline">Security</Link>
+        <Link className="text-[#0056ff] hover:underline" href="/privacy">Privacy Policy</Link> •&nbsp;
+        <Link className="text-[#0056ff] hover:underline" href="/terms">Terms of Service</Link> •&nbsp;
+        <Link className="text-[#0056ff] hover:underline" href="/security">Security</Link>
       </footer>
     </div>
   );

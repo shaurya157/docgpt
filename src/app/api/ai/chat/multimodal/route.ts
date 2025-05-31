@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, chatId, userId } = await req.json();
+    const { chatId, messages, userId } = await req.json();
     const lastMessage = messages[messages.length - 1];
 
     if (!process.env.PINECONE_API_KEY || !process.env.OPENAI_API_KEY) {
@@ -36,13 +36,13 @@ export async function POST(req: NextRequest) {
 
     // Search for relevant context
     const searchResults = await index.query({
-      vector: vectorValues,
-      topK: 15,
       filter: { 
         userId,
         ...(chatId && { chatId })
       },
-      includeMetadata: true
+      includeMetadata: true,
+      topK: 15,
+      vector: vectorValues
     });
 
     // Build context from multimodal sources
@@ -56,17 +56,17 @@ export async function POST(req: NextRequest) {
         
         let prefix = '';
         switch (contentType) {
-          case 'image_description':
-            prefix = `[IMAGE ANALYSIS from ${fileName}]`;
-            break;
           case 'audio_transcription':
             prefix = `[AUDIO TRANSCRIPT from ${fileName}]`;
             break;
-          case 'video_content':
-            prefix = `[VIDEO CONTENT from ${fileName}]`;
-            break;
           case 'document_text':
             prefix = `[DOCUMENT from ${fileName}]`;
+            break;
+          case 'image_description':
+            prefix = `[IMAGE ANALYSIS from ${fileName}]`;
+            break;
+          case 'video_content':
+            prefix = `[VIDEO CONTENT from ${fileName}]`;
             break;
           default:
             prefix = `[CONTENT from ${fileName}]`;
@@ -101,14 +101,14 @@ Current conversation context: The user has uploaded files and is asking question
 
     // Use OpenAI directly for streaming to avoid AI SDK version conflicts
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      max_tokens: 1000,
       messages: [
-        { role: 'system', content: systemPrompt },
+        { content: systemPrompt, role: 'system' },
         ...messages
       ],
-      temperature: 0.7,
-      max_tokens: 1000,
+      model: 'gpt-4o',
       stream: true,
+      temperature: 0.7,
     });
 
     // Create a readable stream for the response
@@ -119,7 +119,7 @@ Current conversation context: The user has uploaded files and is asking question
           for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content || '';
             if (content) {
-              const data = `0:${JSON.stringify({ type: 'text-delta', textDelta: content })}\n`;
+              const data = `0:${JSON.stringify({ textDelta: content, type: 'text-delta' })}\n`;
               controller.enqueue(encoder.encode(data));
             }
           }
@@ -132,9 +132,9 @@ Current conversation context: The user has uploaded files and is asking question
 
     return new Response(readable, {
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        'Content-Type': 'text/plain; charset=utf-8',
       },
     });
 

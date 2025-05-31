@@ -1,21 +1,22 @@
 "use client";
 
 import { useState } from 'react';
+
 import { useSession } from 'next-auth/react';
 
 interface ProcessedFile {
   fileName: string;
-  status: 'success' | 'error' | 'processing';
-  contentType?: string;
+  status: 'error' | 'processing' | 'success';
   chunksCreated?: number;
+  contentType?: string;
   error?: string;
   preview?: string;
 }
 
 // Simple file upload zone component (inline for now)
-const FileUploadZone = ({ onFileUpload, isProcessing }: { 
-  onFileUpload: (files: File[]) => void; 
+const FileUploadZone = ({ isProcessing, onFileUpload }: { 
   isProcessing: boolean; 
+  onFileUpload: (files: File[]) => void; 
 }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -40,11 +41,11 @@ const FileUploadZone = ({ onFileUpload, isProcessing }: {
                 <p className="text-xl font-medium text-gray-900 mb-2">Upload files here</p>
                 <p className="text-gray-600 mb-4">Select files to analyze</p>
                 <input
-                  type="file"
-                  multiple
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   onChange={handleFileChange}
                   accept="image/*,audio/*,video/*,.pdf,.txt,.doc,.docx"
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  type="file"
+                  multiple
                 />
               </div>
               <div className="text-sm text-gray-500 space-y-1">
@@ -77,18 +78,18 @@ const FilePreview = ({ file }: { file: ProcessedFile }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success': return 'text-green-600 bg-green-50 border-green-200';
       case 'error': return 'text-red-600 bg-red-50 border-red-200';
       case 'processing': return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'success': return 'text-green-600 bg-green-50 border-green-200';
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'success': return '✅';
       case 'error': return '❌';
       case 'processing': return '⏳';
+      case 'success': return '✅';
       default: return '❓';
     }
   };
@@ -137,7 +138,7 @@ const FilePreview = ({ file }: { file: ProcessedFile }) => {
 
 // Simple chat component (inline for now)
 const MultimodalChat = ({ hasFiles }: { hasFiles: boolean }) => {
-  const [messages, setMessages] = useState<Array<{id: string, role: string, content: string}>>([]);
+  const [messages, setMessages] = useState<Array<{id: string, content: string; role: string,}>>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -145,20 +146,20 @@ const MultimodalChat = ({ hasFiles }: { hasFiles: boolean }) => {
     e.preventDefault();
     if (!input.trim() || !hasFiles) return;
 
-    const userMessage = { id: Date.now().toString(), role: 'user', content: input };
+    const userMessage = { id: Date.now().toString(), content: input, role: 'user' };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
       const response = await fetch('/api/ai/chat/multimodal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
           chatId: 'multimodal-demo',
+          messages: [...messages, userMessage],
           userId: 'demo-user'
-        })
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST'
       });
 
       if (response.ok) {
@@ -166,7 +167,7 @@ const MultimodalChat = ({ hasFiles }: { hasFiles: boolean }) => {
         const decoder = new TextDecoder();
         let assistantContent = '';
 
-        const assistantMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: '' };
+        const assistantMessage = { id: (Date.now() + 1).toString(), content: '', role: 'assistant' };
         setMessages(prev => [...prev, assistantMessage]);
 
         if (reader) {
@@ -203,8 +204,8 @@ const MultimodalChat = ({ hasFiles }: { hasFiles: boolean }) => {
       console.error('Chat error:', error);
       setMessages(prev => [...prev, { 
         id: (Date.now() + 1).toString(), 
-        role: 'assistant', 
-        content: 'Sorry, there was an error processing your request.' 
+        content: 'Sorry, there was an error processing your request.', 
+        role: 'assistant' 
       }]);
     } finally {
       setIsLoading(false);
@@ -230,8 +231,8 @@ const MultimodalChat = ({ hasFiles }: { hasFiles: boolean }) => {
                   {exampleQuestions.map((question, index) => (
                     <button
                       key={index}
-                      onClick={() => setInput(question)}
                       className="p-2 text-sm bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-700 transition-colors"
+                      onClick={() => setInput(question)}
                     >
                       "{question}"
                     </button>
@@ -277,18 +278,18 @@ const MultimodalChat = ({ hasFiles }: { hasFiles: boolean }) => {
       </div>
 
       <div className="border-t p-4">
-        <form onSubmit={handleSubmit} className="flex space-x-2">
+        <form className="flex space-x-2" onSubmit={handleSubmit}>
           <input
+            className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            disabled={!hasFiles || isLoading}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={hasFiles ? "Ask about your files..." : "Upload files first to start chatting"}
-            disabled={!hasFiles || isLoading}
-            className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
           <button
-            type="submit"
-            disabled={!input.trim() || !hasFiles || isLoading}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            disabled={!input.trim() || !hasFiles || isLoading}
+            type="submit"
           >
             Send
           </button>
@@ -320,8 +321,8 @@ export default function MultimodalDemo() {
 
     try {
       const response = await fetch('/api/ai/multimodal', {
-        method: 'POST',
-        body: formData
+        body: formData,
+        method: 'POST'
       });
       
       if (!response.ok) {
@@ -351,7 +352,7 @@ export default function MultimodalDemo() {
       setUploadedFiles(prev => 
         prev.map(file => 
           file.status === 'processing' 
-            ? { ...file, status: 'error' as const, error: error.message }
+            ? { ...file, error: error.message, status: 'error' as const }
             : file
         )
       );
@@ -387,8 +388,8 @@ export default function MultimodalDemo() {
                 <h2 className="text-2xl font-semibold text-gray-900">Upload Files</h2>
                 {uploadedFiles.length > 0 && (
                   <button
-                    onClick={handleClearFiles}
                     className="text-sm text-red-600 hover:text-red-800 underline"
+                    onClick={handleClearFiles}
                   >
                     Clear All
                   </button>
